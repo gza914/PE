@@ -1,0 +1,462 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #0f1419;
+    color: #e4e6eb;
+    line-height: 1.6;
+}
+
+.header {
+    background: #1a1f2e;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #2a3f5f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    color: #4a9eff;
+    font-weight: 600;
+}
+
+.header-controls {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.panel {
+    background: #1a1f2e;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border: 1px solid #2a3f5f;
+}
+
+.panel h2 {
+    color: #4a9eff;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.panel h3 {
+    color: #6ab0ff;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Fund Summary */
+.fund-summary {
+    background: linear-gradient(135deg, #1a1f2e 0%, #1e2a3a 100%);
+}
+
+.fund-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background: rgba(42, 63, 95, 0.3);
+    border-radius: 6px;
+    border: 1px solid #2a3f5f;
+}
+
+.stat label {
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat span {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #e4e6eb;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: #4a9eff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3a8eef;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+}
+
+.btn-secondary {
+    background: #2a3f5f;
+    color: #e4e6eb;
+}
+
+.btn-secondary:hover {
+    background: #3a4f6f;
+}
+
+.btn-large {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Portfolio List */
+.portfolio-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.company-card {
+    background: rgba(42, 63, 95, 0.2);
+    border: 1px solid #2a3f5f;
+    border-radius: 6px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.company-card:hover {
+    background: rgba(42, 63, 95, 0.4);
+    border-color: #4a9eff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+}
+
+.company-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.company-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #4a9eff;
+}
+
+.company-industry {
+    font-size: 0.85rem;
+    color: #8b949e;
+    background: rgba(74, 158, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+}
+
+.company-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.company-metric {
+    display: flex;
+    flex-direction: column;
+}
+
+.company-metric label {
+    font-size: 0.75rem;
+    color: #8b949e;
+    margin-bottom: 0.25rem;
+}
+
+.company-metric span {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #e4e6eb;
+}
+
+.metric-good {
+    color: #2ea043 !important;
+}
+
+.metric-warning {
+    color: #d29922 !important;
+}
+
+.metric-danger {
+    color: #f85149 !important;
+}
+
+/* Company Detail */
+.company-detail {
+    display: none;
+}
+
+.company-detail.active {
+    display: block;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2a3f5f;
+}
+
+.detail-content {
+    display: grid;
+    gap: 2rem;
+}
+
+.financials-grid,
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.financial-item,
+.metric-item {
+    padding: 1rem;
+    background: rgba(42, 63, 95, 0.3);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.financial-item label,
+.metric-item label {
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin-bottom: 0.5rem;
+}
+
+.financial-item span,
+.metric-item span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #e4e6eb;
+}
+
+/* Decision Section */
+.decision-section {
+    background: rgba(42, 63, 95, 0.2);
+    padding: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid #2a3f5f;
+}
+
+.decision-help {
+    color: #8b949e;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.decision-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.decision-btn {
+    padding: 1.5rem;
+    background: rgba(74, 158, 255, 0.1);
+    border: 2px solid #2a3f5f;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.decision-btn:hover {
+    background: rgba(74, 158, 255, 0.2);
+    border-color: #4a9eff;
+    transform: translateY(-2px);
+}
+
+.decision-btn.selected {
+    background: rgba(74, 158, 255, 0.3);
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.decision-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #4a9eff;
+    margin-bottom: 0.5rem;
+}
+
+.decision-desc {
+    font-size: 0.9rem;
+    color: #8b949e;
+    line-height: 1.4;
+}
+
+.decision-feedback {
+    padding: 1rem;
+    background: rgba(46, 160, 67, 0.1);
+    border: 1px solid #2ea043;
+    border-radius: 6px;
+    color: #2ea043;
+    font-size: 0.95rem;
+    display: none;
+}
+
+.decision-feedback.show {
+    display: block;
+}
+
+/* Performance History */
+.performance-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.history-item {
+    padding: 0.75rem;
+    background: rgba(42, 63, 95, 0.2);
+    border-left: 3px solid #4a9eff;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.history-item strong {
+    color: #4a9eff;
+}
+
+/* Events Log */
+.events-panel {
+    max-height: 300px;
+}
+
+.events-list {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.event-item {
+    padding: 0.75rem;
+    background: rgba(42, 63, 95, 0.2);
+    border-left: 3px solid #6ab0ff;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #c9d1d9;
+}
+
+.event-item.warning {
+    border-left-color: #d29922;
+    background: rgba(210, 153, 34, 0.1);
+}
+
+.event-item.danger {
+    border-left-color: #f85149;
+    background: rgba(248, 81, 73, 0.1);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #1a1f2e;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    border: 2px solid #4a9eff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+    color: #4a9eff;
+    margin-bottom: 1.5rem;
+}
+
+#gameOverStats {
+    margin-bottom: 2rem;
+}
+
+#gameOverStats .stat {
+    margin-bottom: 1rem;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1f2e;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2a3f5f;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3a4f6f;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .fund-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .decision-options {
+        grid-template-columns: 1fr;
+    }
+}

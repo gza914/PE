@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PE Simulator - Private Equity Fund Management Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>PE Simulator</h1>
+            <div class="header-controls">
+                <button id="saveBtn" class="btn btn-secondary">Save Game</button>
+                <button id="loadBtn" class="btn btn-secondary">Load Game</button>
+                <button id="newGameBtn" class="btn btn-secondary">New Game</button>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Fund Summary Panel -->
+            <div class="panel fund-summary">
+                <h2>Fund Overview</h2>
+                <div class="fund-stats">
+                    <div class="stat">
+                        <label>Fund Size</label>
+                        <span id="fundSize">$100.0M</span>
+                    </div>
+                    <div class="stat">
+                        <label>Deployed Capital</label>
+                        <span id="deployedCapital">$0.0M</span>
+                    </div>
+                    <div class="stat">
+                        <label>Dry Powder</label>
+                        <span id="dryPowder">$100.0M</span>
+                    </div>
+                    <div class="stat">
+                        <label>Portfolio Value</label>
+                        <span id="portfolioValue">$0.0M</span>
+                    </div>
+                    <div class="stat">
+                        <label>Current Quarter</label>
+                        <span id="currentQuarter">Q1 2024</span>
+                    </div>
+                    <div class="stat">
+                        <label>Estimated IRR</label>
+                        <span id="currentIRR">N/A</span>
+                    </div>
+                </div>
+                <button id="nextQuarterBtn" class="btn btn-primary btn-large">Advance to Next Quarter</button>
+            </div>
+
+            <!-- Portfolio Dashboard -->
+            <div class="panel portfolio-panel">
+                <h2>Portfolio Companies</h2>
+                <div id="portfolioList" class="portfolio-list">
+                    <!-- Companies will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Company Detail Panel -->
+            <div id="companyDetail" class="panel company-detail" style="display: none;">
+                <div class="detail-header">
+                    <h2 id="detailCompanyName"></h2>
+                    <button id="closeDetailBtn" class="btn btn-secondary">Back to Portfolio</button>
+                </div>
+
+                <div class="detail-content">
+                    <!-- Financials Section -->
+                    <div class="financials-section">
+                        <h3>Financial Summary</h3>
+                        <div class="financials-grid">
+                            <div class="financial-item">
+                                <label>Revenue</label>
+                                <span id="detailRevenue"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>EBITDA</label>
+                                <span id="detailEBITDA"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>EBITDA Margin</label>
+                                <span id="detailEBITDAMargin"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>Total Debt</label>
+                                <span id="detailDebt"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>Interest Expense</label>
+                                <span id="detailInterest"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>Net Income</label>
+                                <span id="detailNetIncome"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>Equity Invested</label>
+                                <span id="detailEquity"></span>
+                            </div>
+                            <div class="financial-item">
+                                <label>Enterprise Value</label>
+                                <span id="detailEV"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Section -->
+                    <div class="metrics-section">
+                        <h3>Key Metrics</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <label>Debt / EBITDA</label>
+                                <span id="detailDebtEBITDA" class="metric-value"></span>
+                            </div>
+                            <div class="metric-item">
+                                <label>Interest Coverage</label>
+                                <span id="detailInterestCoverage" class="metric-value"></span>
+                            </div>
+                            <div class="metric-item">
+                                <label>Revenue Growth (QoQ)</label>
+                                <span id="detailGrowth" class="metric-value"></span>
+                            </div>
+                            <div class="metric-item">
+                                <label>CEO Quality</label>
+                                <span id="detailCEO" class="metric-value"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quarterly Decision Section -->
+                    <div class="decision-section">
+                        <h3>Quarterly Action</h3>
+                        <p class="decision-help">Choose your strategy for this quarter. Each action has trade-offs:</p>
+                        <div class="decision-options">
+                            <button class="decision-btn" data-action="cut-costs">
+                                <div class="decision-title">Cut Costs</div>
+                                <div class="decision-desc">Improve EBITDA margin by 2-4% but may reduce growth</div>
+                            </button>
+                            <button class="decision-btn" data-action="invest-growth">
+                                <div class="decision-title">Invest in Growth</div>
+                                <div class="decision-desc">Increase revenue growth by 5-10% but reduces near-term EBITDA</div>
+                            </button>
+                            <button class="decision-btn" data-action="do-nothing">
+                                <div class="decision-title">Maintain Course</div>
+                                <div class="decision-desc">Let the CEO run operations, no major changes</div>
+                            </button>
+                        </div>
+                        <div id="decisionFeedback" class="decision-feedback"></div>
+                    </div>
+
+                    <!-- Historical Performance -->
+                    <div class="history-section">
+                        <h3>Quarterly Performance History</h3>
+                        <div id="performanceHistory" class="performance-history">
+                            <!-- History will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Log -->
+            <div class="panel events-panel">
+                <h3>Recent Events</h3>
+                <div id="eventsList" class="events-list">
+                    <p class="event-item">Game started. Welcome to PE Simulator!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h2>Fund Performance Report</h2>
+                <div id="gameOverStats"></div>
+                <button id="newGameFromModal" class="btn btn-primary">Start New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
