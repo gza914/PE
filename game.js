@@ -823,7 +823,5 @@ class UI {
 let game;
 let ui;
 
-window.addEventListener('DOMContentLoaded', () => {
-    game = new Game();
-    ui = new UI(game);
-});
+game = new Game();
+ui = new UI(game);
