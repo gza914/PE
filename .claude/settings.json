@@ -1,0 +1,44 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; cmd=json.load(sys.stdin).get(\\\"command\\\",\\\"\\\"); exit(1 if (\\\"rm -rf\\\" in cmd and \\\"taxonomy\\\" in cmd) or (\\\"psql\\\" in cmd and (\\\"INSERT\\\" in cmd or \\\"UPDATE\\\" in cmd or \\\"DELETE\\\" in cmd)) else 0)\"'",
+            "blocking": true,
+            "message": "Blocked: direct rm -rf on taxonomy/ or direct psql writes are not allowed. Use migrations and taxonomy PRs."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys,json; path=json.load(sys.stdin).get(\\\"file_path\\\",\\\"\\\"); exit(0 if \\\"taxonomy/\\\" not in path or not path.endswith(\\\".yaml\\\") else 1)\" && exit 0 || node packages/shared/src/taxonomy/validate.mjs'",
+            "blocking": false,
+            "message": "Taxonomy validator ran after edit."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(python3 *)",
+      "Bash(uv *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+# Account taxonomy — maps X handles to factions.
+# Fields: handle (required, unique), faction (required, must match factions.yaml slug),
+#         display_name, notes
+
+# MAGA Right
+- handle: realDonaldTrump
+  faction: maga-right
+  display_name: Donald J. Trump
+
+- handle: DonaldJTrumpJr
+  faction: maga-right
+  display_name: Donald Trump Jr.
+
+- handle: elonmusk
+  faction: maga-right
+  display_name: Elon Musk
+  notes: Tech oligarch, X owner, Trump-aligned since 2024
+
+- handle: TuckerCarlson
+  faction: maga-right
+  display_name: Tucker Carlson
+
+- handle: BlazeTV
+  faction: maga-right
+  display_name: Blaze TV
+
+# Dissident Right
+- handle: RealJamesWoods
+  faction: dissident-right
+  display_name: James Woods
+
+- handle: BasedMikeLee
+  faction: dissident-right
+  display_name: Mike Lee
+  notes: Hardliner, frequently dissident from GOP leadership
+
+# Legacy GOP
+- handle: MittRomney
+  faction: legacy-gop
+  display_name: Mitt Romney
+
+- handle: AdamKinzinger
+  faction: legacy-gop
+  display_name: Adam Kinzinger
+
+- handle: LindseyGrahamSC
+  faction: legacy-gop
+  display_name: Lindsey Graham
+
+# Corporate Democrat
+- handle: JoeBiden
+  faction: corporate-dem
+  display_name: Joe Biden
+
+- handle: HillaryClinton
+  faction: corporate-dem
+  display_name: Hillary Clinton
+
+- handle: PeteButtigieg
+  faction: corporate-dem
+  display_name: Pete Buttigieg
+
+- handle: ChrisHayes
+  faction: corporate-dem
+  display_name: Chris Hayes
+
+- handle: MaddowBlog
+  faction: corporate-dem
+  display_name: Rachel Maddow
+
+# Progressive Left
+- handle: AOC
+  faction: progressive-left
+  display_name: Alexandria Ocasio-Cortez
+
+- handle: BernieSanders
+  faction: progressive-left
+  display_name: Bernie Sanders
+
+- handle: IlhanMN
+  faction: progressive-left
+  display_name: Ilhan Omar
+
+- handle: RashidaTlaib
+  faction: progressive-left
+  display_name: Rashida Tlaib
+
+- handle: ewarren
+  faction: progressive-left
+  display_name: Elizabeth Warren

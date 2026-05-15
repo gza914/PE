@@ -1,0 +1,20 @@
+{
+  "name": "doomwire",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @doomwire/db migrate",
+    "db:generate": "pnpm --filter @doomwire/db generate",
+    "db:studio": "pnpm --filter @doomwire/db studio",
+    "taxonomy:validate": "node packages/shared/src/taxonomy/validate.mjs",
+    "taxonomy:sync": "pnpm --filter @doomwire/db taxonomy:sync"
+  }
+}

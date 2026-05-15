@@ -1,0 +1,27 @@
+# Faction taxonomy — the moat. Edit via PR, never directly.
+# Fields: slug (required, unique), name (required), description, ideology
+
+- slug: maga-right
+  name: MAGA Right
+  description: Trump-aligned populist right, America-first nationalism
+  ideology: national populism
+
+- slug: dissident-right
+  name: Dissident Right
+  description: Post-liberal, race-conscious, anti-establishment right
+  ideology: post-liberal nationalism
+
+- slug: legacy-gop
+  name: Legacy GOP
+  description: Traditional Republican establishment, neoconservative-adjacent
+  ideology: neoconservatism
+
+- slug: corporate-dem
+  name: Corporate Democrat
+  description: Centrist Democratic establishment, donor class-aligned
+  ideology: third-way liberalism
+
+- slug: progressive-left
+  name: Progressive Left
+  description: AOC-wing Democrats, social justice coalition
+  ideology: progressive social democracy
