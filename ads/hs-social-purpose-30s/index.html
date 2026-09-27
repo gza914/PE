@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Penn Foster High School Partners</title>
+<style>
+  /* Brand tokens are placeholders. Swap in the official Penn Foster palette, font and logo. */
+  :root {
+    --navy: #0b2545;
+    --navy-2: #13315c;
+    --paper: #f7f9fc;
+    --accent: #f2a541;
+    --accent-2: #3fb8af;
+    --white: #ffffff;
+    --muted: #d3dceb;
+    --font: "Inter", "Helvetica Neue", "Liberation Sans", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #05101f; color: var(--white); font-family: var(--font); overflow: hidden; }
+  #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--navy); transform-origin: center; }
+  .el { position: absolute; will-change: transform, opacity; opacity: 0; }
+
+  /* Photo layers */
+  .photo { inset: 0; overflow: hidden; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; will-change: transform; }
+  .shade-left::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(11,37,69,.92) 0%, rgba(11,37,69,.72) 38%, rgba(11,37,69,.1) 70%, rgba(11,37,69,0) 100%); }
+  .shade-full::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(11,37,69,.55), rgba(11,37,69,.88)); }
+  .shade-bottom::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(0deg, rgba(11,37,69,.95) 0%, rgba(11,37,69,.55) 45%, rgba(11,37,69,.05) 75%); }
+
+  .kicker { font-size: 46px; font-weight: 600; color: var(--muted); letter-spacing: .2px; }
+  .h1 { font-size: 104px; font-weight: 800; letter-spacing: -2.5px; line-height: 1.04; text-shadow: 0 4px 30px rgba(0,0,0,.25); }
+  .h2 { font-size: 76px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.08; }
+  .accent { color: var(--accent); }
+  .teal { color: var(--accent-2); }
+  .L { left: 130px; }
+
+  /* Scene 3 chips */
+  .chip { height: 96px; padding: 0 40px; border-radius: 48px; display: inline-flex; align-items: center; gap: 20px;
+    font-size: 42px; font-weight: 700; background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.28);
+    backdrop-filter: blur(6px); }
+  .chip .dot { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); }
+  .badge { display: inline-flex; align-items: center; gap: 16px; padding: 14px 28px; border-radius: 14px;
+    background: var(--accent-2); color: var(--navy); font-size: 32px; font-weight: 800; letter-spacing: .5px; }
+
+  /* Scene 4 panel */
+  #s4panel { left: 0; top: 0; bottom: 0; width: 900px; background: var(--navy); }
+  .feat { left: 130px; display: flex; align-items: center; gap: 34px; }
+  .feat .ico { width: 110px; height: 110px; border-radius: 28px; background: var(--paper); color: var(--navy);
+    display: grid; place-items: center; font-size: 44px; font-weight: 800; flex: none; }
+  .feat .txt b { display: block; font-size: 50px; font-weight: 800; letter-spacing: -.8px; }
+  .feat .txt span { display: block; font-size: 32px; color: var(--muted); margin-top: 6px; }
+
+  /* Scene 5 stat */
+  .big { font-size: 260px; font-weight: 800; letter-spacing: -8px; line-height: 1; }
+  .big .plus { color: var(--accent); }
+
+  /* Scene 6 end card */
+  #endpanel { right: 0; top: 0; bottom: 0; width: 1060px; background: var(--paper); }
+  .wordmark { font-size: 120px; font-weight: 800; letter-spacing: -3px; color: var(--navy); }
+  .wordmark small { display: block; font-size: 40px; letter-spacing: 6px; font-weight: 700; color: var(--accent-2); margin-top: 8px; }
+  .rule { width: 180px; height: 12px; border-radius: 6px; background: var(--accent); }
+  .tagline { font-size: 60px; font-weight: 800; letter-spacing: -1px; line-height: 1.12; color: var(--navy); }
+  .cta { padding: 28px 44px; border-radius: 60px; background: var(--navy); color: var(--white); font-size: 36px; font-weight: 700; white-space: nowrap; }
+  .cta b { color: var(--accent); }
+
+  #cap { left: 50%; bottom: 44px; transform: translateX(-50%); max-width: 1500px; padding: 14px 28px; border-radius: 12px;
+    background: rgba(0,0,0,.72); font-size: 38px; font-weight: 500; text-align: center; opacity: 1; display: none; }
+  body.captions #cap { display: block; }
+  body.captions #cap:empty { display: none; }
+  #prog { left: 0; bottom: 0; height: 8px; background: var(--accent); opacity: .9; }
+  body.render #prog { display: none; }
+
+  #start { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(5,16,31,.55); z-index: 20; cursor: pointer; }
+  #start span { font: 800 22px/1 var(--font); padding: 22px 34px; border-radius: 999px; background: var(--accent); color: var(--navy); }
+  #controls { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 8px; align-items: center;
+    padding: 8px 12px; border-radius: 999px; background: rgba(0,0,0,.6); font: 600 14px/1 var(--font); z-index: 10; }
+  #controls button { font: inherit; color: #fff; background: rgba(255,255,255,.12); border: 0; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  #controls button:hover { background: rgba(255,255,255,.22); }
+  #time { color: #cdd6e3; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+  body.render #controls, body.render #start { display: none; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+  <!-- Scene 1 -->
+  <div class="el photo shade-left" id="ph1"><img src="img/s1-hopeful-learner.jpg" alt=""></div>
+  <div class="el kicker L" id="s1k" style="top:360px">For the people you serve,</div>
+  <div class="el h1 L" id="s1h" style="top:430px">a diploma<br><span class="accent">changes everything.</span></div>
+
+  <!-- Scene 2 -->
+  <div class="el photo shade-left" id="ph2"><img src="img/s2-youth-group.jpg" alt=""></div>
+  <div class="el h2 L" id="s2h" style="top:380px">Building a high school<br>program on your own?</div>
+  <div class="el kicker L" id="s2k" style="top:590px; font-size:56px; color:var(--accent); font-weight:800">That's a lot to carry.</div>
+
+  <!-- Scene 3 -->
+  <div class="el photo shade-left" id="ph3"><img src="img/s3-partnership.jpg" alt=""></div>
+  <div class="el kicker L" id="s3k" style="top:200px">Penn Foster partners with</div>
+  <div class="el chip L" id="c1" style="top:280px"><span class="dot"></span>Nonprofits</div>
+  <div class="el chip L" id="c2" style="top:400px"><span class="dot"></span>Youth Organizations</div>
+  <div class="el chip L" id="c3" style="top:520px"><span class="dot"></span>Workforce Boards</div>
+  <div class="el h2 L" id="s3h" style="top:680px">to deliver an <span class="accent">accredited</span><br>online high school diploma.</div>
+
+  <!-- Scene 4 -->
+  <div class="el photo" id="ph4" style="left:700px"><img src="img/s4-self-paced.jpg" alt=""></div>
+  <div class="el" id="s4panel"></div>
+  <div class="el h2 L" id="s4h" style="top:150px">Built for <span class="accent">real lives.</span></div>
+  <div class="el feat" id="f1" style="top:340px"><div class="ico">21</div><div class="txt"><b>Credit curriculum</b><span>Core subjects + career electives</span></div></div>
+  <div class="el feat" id="f2" style="top:520px"><div class="ico">⟳</div><div class="txt"><b>Online &amp; self-paced</b><span>Learners study when life allows</span></div></div>
+  <div class="el feat" id="f3" style="top:700px"><div class="ico">✓</div><div class="txt"><b>Wraparound support</b><span>Academic and motivational coaching</span></div></div>
+
+  <!-- Scene 5 -->
+  <div class="el photo shade-full" id="ph5"><img src="img/s5-graduates.jpg" alt=""></div>
+  <div class="el" id="s5" style="left:0; right:0; top:330px; text-align:center">
+    <div class="big"><span id="num">0</span><span class="plus">+</span></div>
+    <div class="kicker" style="font-size:54px; color:var(--white); font-weight:700; margin-top:10px">high school graduates in 2025 alone</div>
+  </div>
+
+  <!-- Scene 6 -->
+  <div class="el photo" id="ph6" style="right:1060px"><img src="img/s6-graduate.jpg" alt=""></div>
+  <div class="el" id="endpanel"></div>
+  <div class="el wordmark" id="e1" style="left:960px; top:200px">Penn Foster<small>HIGH SCHOOL</small></div>
+  <div class="el rule" id="e2" style="left:960px; top:445px"></div>
+  <div class="el tagline" id="e3" style="left:960px; top:510px">Let's open the door<br>to what's next, <span class="accent">together.</span></div>
+  <div class="el cta" id="e4" style="left:960px; top:800px">Partner with us → <b>partners.pennfoster.edu</b></div>
+
+  <div class="el" id="cap"></div>
+  <div class="el" id="prog"></div>
+</div></div>
+
+<div id="start"><span>▶ Play with sound</span></div>
+<div id="controls">
+  <button id="play">Pause</button><button id="replay">Replay</button>
+  <span id="time">0.0s</span><button id="cc">Captions</button>
+</div>
+<audio id="aud" src="audio/mix.wav" preload="auto"></audio>
+
+<script>
+const DURATION = 30;
+// VO lines: [start, end, text]. Starts and ends come from audio/timings.json.
+const VO = [
+  [0.5, 3.52, "For the people you serve, a diploma changes everything."],
+  [4.1, 7.28, "But building a high school program on your own is a lot to carry."],
+  [7.9, 15.42, "Penn Foster partners with nonprofits, youth organizations, and workforce boards to deliver an accredited online high school diploma."],
+  [15.9, 19.95, "Self-paced, with wraparound support that keeps learners moving forward."],
+  [20.6, 24.74, "In 2025 alone, more than 45,000 students graduated."],
+  [25.9, 29.37, "Penn Foster. Let's open the door to what's next, together."],
+];
+// Scene windows [in, out] for the photo layers (crossfades overlap by ~0.6s).
+const SCENES = { ph1: [0, 3.9], ph2: [3.6, 7.8], ph3: [7.5, 15.7], ph4: [15.4, 20.5], ph5: [20.2, 25.6], ph6: [25.3, 30.5] };
+
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const easeIn = x => Math.pow(clamp(x), 3);
+const $ = id => document.getElementById(id);
+
+function show(id, t, tin, tout, { dy = 36, dx = 0, dur = 0.6, scale = 0 } = {}) {
+  const el = $(id);
+  const a = ease((t - tin) / dur);
+  const b = tout == null ? 0 : easeIn((t - tout) / 0.4);
+  el.style.opacity = a * (1 - b);
+  el.style.transform = `translate(${(1 - a) * dx}px, ${(1 - a) * dy - b * dy * 0.4}px) scale(${1 + (1 - a) * scale})`;
+}
+
+function photo(id, t, [tin, tout], pan) {
+  const el = $(id);
+  const a = ease((t - tin) / 0.6), b = tout > DURATION ? 0 : clamp((t - (tout - 0.6)) / 0.6);
+  el.style.opacity = a * (1 - b);
+  const p = clamp((t - tin) / (tout - tin));          // Ken Burns: slow push-in with drift
+  el.firstElementChild.style.transform = `scale(${1.02 + 0.08 * p}) translate(${pan[0] * p}px, ${pan[1] * p}px)`;
+}
+
+function render(t) {
+  photo('ph1', t, SCENES.ph1, [-30, -6]);
+  photo('ph2', t, SCENES.ph2, [24, 0]);
+  photo('ph3', t, SCENES.ph3, [-26, 8]);
+  photo('ph4', t, SCENES.ph4, [-18, -8]);
+  photo('ph5', t, SCENES.ph5, [0, -22]);
+  photo('ph6', t, SCENES.ph6, [14, -6]);
+
+  show('s1k', t, 0.4, 3.5);
+  show('s1h', t, 1.3, 3.5, { dy: 50 });
+
+  show('s2h', t, 4.1, 7.4);
+  show('s2k', t, 5.6, 7.4);
+
+  show('s3k', t, 7.9, 15.3);
+  show('c1', t, 8.9, 15.3, { dy: 0, dx: -40 });
+  show('c2', t, 9.6, 15.3, { dy: 0, dx: -40 });
+  show('c3', t, 10.8, 15.3, { dy: 0, dx: -40 });
+  show('s3h', t, 12.3, 15.3);
+
+  show('s4panel', t, 15.4, 20.1, { dy: 0, dx: -120, dur: 0.7 });
+  show('s4h', t, 15.8, 20.1);
+  show('f1', t, 16.4, 20.1, { dx: -30, dy: 0 });
+  show('f2', t, 17.2, 20.1, { dx: -30, dy: 0 });
+  show('f3', t, 18.4, 20.1, { dx: -30, dy: 0 });
+
+  show('s5', t, 20.8, 25.3, { scale: 0.06, dy: 20 });
+  $('num').textContent = Math.round(45000 * ease((t - 21.0) / 2.6)).toLocaleString('en-US');
+
+  show('endpanel', t, 25.4, null, { dy: 0, dx: 160, dur: 0.7 });
+  show('e1', t, 25.9, null, { dy: 24 });
+  show('e2', t, 26.3, null, { dy: 0, dx: -40 });
+  show('e3', t, 26.9, null);
+  show('e4', t, 27.8, null, { dy: 24 });
+
+  const line = VO.find(([a, b]) => t >= a && t <= b);
+  $('cap').textContent = line ? line[2] : '';
+  $('prog').style.width = (1920 * clamp(t / DURATION)) + 'px';
+  $('time').textContent = t.toFixed(1) + 's';
+}
+
+function fit() { $('stage').style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`; }
+addEventListener('resize', fit); fit();
+
+const params = new URLSearchParams(location.search);
+if (params.has('captions')) document.body.classList.add('captions');
+if (params.has('render')) document.body.classList.add('render');
+window.render = render;
+
+// Playback is driven by the audio clock so picture and sound stay in sync.
+const aud = $('aud');
+let started = false;
+function tick() {
+  if (started) render(Math.min(DURATION, aud.currentTime));
+  requestAnimationFrame(tick);
+}
+render(0.01);
+requestAnimationFrame(tick);
+function start() { $('start').style.display = 'none'; started = true; aud.currentTime = 0; aud.play(); $('play').textContent = 'Pause'; }
+$('start').onclick = start;
+$('play').onclick = () => {
+  if (!started) return start();
+  if (aud.paused) { aud.play(); $('play').textContent = 'Pause'; } else { aud.pause(); $('play').textContent = 'Play'; }
+};
+$('replay').onclick = start;
+$('cc').onclick = () => document.body.classList.toggle('captions');
+</script>
+</body>
+</html>
