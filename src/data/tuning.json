@@ -1,0 +1,232 @@
+{
+  "clock": {
+    "startDate": "2024-09-09",
+    "maxDays": 270,
+    "realMsPerHourBySpeed": [
+      2000,
+      1000,
+      500,
+      250,
+      100
+    ],
+    "nightStartHour": 20,
+    "nightEndHour": 6,
+    "nightSignatureMultiplier": 0.6,
+    "nightBrechaBreakdownMultiplier": 2,
+    "payrollWeekday": 0,
+    "payrollHour": 0,
+    "incomeSettleHour": 0
+  },
+  "pulse": {
+    "exhaustionDecayPerQuietDay": 3,
+    "aiNoMajorOffensiveAboveExhaustion": 60,
+    "allOffensivesHaltAtExhaustion": 80,
+    "culiacanMinSkirmishesPerDay": 1,
+    "startingSupply": 70,
+    "startingExhaustion": 0,
+    "quietDayMaxCombatHours": 0
+  },
+  "map": {
+    "coloniaFlipThreshold": 60,
+    "halconRoadCoverageKm": 10
+  },
+  "roads": {
+    "highway": {
+      "speed": 1.0,
+      "visibility": 1.0,
+      "checkpointChance": 0.3
+    },
+    "paved": {
+      "speed": 0.7,
+      "visibility": 0.6,
+      "checkpointChance": 0.15
+    },
+    "brecha": {
+      "speed": 0.35,
+      "visibility": 0.25,
+      "checkpointChance": 0.02,
+      "breakdownChancePerSegment": 0.03
+    }
+  },
+  "vehicles": {
+    "pickup": {
+      "seats": 4,
+      "signature": 1,
+      "cost": 15000,
+      "roads": [
+        "highway",
+        "paved",
+        "brecha"
+      ],
+      "baseSpeedKmh": 90
+    },
+    "suv": {
+      "seats": 5,
+      "signature": 1,
+      "cost": 25000,
+      "roads": [
+        "highway",
+        "paved"
+      ],
+      "baseSpeedKmh": 100
+    },
+    "motorcycle": {
+      "seats": 2,
+      "signature": 0.3,
+      "cost": 4000,
+      "roads": [
+        "highway",
+        "paved",
+        "brecha"
+      ],
+      "baseSpeedKmh": 100
+    },
+    "armored": {
+      "seats": 6,
+      "signature": 6,
+      "cost": 400000,
+      "roads": [
+        "highway",
+        "paved"
+      ],
+      "baseSpeedKmh": 70,
+      "combatPower": 30
+    }
+  },
+  "detection": {
+    "coefficient": 0.08,
+    "minChance": 0.02,
+    "maxChance": 0.95,
+    "eliteStealthMultiplier": 0.7,
+    "lastSeenFadeHours": 12,
+    "droneRevealHours": 4,
+    "droneNoticeAlertnessFactor": 0.5,
+    "droneCost": 3000
+  },
+  "crews": {
+    "minMen": 4,
+    "maxMen": 40,
+    "moraleBreakThreshold": 30,
+    "ammoHoursOfFighting": 6,
+    "startingMorale": 70,
+    "startingAlertness": 50
+  },
+  "combat": {
+    "casualtyRatePerHour": 0.04,
+    "randomFactorMin": 0.7,
+    "randomFactorMax": 1.3,
+    "retreatMorale": 30,
+    "routMorale": 15,
+    "ambushFirstHourMultiplier": 2.5,
+    "fortificationBonusPerLevel": 0.25,
+    "powerSkillBase": 0.6,
+    "powerSkillPerLevel": 0.2,
+    "powerGearBase": 0.6,
+    "powerGearPerLevel": 0.2,
+    "powerMoraleBase": 0.5,
+    "powerMoraleScale": 0.5,
+    "terrain": {
+      "open_valley": 1.0,
+      "sugarcane": 1.1,
+      "hills": 1.15,
+      "sierra": 1.25,
+      "urban": 1.1
+    }
+  },
+  "economy": {
+    "extortionRates": {
+      "low": {
+        "incomePerBusinessPerDay": 20,
+        "supportPerWeek": 2,
+        "businessClosurePerWeek": 0
+      },
+      "medium": {
+        "incomePerBusinessPerDay": 40,
+        "supportPerWeek": 0,
+        "businessClosurePerWeek": 0.01
+      },
+      "high": {
+        "incomePerBusinessPerDay": 70,
+        "supportPerWeek": -4,
+        "businessClosurePerWeek": 0.03
+      },
+      "brutal": {
+        "incomePerBusinessPerDay": 110,
+        "supportPerWeek": -10,
+        "businessClosurePerWeek": 0.08
+      }
+    },
+    "contestedRouteThroughputPenalty": 0.2,
+    "payrollPerManPerWeek": 150,
+    "halconCostPer10CoveragePerWeek": 2000,
+    "ammoResupplyPerMan": 30,
+    "factionTributeRate": 0.2,
+    "missedPayroll": {
+      "moraleLoss": 20,
+      "leaderOpinionLoss": 10,
+      "consecutiveWeeksForDesertion": 2,
+      "desertionRatePerDay": 0.1
+    }
+  },
+  "characters": {
+    "skillMax": 20,
+    "opinionMin": -100,
+    "opinionMax": 100,
+    "heirSuccessionOpinionLoss": 20,
+    "extraditionDays": 30
+  },
+  "diplomacy": {
+    "neutralOpinionLossPerDay": 1,
+    "neutralOpinionFloor": -50,
+    "ultimatumDays": [
+      14,
+      30
+    ],
+    "traitorOpinion": -100,
+    "sideSwitchNewFactionOpinion": -20,
+    "truceExhaustionThreshold": 70,
+    "truceSustainDays": 14,
+    "foreignRouteCutMin": 0.25,
+    "foreignRouteCutMax": 0.4
+  },
+  "state": {
+    "startingCalentura": 25,
+    "calenturaDecayPerQuietDay": 2,
+    "tiers": {
+      "elevated": 30,
+      "surge": 60,
+      "occupation": 85
+    },
+    "occupationSignatureMultiplier": 1.5,
+    "commanderBribeDays": 30,
+    "commanderRotationDays": 45,
+    "fightStateCalentura": 30,
+    "captureOpProfileThreshold": 70,
+    "captureOpIntelThreshold": 100
+  },
+  "events": {
+    "targetPlayerEventsPerWeekMin": 2,
+    "targetPlayerEventsPerWeekMax": 4
+  },
+  "endings": {
+    "factionCollapseSuccessionDays": 7,
+    "territorialDefeatShare": 0.2,
+    "territorialDefeatDays": 14,
+    "scoreWeights": {
+      "territory": 0.3,
+      "wealth": 0.2,
+      "standing": 0.2,
+      "reputation": 0.15,
+      "force": 0.15
+    },
+    "fateMultipliers": {
+      "free": 1.0,
+      "jailed": 0.5,
+      "deadOrExtradited": 0.25
+    }
+  },
+  "ai": {
+    "strategicIntervalHours": 24,
+    "operationalIntervalHours": 6
+  }
+}

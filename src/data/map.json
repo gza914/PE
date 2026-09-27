@@ -1,0 +1,30 @@
+{
+  "_comment": "PLACEHOLDER schematic map, ~20 of the planned ~50 nodes. Positions are approximate SVG coordinates (0-1000). Starting ownership is an open question for Tony.",
+  "regions": [
+    { "id": "norte", "name": "Norte" },
+    { "id": "centro", "name": "Centro" },
+    { "id": "sierra", "name": "Sierra" },
+    { "id": "sur", "name": "Sur" }
+  ],
+  "nodes": [
+    { "id": "sonora_exit", "name": "Sonora", "type": "border_exit", "region": "norte", "x": 60, "y": 60, "owner": null },
+    { "id": "chihuahua_exit", "name": "Chihuahua", "type": "border_exit", "region": "sierra", "x": 330, "y": 40, "owner": null },
+    { "id": "los_mochis", "name": "Los Mochis", "type": "city", "region": "norte", "x": 130, "y": 170, "owner": "lt_los_mochis", "fortification": 1, "businesses": 900, "militaryPresence": 1, "halconCoverage": 50 },
+    { "id": "topolobampo", "name": "Topolobampo", "type": "port", "region": "norte", "x": 90, "y": 230, "owner": "lt_los_mochis", "businesses": 150, "militaryPresence": 2, "halconCoverage": 40 },
+    { "id": "guasave", "name": "Guasave", "type": "town", "region": "norte", "x": 230, "y": 280, "owner": "lt_guasave", "businesses": 350, "halconCoverage": 40 },
+    { "id": "guamuchil", "name": "Guamúchil", "type": "town", "region": "norte", "x": 320, "y": 350, "owner": null, "businesses": 250, "halconCoverage": 20 },
+    { "id": "badiraguato", "name": "Badiraguato", "type": "sierra_hub", "region": "sierra", "x": 470, "y": 280, "owner": "chapitos_head", "fortification": 2, "labs": 3, "support": 70, "halconCoverage": 80, "businesses": 40 },
+    { "id": "la_tuna", "name": "La Tuna", "type": "rancheria", "region": "sierra", "x": 540, "y": 200, "owner": "lt_la_tuna", "fortification": 2, "labs": 2, "support": 75, "halconCoverage": 70, "businesses": 10 },
+    { "id": "tamazula_approach", "name": "Tamazula approach", "type": "sierra_hub", "region": "sierra", "x": 650, "y": 250, "owner": null, "labs": 2, "halconCoverage": 30, "businesses": 10 },
+    { "id": "durango_exit", "name": "Durango", "type": "border_exit", "region": "sierra", "x": 780, "y": 320, "owner": null },
+    { "id": "navolato", "name": "Navolato", "type": "town", "region": "centro", "x": 440, "y": 470, "owner": "lt_navolato", "businesses": 300, "halconCoverage": 50 },
+    { "id": "culiacan", "name": "Culiacán", "type": "city", "region": "centro", "x": 510, "y": 440, "owner": null, "hasSubmap": true, "fortification": 1, "businesses": 3000, "militaryPresence": 2, "halconCoverage": 60 },
+    { "id": "el_salado", "name": "El Salado", "type": "rancheria", "region": "centro", "x": 560, "y": 540, "owner": "lt_el_salado", "fortification": 1, "labs": 1, "support": 65, "halconCoverage": 60, "businesses": 30 },
+    { "id": "eldorado", "name": "Eldorado", "type": "rancheria", "region": "centro", "x": 530, "y": 590, "owner": "mayos_head", "fortification": 2, "labs": 2, "support": 70, "halconCoverage": 80, "businesses": 120 },
+    { "id": "cosala", "name": "Cosalá", "type": "town", "region": "sur", "x": 650, "y": 610, "owner": "lt_cosala", "businesses": 80, "halconCoverage": 40 },
+    { "id": "mazatlan", "name": "Mazatlán", "type": "city", "region": "sur", "x": 740, "y": 800, "owner": "lt_mazatlan", "fortification": 1, "businesses": 2200, "militaryPresence": 2, "halconCoverage": 60 },
+    { "id": "mazatlan_port", "name": "Mazatlán port", "type": "port", "region": "sur", "x": 700, "y": 840, "owner": "lt_mazatlan", "businesses": 100, "militaryPresence": 2, "halconCoverage": 40 },
+    { "id": "escuinapa", "name": "Escuinapa", "type": "town", "region": "sur", "x": 880, "y": 900, "owner": "lt_escuinapa", "businesses": 200, "halconCoverage": 40 },
+    { "id": "nayarit_exit", "name": "Nayarit", "type": "border_exit", "region": "sur", "x": 950, "y": 960, "owner": null }
+  ]
+}

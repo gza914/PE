@@ -1,0 +1,29 @@
+{
+  "_comment": "PLACEHOLDER road graph. Lengths are rough; final values live here, not in code.",
+  "roads": [
+    { "id": "r_sonora_mochis", "from": "sonora_exit", "to": "los_mochis", "type": "highway", "lengthKm": 190, "terrain": "open_valley" },
+    { "id": "r_mochis_topo", "from": "los_mochis", "to": "topolobampo", "type": "paved", "lengthKm": 24, "terrain": "open_valley" },
+    { "id": "r_mochis_guasave", "from": "los_mochis", "to": "guasave", "type": "highway", "lengthKm": 60, "terrain": "open_valley" },
+    { "id": "r_guasave_guamuchil", "from": "guasave", "to": "guamuchil", "type": "highway", "lengthKm": 60, "terrain": "sugarcane" },
+    { "id": "r_guamuchil_culiacan", "from": "guamuchil", "to": "culiacan", "type": "highway", "lengthKm": 105, "terrain": "sugarcane" },
+    { "id": "r_guamuchil_badiraguato", "from": "guamuchil", "to": "badiraguato", "type": "paved", "lengthKm": 80, "terrain": "hills" },
+    { "id": "r_culiacan_badiraguato", "from": "culiacan", "to": "badiraguato", "type": "paved", "lengthKm": 75, "terrain": "hills" },
+    { "id": "r_badiraguato_latuna", "from": "badiraguato", "to": "la_tuna", "type": "brecha", "lengthKm": 30, "terrain": "sierra" },
+    { "id": "r_latuna_chihuahua", "from": "la_tuna", "to": "chihuahua_exit", "type": "brecha", "lengthKm": 150, "terrain": "sierra" },
+    { "id": "r_latuna_tamazula", "from": "la_tuna", "to": "tamazula_approach", "type": "brecha", "lengthKm": 90, "terrain": "sierra" },
+    { "id": "r_tamazula_durango", "from": "tamazula_approach", "to": "durango_exit", "type": "brecha", "lengthKm": 110, "terrain": "sierra" },
+    { "id": "r_culiacan_tamazula", "from": "culiacan", "to": "tamazula_approach", "type": "brecha", "lengthKm": 140, "terrain": "sierra" },
+    { "id": "r_culiacan_navolato", "from": "culiacan", "to": "navolato", "type": "paved", "lengthKm": 30, "terrain": "sugarcane" },
+    { "id": "r_culiacan_elsalado", "from": "culiacan", "to": "el_salado", "type": "paved", "lengthKm": 40, "terrain": "open_valley" },
+    { "id": "r_elsalado_eldorado", "from": "el_salado", "to": "eldorado", "type": "brecha", "lengthKm": 25, "terrain": "sugarcane" },
+    { "id": "r_culiacan_eldorado", "from": "culiacan", "to": "eldorado", "type": "paved", "lengthKm": 60, "terrain": "sugarcane" },
+    { "id": "r_culiacan_mazatlan", "from": "culiacan", "to": "mazatlan", "type": "highway", "lengthKm": 220, "passesNear": ["el_salado"], "terrain": "open_valley" },
+    { "id": "r_elsalado_cosala", "from": "el_salado", "to": "cosala", "type": "paved", "lengthKm": 80, "terrain": "hills" },
+    { "id": "r_cosala_mazatlan", "from": "cosala", "to": "mazatlan", "type": "brecha", "lengthKm": 150, "terrain": "hills" },
+    { "id": "r_cosala_latuna", "from": "cosala", "to": "la_tuna", "type": "brecha", "lengthKm": 180, "terrain": "sierra" },
+    { "id": "r_mazatlan_port", "from": "mazatlan", "to": "mazatlan_port", "type": "paved", "lengthKm": 8, "terrain": "urban" },
+    { "id": "r_mazatlan_escuinapa", "from": "mazatlan", "to": "escuinapa", "type": "highway", "lengthKm": 90, "terrain": "open_valley" },
+    { "id": "r_escuinapa_nayarit", "from": "escuinapa", "to": "nayarit_exit", "type": "highway", "lengthKm": 60, "terrain": "open_valley" },
+    { "id": "r_mazatlan_durango", "from": "mazatlan", "to": "durango_exit", "type": "highway", "lengthKm": 180, "terrain": "sierra" }
+  ]
+}

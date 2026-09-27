@@ -1,0 +1,12 @@
+{
+  "_comment": "PLACEHOLDER library. Tony writes the real message templates, banner wording, corrido titles, and rumor text.",
+  "messages": [
+    { "id": "manta_claim_plaza", "kind": "narcomanta", "text": "{plaza.name} tiene dueño. Atentamente, {sender.name}.", "tags": ["claim"] },
+    { "id": "manta_accuse_rival", "kind": "narcomanta", "text": "{target.name} le vende información al gobierno.", "tags": ["accuse"] },
+    { "id": "video_rally", "kind": "video", "text": "{sender.name} addresses the men of {faction.name}.", "tags": ["morale"] },
+    { "id": "claim_victory", "kind": "social_claim", "text": "{faction.name} took {plaza.name} last night.", "tags": ["victory"] },
+    { "id": "corrido_generic", "kind": "corrido", "text": "El corrido de {sender.name}", "tags": ["respect"] },
+    { "id": "rumor_fake_convoy", "kind": "rumor", "text": "A convoy of {sender.name}'s men will cross {road.name} tonight.", "tags": ["bait"] },
+    { "id": "rumor_weak_plaza", "kind": "rumor", "text": "{plaza.name} is barely guarded.", "tags": ["bait"] }
+  ]
+}

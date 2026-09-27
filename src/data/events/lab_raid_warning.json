@@ -1,0 +1,14 @@
+{
+  "id": "lab_raid_warning",
+  "scope": "plaza",
+  "chain": "lab_raid",
+  "trigger": { "owner_is_player": true, "labs_gt": 0, "calentura_gt": 60 },
+  "mean_days": 10,
+  "title": "A friend in the police",
+  "text": "A contact in the {plaza.name} police says the army is planning a raid on your lab within 48 hours.",
+  "options": [
+    { "label": "Move the lab to the sierra", "effects": { "money": -40000, "labs_move_to": "nearest_sierra_owned" }, "ai_weight": 3 },
+    { "label": "Pay the contact to delay the raid", "effects": { "money": -25000, "delay_event": "army_lab_raid", "delay_days": 14 }, "ai_weight": 2 },
+    { "label": "Ignore it", "effects": { "schedule_event": "army_lab_raid", "in_hours": 48 }, "ai_weight": 1 }
+  ]
+}

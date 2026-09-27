@@ -1,0 +1,25 @@
+{
+  "_comment": "PLACEHOLDER. Final colonia list (~16) and starting control values will come from Tony. Positive control = Chapitos-side.",
+  "parentNode": "culiacan",
+  "positiveFaction": "chapitos",
+  "colonias": [
+    { "id": "col_norte_a", "name": "Norte A", "x": 300, "y": 100, "control": 80, "businesses": 250 },
+    { "id": "col_norte_b", "name": "Norte B", "x": 550, "y": 120, "control": 65, "businesses": 200 },
+    { "id": "col_centro_a", "name": "Centro A", "x": 250, "y": 320, "control": 20, "businesses": 400 },
+    { "id": "col_centro_b", "name": "Centro B", "x": 500, "y": 300, "control": 0, "businesses": 600 },
+    { "id": "col_centro_c", "name": "Centro C", "x": 720, "y": 340, "control": -25, "businesses": 300 },
+    { "id": "col_sur_a", "name": "Sur A", "x": 350, "y": 540, "control": -65, "businesses": 250 },
+    { "id": "col_sur_b", "name": "Sur B", "x": 620, "y": 560, "control": -80, "businesses": 200 }
+  ],
+  "streets": [
+    { "from": "col_norte_a", "to": "col_norte_b" },
+    { "from": "col_norte_a", "to": "col_centro_a" },
+    { "from": "col_norte_b", "to": "col_centro_b" },
+    { "from": "col_centro_a", "to": "col_centro_b" },
+    { "from": "col_centro_b", "to": "col_centro_c" },
+    { "from": "col_centro_a", "to": "col_sur_a" },
+    { "from": "col_centro_b", "to": "col_sur_a" },
+    { "from": "col_centro_c", "to": "col_sur_b" },
+    { "from": "col_sur_a", "to": "col_sur_b" }
+  ]
+}
