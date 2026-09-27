@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partner With Penn Foster</title>
+<style>
+  /* Brand tokens — placeholders; swap for official Penn Foster brand values. */
+  :root {
+    --navy: #0b2545;
+    --navy-2: #13315c;
+    --ink: #0b2545;
+    --paper: #f7f9fc;
+    --accent: #f2a541;
+    --accent-2: #3fb8af;
+    --white: #ffffff;
+    --muted: #b9c6d8;
+    --font: "Inter", "Helvetica Neue", "Liberation Sans", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #05101f; color: var(--white); font-family: var(--font); overflow: hidden; }
+  #viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+  #stage {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    background: radial-gradient(1200px 800px at 75% 30%, var(--navy-2), var(--navy));
+    transform-origin: center center;
+  }
+  .el { position: absolute; will-change: transform, opacity; opacity: 0; }
+  .center { left: 0; right: 0; text-align: center; }
+
+  .h1 { font-size: 112px; font-weight: 800; letter-spacing: -2.5px; line-height: 1.05; }
+  .h2 { font-size: 72px; font-weight: 700; letter-spacing: -1.5px; line-height: 1.1; }
+  .h3 { font-size: 44px; font-weight: 500; color: var(--muted); }
+  .accent { color: var(--accent); }
+  .teal { color: var(--accent-2); }
+
+  /* Scene 2: skills gap bar */
+  .gap { top: 640px; left: 460px; width: 1000px; height: 18px; }
+  .gap .l, .gap .r { position: absolute; top: 0; height: 18px; border-radius: 9px; background: var(--muted); }
+  .gap .l { left: 0; } .gap .r { right: 0; }
+  .gap .fill { position: absolute; top: 0; height: 18px; border-radius: 9px; background: var(--accent); }
+
+  /* Scene 3: partner chips */
+  .chips { position: absolute; left: 0; right: 0; top: 540px; display: flex; justify-content: center; gap: 40px; }
+  .chips .el { position: relative; }
+  .chip { height: 120px; padding: 0 48px; border-radius: 60px;
+    display: flex; align-items: center; gap: 22px; font-size: 44px; font-weight: 600;
+    background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.18);
+  }
+  .chip .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); flex: none; }
+
+  /* Scene 4: pillars */
+  .pillar {
+    top: 420px; width: 520px; height: 440px; border-radius: 28px; padding: 56px 48px;
+    background: var(--paper); color: var(--ink);
+    box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  }
+  .pillar .num { font-size: 28px; font-weight: 800; letter-spacing: 4px; color: var(--accent-2); }
+  .pillar h4 { font-size: 64px; font-weight: 800; letter-spacing: -1px; margin: 18px 0 22px; }
+  .pillar p { font-size: 34px; line-height: 1.3; color: #3a4a63; }
+  .pillar .bar { position: absolute; left: 48px; bottom: 48px; width: 80px; height: 10px; border-radius: 5px; background: var(--accent); }
+
+  /* Scene 5: stats */
+  .stat { top: 330px; width: 760px; text-align: center; }
+  .stat .big { font-size: 220px; font-weight: 800; letter-spacing: -6px; line-height: 1; color: var(--white); }
+  .stat .big span { color: var(--accent); }
+  .stat .big .n { color: var(--white); }
+  .stat .lbl { font-size: 48px; font-weight: 600; color: var(--muted); margin-top: 18px; }
+
+  /* Scene 6: end card */
+  #endbg { inset: 0; background: var(--paper); }
+  .wordmark { font-size: 150px; font-weight: 800; letter-spacing: -4px; color: var(--navy); }
+  .wordmark .rule { display: block; height: 14px; width: 220px; margin: 18px auto 0; border-radius: 7px; background: var(--accent); }
+  .tagline { font-size: 64px; font-weight: 700; color: var(--navy); letter-spacing: -1px; }
+  .cta {
+    left: 50%; top: 790px; transform: translateX(-50%);
+    padding: 30px 64px; border-radius: 70px; background: var(--navy); color: var(--white);
+    font-size: 44px; font-weight: 700; white-space: nowrap;
+  }
+  .cta b { color: var(--accent); font-weight: 800; }
+
+  /* Captions (VO), toggleable */
+  #cap {
+    left: 50%; bottom: 44px; transform: translateX(-50%); max-width: 1500px;
+    padding: 14px 28px; border-radius: 12px; background: rgba(0,0,0,.72); color: #fff;
+    font-size: 38px; font-weight: 500; text-align: center; opacity: 1; display: none;
+  }
+  body.captions #cap { display: block; }
+  body.captions #cap:empty { display: none; }
+
+  /* Progress bar at the bottom of the stage */
+  #prog { left: 0; bottom: 0; height: 8px; background: var(--accent); opacity: .9; }
+
+  /* Controls (hidden during render) */
+  #controls {
+    position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-radius: 999px;
+    background: rgba(0,0,0,.6); font: 600 14px/1 var(--font); z-index: 10;
+  }
+  #controls button {
+    font: inherit; color: #fff; background: rgba(255,255,255,.12); border: 0;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  }
+  #controls button:hover { background: rgba(255,255,255,.22); }
+  #time { color: #cdd6e3; min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+  body.render #controls { display: none; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <!-- Scene 1 (0–4s) -->
+    <div class="el center h1" id="s1a" style="top:360px">Your people have <span class="accent">potential.</span></div>
+    <div class="el center h2" id="s1b" style="top:540px; color:var(--muted)">Your goals can't wait.</div>
+
+    <!-- Scene 2 (4–9s) -->
+    <div class="el center h1" id="s2a" style="top:330px">Close the <span class="accent">skills gap</span></div>
+    <div class="el gap" id="s2gap"><div class="l" style="width:360px"></div><div class="r" style="width:360px"></div><div class="fill" id="s2fill"></div></div>
+    <div class="el center h3" id="s2b" style="top:730px">without building a training program from scratch.</div>
+
+    <!-- Scene 3 (9–16s) -->
+    <div class="el center h2" id="s3a" style="top:300px">Penn Foster partners with</div>
+    <div class="chips">
+      <div class="el chip" id="c1"><span class="dot"></span>Employers</div>
+      <div class="el chip" id="c2"><span class="dot"></span>Schools &amp; Colleges</div>
+      <div class="el chip" id="c3"><span class="dot"></span>Workforce Orgs</div>
+    </div>
+    <div class="el center h3" id="s3b" style="top:780px">to deliver <span class="teal">accredited</span> online career training &amp; high school programs.</div>
+
+    <!-- Scene 4 (16–22s) -->
+    <div class="el center h2" id="s4a" style="top:210px">We bring it. <span class="accent">You grow.</span></div>
+    <div class="el pillar" id="p1" style="left:130px"><div class="num">01</div><h4>Platform</h4><p>Flexible, self-paced online learning.</p><div class="bar"></div></div>
+    <div class="el pillar" id="p2" style="left:700px"><div class="num">02</div><h4>Content</h4><p>Learn · Practice · Apply — built for real jobs.</p><div class="bar"></div></div>
+    <div class="el pillar" id="p3" style="left:1270px"><div class="num">03</div><h4>Coaching</h4><p>Instructors and support that keep learners moving.</p><div class="bar"></div></div>
+
+    <!-- Scene 5 (22–26.5s) -->
+    <div class="el center h2" id="s5a" style="top:170px">Join a proven network</div>
+    <div class="el stat" id="st1" style="left:200px"><div class="big"><span id="n1" class="n">0</span><span>+</span></div><div class="lbl">partnerships</div></div>
+    <div class="el stat" id="st2" style="left:960px"><div class="big"><span id="n2" class="n">0</span><span>K+</span></div><div class="lbl">learners trained each year</div></div>
+
+    <!-- Scene 6 (26.5–30s) -->
+    <div class="el" id="endbg"></div>
+    <div class="el center wordmark" id="e1" style="top:250px">Penn Foster<span class="rule"></span></div>
+    <div class="el center tagline" id="e2" style="top:560px">Let's build your pathway <span style="color:var(--accent)">together.</span></div>
+    <div class="el cta" id="e3">Become a partner → <b>partners.pennfoster.edu</b></div>
+
+    <div class="el" id="cap"></div>
+    <div class="el" id="prog"></div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="play">Pause</button>
+  <button id="replay">Replay</button>
+  <span id="time">0.0s</span>
+  <button id="cc">Captions</button>
+</div>
+
+<script>
+const DURATION = 30;
+
+// Voiceover lines with start/end (seconds). Mirrors script.md.
+const VO = [
+  [0.3, 3.8, "Your people have potential. Your goals can't wait."],
+  [4.2, 8.8, "So close the skills gap, without building a training program from scratch."],
+  [9.2, 15.6, "Penn Foster partners with employers, schools, and workforce organizations to deliver accredited online training."],
+  [16.1, 21.7, "We bring the platform, the content, and the coaching. Your learners build real, job-ready skills."],
+  [22.1, 26.3, "Join more than a thousand partners training over 130,000 learners every year."],
+  [26.8, 29.6, "Penn Foster. Let's build your pathway together."],
+];
+
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const ease = t => 1 - Math.pow(1 - clamp(t), 3);            // easeOutCubic
+const easeIn = t => Math.pow(clamp(t), 3);
+const $ = id => document.getElementById(id);
+
+// Enter at `in`, exit at `out`. dy = rise distance, dur = fade length.
+function show(id, t, tin, tout, { dy = 40, dx = 0, dur = 0.6, scale = 0 } = {}) {
+  const el = $(id);
+  const a = ease((t - tin) / dur);
+  const b = tout == null ? 0 : easeIn((t - tout) / 0.45);
+  const o = a * (1 - b);
+  el.style.opacity = o;
+  const y = (1 - a) * dy - b * dy * 0.5;
+  const x = (1 - a) * dx;
+  const s = 1 + (1 - a) * scale;
+  const base = el.classList.contains('cta') ? 'translateX(-50%) ' : '';
+  el.style.transform = `${base}translate(${x}px, ${y}px) scale(${s})`;
+  return a;
+}
+
+function render(t) {
+  // Scene 1
+  show('s1a', t, 0.2, 3.7);
+  show('s1b', t, 1.4, 3.7);
+
+  // Scene 2
+  show('s2a', t, 4.0, 8.6);
+  show('s2gap', t, 4.4, 8.6, { dy: 0 });
+  $('s2fill').style.left = '360px';
+  $('s2fill').style.width = (280 * ease((t - 5.4) / 1.6)) + 'px';
+  show('s2b', t, 5.2, 8.6);
+
+  // Scene 3
+  show('s3a', t, 9.0, 15.5);
+  show('c1', t, 9.8, 15.5, { dy: 60 });
+  show('c2', t, 10.4, 15.5, { dy: 60 });
+  show('c3', t, 11.0, 15.5, { dy: 60 });
+  show('s3b', t, 12.2, 15.5);
+
+  // Scene 4
+  show('s4a', t, 16.0, 21.6);
+  show('p1', t, 16.6, 21.6, { dy: 120, dur: 0.8 });
+  show('p2', t, 17.3, 21.6, { dy: 120, dur: 0.8 });
+  show('p3', t, 18.0, 21.6, { dy: 120, dur: 0.8 });
+
+  // Scene 5
+  show('s5a', t, 22.0, 26.2);
+  show('st1', t, 22.4, 26.2, { scale: 0.08, dy: 20 });
+  show('st2', t, 22.9, 26.2, { scale: 0.08, dy: 20 });
+  $('n1').textContent = Math.round(1000 * ease((t - 22.5) / 2.0)).toLocaleString('en-US');
+  $('n2').textContent = Math.round(130 * ease((t - 23.0) / 2.0));
+
+  // Scene 6
+  show('endbg', t, 26.4, null, { dy: 0, dur: 0.5 });
+  show('e1', t, 26.8, null, { scale: 0.06, dy: 0, dur: 0.7 });
+  show('e2', t, 27.5, null);
+  show('e3', t, 28.1, null, { dy: 30 });
+
+  // Captions + progress
+  const line = VO.find(([a, b]) => t >= a && t <= b);
+  $('cap').textContent = line ? line[2] : '';
+  $('prog').style.opacity = document.body.classList.contains('render') ? 0 : 0.9;
+  $('prog').style.width = (1920 * clamp(t / DURATION)) + 'px';
+  $('time').textContent = t.toFixed(1) + 's';
+}
+
+// Fit the 1920x1080 stage to the window.
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('stage').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+// Playback (skipped when a renderer drives window.render directly).
+const params = new URLSearchParams(location.search);
+if (params.has('captions')) document.body.classList.add('captions');
+window.render = render;
+let playing = !params.has('render'), t0 = performance.now(), paused = 0;
+if (params.has('render')) document.body.classList.add('render');
+function tick(now) {
+  if (playing) render(Math.min(DURATION, (now - t0) / 1000));
+  requestAnimationFrame(tick);
+}
+render(0);
+requestAnimationFrame(tick);
+$('play').onclick = () => {
+  if (playing) { paused = performance.now() - t0; playing = false; $('play').textContent = 'Play'; }
+  else { t0 = performance.now() - paused; playing = true; $('play').textContent = 'Pause'; }
+};
+$('replay').onclick = () => { t0 = performance.now(); playing = true; $('play').textContent = 'Pause'; };
+$('cc').onclick = () => document.body.classList.toggle('captions');
+</script>
+</body>
+</html>
