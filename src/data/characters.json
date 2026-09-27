@@ -54,7 +54,8 @@
           "vehicles": {
             "pickup": 8
           },
-          "leader": "cl_el_menor"
+          "leader": "cl_el_menor",
+          "colonia": "col_tierra_blanca"
         },
         {
           "location": "badiraguato",
@@ -268,7 +269,8 @@
           "gear": 3,
           "vehicles": {
             "pickup": 8
-          }
+          },
+          "colonia": "col_tres_rios"
         },
         {
           "location": "jesus_maria",
@@ -842,7 +844,8 @@
           "gear": 3,
           "vehicles": {
             "pickup": 8
-          }
+          },
+          "colonia": "col_chapultepec"
         }
       ]
     },

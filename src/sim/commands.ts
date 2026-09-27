@@ -12,6 +12,7 @@ import { newTransit } from './newGame';
 import { nearestNode, planRoute } from './routing';
 import { allowedRoadTypes, seats, VEHICLE_TYPES } from './signature';
 import type { CrewOrder, CrewState, Id, RoutePreference } from './state';
+import { acceptSurrender, callForHelp, reinforceOrder, sideOf } from './systems/combat';
 import { world } from './world';
 
 interface Base {
@@ -27,7 +28,8 @@ export type OrderRequest =
   | { type: 'idle' }
   | { type: 'ambush'; road: Id }
   | { type: 'patrol'; road: Id }
-  | { type: 'escort'; crew: Id };
+  | { type: 'escort'; crew: Id }
+  | { type: 'raid'; target: Id; preference: RoutePreference };
 
 export type Command =
   | (Base & { type: 'declare_alignment'; faction: Id | null })
@@ -37,6 +39,12 @@ export type Command =
   | (Base & { type: 'split_crew'; crew: Id; men: number; vehicles: Partial<Record<VehicleType, number>>; leader?: Id })
   | (Base & { type: 'merge_crews'; crew: Id; into: Id })
   | (Base & { type: 'launch_drone'; road: Id })
+  | (Base & { type: 'deploy_crew'; crew: Id; colonia: Id | null })
+  | (Base & { type: 'battle_withdraw'; battle: Id })
+  | (Base & { type: 'battle_armor_forward'; battle: Id })
+  | (Base & { type: 'battle_call_help'; battle: Id })
+  | (Base & { type: 'battle_commit'; battle: Id; crew: Id })
+  | (Base & { type: 'battle_accept_surrender'; battle: Id })
   | (Base & { type: 'choose_event_option'; instance: Id; option: number });
 
 export interface Rejection {
@@ -79,12 +87,28 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       const crew = state.crews[cmd.crew];
       if (!crew) return `unknown crew "${cmd.crew}"`;
       if (crew.owner !== cmd.issuer) return `${issuer.name} does not command ${cmd.crew}`;
+      if (crew.battle !== null) return 'that crew is in a battle; use the battle orders';
       const order = buildOrder(ctx, crew, cmd.order);
       if (typeof order === 'string') return order;
       crew.order = order;
       crew.transit.shiftAt = null;
       return null;
     }
+    case 'deploy_crew': {
+      const crew = state.crews[cmd.crew];
+      if (!crew || crew.owner !== cmd.issuer) return 'not your crew';
+      if (crew.battle !== null) return 'that crew is in a battle';
+      if (crew.location.kind !== 'node' || crew.location.node !== content.culiacan.parentNode) return 'crews deploy to colonias only inside Culiacán';
+      if (cmd.colonia !== null && !content.culiacan.colonias.some((c) => c.id === cmd.colonia)) return `unknown colonia "${cmd.colonia}"`;
+      crew.colonia = cmd.colonia;
+      return null;
+    }
+    case 'battle_withdraw':
+    case 'battle_armor_forward':
+    case 'battle_call_help':
+    case 'battle_commit':
+    case 'battle_accept_surrender':
+      return battleCommand(ctx, cmd);
     case 'split_crew':
       return split(ctx, cmd);
     case 'merge_crews':
@@ -171,6 +195,15 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
       if (!onIt) return 'the crew must be at one end of the road, or on it';
       return { type: req.type, road: road.id, atKm: null };
     }
+    case 'raid': {
+      const target = content.nodes.find((n) => n.id === req.target);
+      if (!target) return `unknown node "${req.target}"`;
+      if (target.type === 'border_exit' || target.id === content.culiacan.parentNode) return `${target.name} cannot be raided; fight for Culiacán colonia by colonia`;
+      if (ownedBy(state, target.id, network)) return `${target.name} is already yours`;
+      const route = planRoute(state, content, { crews: group, from: loc, destination: target.id, preference: req.preference, departHour: state.hour, viewer: network });
+      if (!route) return `no route to ${target.name} for these vehicles`;
+      return { type: 'raid', target: target.id, preference: req.preference, path: route.path };
+    }
     case 'escort': {
       const target = state.crews[req.crew];
       if (!target || target.id === crew.id) return 'invalid crew to escort';
@@ -247,4 +280,42 @@ function merge(ctx: SimContext, cmd: Extract<Command, { type: 'merge_crews' }>):
   if (b.order.type === 'escort' && b.order.crew === a.id) b.order = { type: 'idle' };
   delete state.crews[a.id];
   return null;
+}
+
+type BattleCommand = Extract<Command, { type: 'battle_withdraw' | 'battle_armor_forward' | 'battle_call_help' | 'battle_commit' | 'battle_accept_surrender' }>;
+
+/** The player's decisions during a battle (GDD "Player decisions mid-battle"). */
+function battleCommand(ctx: SimContext, cmd: BattleCommand): string | null {
+  const { state } = ctx;
+  const b = state.battles[cmd.battle];
+  if (!b || b.endedAt !== null) return 'that battle is over';
+  const k = sideOf(b, networkOf(state, cmd.issuer));
+  if (!k) return 'your side is not in this battle';
+  const mine = b[k].crews.map((id) => state.crews[id]).filter((c): c is CrewState => !!c && c.owner === cmd.issuer);
+  switch (cmd.type) {
+    case 'battle_withdraw':
+      if (!mine.length) return 'none of your crews are fighting here';
+      b.withdrawing = [...new Set([...b.withdrawing, ...mine.map((c) => c.id)])];
+      return null;
+    case 'battle_armor_forward': {
+      const trucks = mine.filter((c) => c.vehicles.armored > 0);
+      if (!trucks.length) return 'you have no armored trucks in this fight';
+      b.armorPush = [...new Set([...b.armorPush, ...trucks.map((c) => c.id)])];
+      return null;
+    }
+    case 'battle_call_help':
+      if (b[k].helpCalled) return 'help was already requested';
+      return callForHelp(ctx, b, k) > 0 ? null : 'no one nearby can come in time';
+    case 'battle_commit': {
+      const crew = state.crews[cmd.crew];
+      if (!crew || crew.owner !== cmd.issuer) return 'not your crew';
+      if (crew.battle !== null) return 'that crew is already fighting';
+      const order = reinforceOrder(ctx, crew, b);
+      if (!order) return 'that crew cannot reach the battle';
+      crew.order = order;
+      return null;
+    }
+    case 'battle_accept_surrender':
+      return acceptSurrender(ctx, b);
+  }
 }

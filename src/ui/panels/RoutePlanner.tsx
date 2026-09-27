@@ -3,7 +3,8 @@ import { formatDateTime, hourOfDay } from '../../sim/clock';
 import { ROUTE_COLORS } from '../map/StateMap';
 import { useGame } from '../store';
 import { PREFERENCES, usePlanOptions } from '../usePlan';
-import { fmtHours, pct } from '../util';
+import { networkOf } from '../../sim/network';
+import { fmtHours, pct, playerNetwork } from '../util';
 
 /** Pick a destination on the map, compare three routes, optionally sync arrival. */
 export function RoutePlanner() {
@@ -15,21 +16,27 @@ export function RoutePlanner() {
   const crew = game.crews[plan.crew]!;
   const dest = plan.destination ? content.nodes.find((n) => n.id === plan.destination) : undefined;
 
+  const raid = plan.kind === 'raid';
   const go = (pref: (typeof PREFERENCES)[number]) => {
     enqueue({
       type: 'order_crew',
       issuer: crew.owner,
       crew: crew.id,
-      order: { type: 'move', destination: plan.destination!, preference: pref, waypoints: plan.waypoints, arriveAt: sync ? arrive : null },
+      order: raid
+        ? { type: 'raid', target: plan.destination!, preference: pref }
+        : { type: 'move', destination: plan.destination!, preference: pref, waypoints: plan.waypoints, arriveAt: sync ? arrive : null },
     });
-    set({ plan: null, syncHour: sync ? arrive : null });
+    set({ plan: null, syncHour: sync && !raid ? arrive : null });
   };
+  const destOwner = dest ? game.nodes[dest.id]?.owner : null;
+  const ownTarget = raid && destOwner != null && networkOf(game, destOwner) === playerNetwork(game);
 
   const day = Math.floor(arrive / 24);
   return (
     <div className="planner">
-      <h3>Plan route</h3>
-      {!dest && <p className="muted">Click a destination on the map.</p>}
+      <h3>{raid ? 'Plan raid' : 'Plan route'}</h3>
+      {!dest && <p className="muted">{raid ? 'Click a rival plaza to attack.' : 'Click a destination on the map.'}</p>}
+      {ownTarget && <p className="error small">That plaza is already your side's.</p>}
       {dest && (
         <p>
           To <strong>{dest.name}</strong>
@@ -42,7 +49,7 @@ export function RoutePlanner() {
         PREFERENCES.map((p) => {
           const r = options[p];
           return (
-            <button key={p} className="routeopt" disabled={!r} onClick={() => go(p)} style={{ borderLeftColor: ROUTE_COLORS[p] }}>
+            <button key={p} className="routeopt" disabled={!r || ownTarget} onClick={() => go(p)} style={{ borderLeftColor: ROUTE_COLORS[p] }}>
               <strong>{p[0]!.toUpperCase() + p.slice(1)}</strong>
               {r ? (
                 <span className="mono small">
@@ -57,10 +64,18 @@ export function RoutePlanner() {
       {options && (
         <p className="muted small">Risk is estimated from what your network knows. Rival halcón coverage is a guess.</p>
       )}
-      <label className="row">
-        <input type="checkbox" checked={sync} onChange={(e) => setSync(e.target.checked)} /> Sync arrival
-      </label>
-      {sync && (
+      {raid && dest && (
+        <p className="muted small">
+          On arrival the crew assaults {dest.name}.{' '}
+          {(game.nodes[dest.id]?.fortification ?? 0) >= content.tuning.combat.siegeMinFortification && 'It is fortified: expect a siege.'}
+        </p>
+      )}
+      {!raid && (
+        <label className="row">
+          <input type="checkbox" checked={sync} onChange={(e) => setSync(e.target.checked)} /> Sync arrival
+        </label>
+      )}
+      {sync && !raid && (
         <div className="row small">
           Arrive day
           <input type="number" min={Math.floor(game.hour / 24)} value={day} onChange={(e) => setArrive(Number(e.target.value) * 24 + hourOfDay(arrive))} />
@@ -69,7 +84,7 @@ export function RoutePlanner() {
           :00
         </div>
       )}
-      {sync && <p className="muted small">{formatDateTime(arrive, content.tuning)}. Order other crews with the same time to hit together.</p>}
+      {sync && !raid && <p className="muted small">{formatDateTime(arrive, content.tuning)}. Order other crews with the same time to hit together.</p>}
       <button onClick={() => set({ plan: null })}>Cancel</button>
     </div>
   );

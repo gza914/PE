@@ -11,7 +11,7 @@ export interface NewGameOptions {
 }
 
 export function newTransit(): CrewTransit {
-  return { waitUntil: null, rolled: [], lastRolledNode: null, nextStationaryRoll: 0, shiftAt: null, shiftAvoidRoad: null };
+  return { waitUntil: null, rolled: [], lastRolledNode: null, nextStationaryRoll: 0, shiftAt: null, shiftAvoidRoad: null, spotted: null };
 }
 
 export const NO_VEHICLES: Record<VehicleType, number> = { pickup: 0, suv: 0, motorcycle: 0, armored: 0 };
@@ -83,6 +83,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       supply: tuning.pulse.startingSupply,
       exhaustion: tuning.pulse.startingExhaustion,
       quietDays: 0,
+      combatHoursToday: 0,
       warPlan: { mode: 'defend', focusRegion: null },
     };
   }
@@ -117,6 +118,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       opinions: {},
       factionOpinions,
       missedPayrollWeeks: 0,
+      captor: null,
     };
     state.characters[def.id] = ch;
 
@@ -138,6 +140,9 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
         location: { kind: 'node', node: c.location },
         order: { type: 'garrison' },
         transit: newTransit(),
+        battle: null,
+        colonia: c.colonia ?? null,
+        battles: 0,
       };
       state.crews[id] = crew;
     }

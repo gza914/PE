@@ -1,16 +1,150 @@
 {
   "traits": [
-    { "id": "sanguinario", "name": "Sanguinario", "description": "+Violencia, fear; raises calentura; others trust them less.", "skillModifiers": { "violencia": 3 }, "modifiers": { "fearGain": 1.5, "calenturaMultiplier": 1.3, "trustOpinion": -10, "caution": 0.6 }, "droneReaction": "ambush" },
-    { "id": "calculador", "name": "Calculador", "description": "+Astucia; better schemes; slow to commit forces.", "skillModifiers": { "astucia": 3 }, "modifiers": { "schemePower": 1.2, "caution": 1.5 }, "droneReaction": "feign", "opposites": ["impulsivo"] },
-    { "id": "leal", "name": "Leal", "description": "Rarely defects; opinion decays slowly.", "modifiers": { "defectionChance": 0.25, "opinionDecayMultiplier": 0.5 }, "opposites": ["ambicioso"] },
-    { "id": "ambicioso", "name": "Ambicioso", "description": "Pushes for promotion and territory; likely to scheme against superiors.", "modifiers": { "schemeAgainstSuperiors": 2, "territoryWeight": 1.4 }, "opposites": ["leal"] },
-    { "id": "paranoico", "name": "Paranoico", "description": "Hard to scheme against; may purge their own people.", "modifiers": { "schemeDefense": 1.5, "purgeChance": 0.05 }, "droneReaction": "relocate" },
-    { "id": "carismatico", "name": "Carismático", "description": "+Palabra; crews under them hold morale longer.", "skillModifiers": { "palabra": 3 }, "modifiers": { "crewMoraleLossMultiplier": 0.75 } },
-    { "id": "codicioso", "name": "Codicioso", "description": "+Negocio; easy to bribe; skims.", "skillModifiers": { "negocio": 3 }, "modifiers": { "bribeCostMultiplier": 0.6, "skimRate": 0.05 } },
-    { "id": "impulsivo", "name": "Impulsivo", "description": "Attacks early and alone; strong ambushes, weak sieges.", "modifiers": { "ambushPower": 1.2, "siegePower": 0.8, "caution": 0.4 }, "opposites": ["calculador"] },
-    { "id": "discreto", "name": "Discreto", "description": "Low profile growth; crews move with lower signature.", "modifiers": { "profileGainMultiplier": 0.5, "signatureMultiplier": 0.8 } },
-    { "id": "vengativo", "name": "Vengativo", "description": "Remembers slights forever; starts vendettas.", "modifiers": { "negativeOpinionDecayMultiplier": 0, "vendettaChance": 0.3 } },
-    { "id": "valiente", "name": "Valiente", "description": "Crews hold under fire; leader death risk is higher.", "modifiers": { "retreatMoraleOffset": -10, "leaderDeathRisk": 1.5 }, "opposites": ["cobarde"] },
-    { "id": "cobarde", "name": "Cobarde", "description": "Retreats early; lower death risk.", "modifiers": { "retreatMoraleOffset": 10, "leaderDeathRisk": 0.5 }, "opposites": ["valiente"] }
+    {
+      "id": "sanguinario",
+      "name": "Sanguinario",
+      "description": "+Violencia, fear; raises calentura; others trust them less.",
+      "skillModifiers": {
+        "violencia": 3
+      },
+      "modifiers": {
+        "fearGain": 1.5,
+        "calenturaMultiplier": 1.3,
+        "trustOpinion": -10,
+        "caution": 0.6
+      },
+      "droneReaction": "ambush"
+    },
+    {
+      "id": "calculador",
+      "name": "Calculador",
+      "description": "+Astucia; better schemes; slow to commit forces.",
+      "skillModifiers": {
+        "astucia": 3
+      },
+      "modifiers": {
+        "schemePower": 1.2,
+        "caution": 1.5
+      },
+      "droneReaction": "feign",
+      "opposites": [
+        "impulsivo"
+      ]
+    },
+    {
+      "id": "leal",
+      "name": "Leal",
+      "description": "Rarely defects; opinion decays slowly.",
+      "modifiers": {
+        "defectionChance": 0.25,
+        "opinionDecayMultiplier": 0.5
+      },
+      "opposites": [
+        "ambicioso"
+      ]
+    },
+    {
+      "id": "ambicioso",
+      "name": "Ambicioso",
+      "description": "Pushes for promotion and territory; likely to scheme against superiors.",
+      "modifiers": {
+        "schemeAgainstSuperiors": 2,
+        "territoryWeight": 1.4
+      },
+      "opposites": [
+        "leal"
+      ]
+    },
+    {
+      "id": "paranoico",
+      "name": "Paranoico",
+      "description": "Hard to scheme against; may purge their own people.",
+      "modifiers": {
+        "schemeDefense": 1.5,
+        "purgeChance": 0.05,
+        "caution": 1.3
+      },
+      "droneReaction": "relocate"
+    },
+    {
+      "id": "carismatico",
+      "name": "Carismático",
+      "description": "+Palabra; crews under them hold morale longer.",
+      "skillModifiers": {
+        "palabra": 3
+      },
+      "modifiers": {
+        "crewMoraleLossMultiplier": 0.75
+      }
+    },
+    {
+      "id": "codicioso",
+      "name": "Codicioso",
+      "description": "+Negocio; easy to bribe; skims.",
+      "skillModifiers": {
+        "negocio": 3
+      },
+      "modifiers": {
+        "bribeCostMultiplier": 0.6,
+        "skimRate": 0.05
+      }
+    },
+    {
+      "id": "impulsivo",
+      "name": "Impulsivo",
+      "description": "Attacks early and alone; strong ambushes, weak sieges.",
+      "modifiers": {
+        "ambushPower": 1.2,
+        "siegePower": 0.8,
+        "caution": 0.4
+      },
+      "opposites": [
+        "calculador"
+      ]
+    },
+    {
+      "id": "discreto",
+      "name": "Discreto",
+      "description": "Low profile growth; crews move with lower signature.",
+      "modifiers": {
+        "profileGainMultiplier": 0.5,
+        "signatureMultiplier": 0.8
+      }
+    },
+    {
+      "id": "vengativo",
+      "name": "Vengativo",
+      "description": "Remembers slights forever; starts vendettas.",
+      "modifiers": {
+        "negativeOpinionDecayMultiplier": 0,
+        "vendettaChance": 0.3
+      }
+    },
+    {
+      "id": "valiente",
+      "name": "Valiente",
+      "description": "Crews hold under fire; leader death risk is higher.",
+      "modifiers": {
+        "retreatMoraleOffset": -10,
+        "leaderDeathRisk": 1.5,
+        "caution": 0.8
+      },
+      "opposites": [
+        "cobarde"
+      ]
+    },
+    {
+      "id": "cobarde",
+      "name": "Cobarde",
+      "description": "Retreats early; lower death risk.",
+      "modifiers": {
+        "retreatMoraleOffset": 10,
+        "leaderDeathRisk": 0.5,
+        "caution": 2.0
+      },
+      "opposites": [
+        "valiente"
+      ]
+    }
   ]
 }

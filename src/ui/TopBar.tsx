@@ -31,12 +31,17 @@ export function TopBar() {
         <span className="muted">Neutral</span>
       )}
       {calentura !== undefined && <span className="mono">Calentura {Math.round(calentura)}</span>}
+      {home && <span className={`warstate ${game.regions[home.region]?.warState}`}>{game.regions[home.region]?.warState}</span>}
+      {Object.values(game.battles).some((b) => b.endedAt === null && [b.attackers.network, b.defenders.network].includes(player.faction ?? player.id)) && (
+        <span className="warstate offensive">⚔ fighting</span>
+      )}
       <span className="spacer" />
       <select value={overlay} onChange={(e) => set({ overlay: e.target.value as Overlay })} title="Map overlay">
         <option value="none">No overlay</option>
         <option value="halcones">Halcón coverage</option>
         <option value="calentura">Calentura</option>
         <option value="income">Businesses</option>
+        <option value="war">War state</option>
       </select>
       <label className="small" title="Pause automatically on critical reports">
         <input type="checkbox" checked={autoPause} onChange={(e) => set({ autoPause: e.target.checked })} /> Auto-pause

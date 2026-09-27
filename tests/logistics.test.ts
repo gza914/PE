@@ -1,73 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { bundledContent } from '../src/data/bundled';
 import type { Content } from '../src/data/content';
-import type { Command, OrderRequest } from '../src/sim/commands';
+import type { Command } from '../src/sim/commands';
 import { lastSeen } from '../src/sim/knowledge';
-import { newGame, newTransit } from '../src/sim/newGame';
+import { newGame } from '../src/sim/newGame';
 import { planRoute } from '../src/sim/routing';
 import { allowedRoadTypes, detectionChance, groupSpeedKmh, signature } from '../src/sim/signature';
 import type { CrewState, GameState } from '../src/sim/state';
 import { tick } from '../src/sim/tick';
 import { world } from '../src/sim/world';
 
-const content = bundledContent();
-
-/** Content with tuning overrides, e.g. to make rolls certain. */
-function tuned(mut: (t: Content['tuning']) => void): Content {
-  const c = structuredClone(content);
-  mut(c.tuning);
-  return c;
-}
-
-const noBreakdowns = (t: Content['tuning']) => {
-  t.roads.brecha.breakdownChancePerSegment = 0;
-};
-
-function start(seed = 1, playerId = 'c_mazatlan'): GameState {
-  return newGame(content, { seed, playerId });
-}
-
-function crewsOf(state: GameState, owner: string): CrewState[] {
-  return Object.values(state.crews)
-    .filter((c) => c.owner === owner)
-    .sort((a, b) => (a.id < b.id ? -1 : 1));
-}
-
-/** Adds a crew with exactly these vehicles. */
-function addCrew(state: GameState, id: string, owner: string, node: string, extra: Partial<CrewState> = {}): CrewState {
-  const crew: CrewState = {
-    id,
-    owner,
-    leader: owner,
-    men: 12,
-    skill: 3,
-    gear: 3,
-    morale: 70,
-    alertness: 50,
-    ammo: 100,
-    fatigue: 0,
-    vehicles: { pickup: 3, suv: 0, motorcycle: 0, armored: 0 },
-    armorDamage: 0,
-    location: { kind: 'node', node },
-    order: { type: 'garrison' },
-    transit: newTransit(),
-    ...extra,
-  };
-  state.crews[id] = crew;
-  return crew;
-}
-
-function order(state: GameState, crew: CrewState, req: OrderRequest, c = content) {
-  const cmd: Command = { type: 'order_crew', issuer: crew.owner, crew: crew.id, order: req };
-  const r = tick(state, [cmd], c);
-  expect(r.rejected).toEqual([]);
-  return r.state;
-}
-
-function run(state: GameState, hours: number, c = content): GameState {
-  for (let i = 0; i < hours; i++) state = tick(state, [], c).state;
-  return state;
-}
+import { addCrew, content, crewsOf, noBreakdowns, order, run, start, tuned } from './helpers';
 
 describe('signature and detection (GDD table, 80 coverage)', () => {
   const s = start();

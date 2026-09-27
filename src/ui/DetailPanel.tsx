@@ -1,10 +1,12 @@
+import { BattlePanel } from './panels/BattlePanel';
+import { ColoniaPanel } from './panels/ColoniaPanel';
 import { CrewPanel } from './panels/CrewPanel';
 import { NodePanel } from './panels/NodePanel';
 import { RoadPanel } from './panels/RoadPanel';
 import { useGame } from './store';
 
 export function DetailPanel() {
-  const { content, game, selected, lastError } = useGame();
+  const { game, selected, lastError } = useGame();
   if (!game) return null;
   const error = lastError && <p className="error small">Order refused: {lastError}</p>;
   if (!selected) {
@@ -27,16 +29,19 @@ export function DetailPanel() {
   }
   if (selected.kind === 'node') return (<>{error}<NodePanel id={selected.id} /></>);
   if (selected.kind === 'road') return (<>{error}<RoadPanel id={selected.id} /></>);
-  const def = content.culiacan.colonias.find((c) => c.id === selected.id)!;
+  if (selected.kind === 'battle') {
+    const b = game.battles[selected.id];
+    return (
+      <>
+        {error}
+        {b ? <BattlePanel battle={b} /> : <p className="muted">That battle is long over.</p>}
+      </>
+    );
+  }
   return (
-    <div>
-      <h2>{def.name}</h2>
-      <dl>
-        <dt>Control</dt>
-        <dd>{Math.round(game.colonias[selected.id]!.control)}</dd>
-        <dt>Businesses</dt>
-        <dd>{def.businesses}</dd>
-      </dl>
-    </div>
+    <>
+      {error}
+      <ColoniaPanel id={selected.id} />
+    </>
   );
 }

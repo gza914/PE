@@ -133,6 +133,8 @@ export interface CharacterState {
   /** Opinion this character holds of each faction. */
   factionOpinions: Record<Id, OpinionModifier[]>;
   missedPayrollWeeks: number;
+  /** Who holds this character, if captured. */
+  captor: Id | null;
 }
 
 export type WarPlanMode = 'attack' | 'defend' | 'regroup';
@@ -143,6 +145,7 @@ export interface FactionState {
   supply: number;
   exhaustion: number;
   quietDays: number;
+  combatHoursToday: number;
   warPlan: { mode: WarPlanMode; focusRegion: Id | null };
 }
 
@@ -179,7 +182,7 @@ export type CrewOrder =
   /** Hold a point on a road; `atKm` is measured from the road's `from` node (null = midpoint). */
   | { type: 'ambush'; road: Id; atKm: number | null }
   | { type: 'patrol'; road: Id; atKm: number | null }
-  | { type: 'raid'; target: Id; path: PathStep[] }
+  | { type: 'raid'; target: Id; preference: RoutePreference; path: PathStep[] }
   | { type: 'reinforce'; battle: Id; path: PathStep[] }
   | { type: 'retreat'; destination: Id; path: PathStep[] }
   | { type: 'escort'; crew: Id };
@@ -200,6 +203,8 @@ export interface CrewTransit {
   shiftAt: number | null;
   /** Road to avoid when shifting. */
   shiftAvoidRoad: Id | null;
+  /** Networks that spotted the group on approach to its current target node. */
+  spotted: { node: Id; by: NetworkId[] } | null;
 }
 
 export interface CrewState {
@@ -222,6 +227,12 @@ export interface CrewState {
   location: CrewLocation;
   order: CrewOrder;
   transit: CrewTransit;
+  /** Battle the crew is fighting in, if any. Crews in battle do not move. */
+  battle: Id | null;
+  /** Culiacán colonia the crew is committed to (only while in Culiacán). */
+  colonia: Id | null;
+  /** Battles survived; skill grows with them. */
+  battles: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -272,19 +283,45 @@ export interface Drone {
 export type EngagementType = 'ambush' | 'road_clash' | 'raid' | 'siege' | 'urban_skirmish' | 'military_clash';
 
 export interface BattleSide {
+  network: NetworkId;
+  /** Crews still fighting. */
   crews: Id[];
-  fortification: number;
+  /** Everyone whose crews fought on this side, for the aftermath. */
+  owners: Id[];
+  /** Men lost so far. */
+  casualties: number;
+  /** Power at the last resolved hour, for the UI. */
+  power: number;
+  /** Faction help was already requested for this side. */
+  helpCalled: boolean;
 }
 
 export interface Battle {
   id: Id;
   type: EngagementType;
   where: CrewLocation;
+  /** Culiacán colonia, for urban skirmishes. */
+  colonia: Id | null;
+  region: Id;
   startedAt: number;
+  hours: number;
   attackers: BattleSide;
   defenders: BattleSide;
+  /** Defending plaza's fortification at the start (0 on roads). */
+  fortification: number;
+  /** Siege progress 0–100; effective fortification falls as it rises. */
   siegeProgress: number;
+  /** Attackers win the plaza if they win the battle (raids and sieges). */
+  capture: boolean;
+  /** Player's crews withdrawing in good order this hour. */
+  withdrawing: Id[];
+  /** Player's crews pushing their armored trucks forward this hour. */
+  armorPush: Id[];
+  /** Prompts already shown, so each key moment pauses once. */
+  prompted: ('enemy_wavering' | 'own_wavering')[];
   log: string[];
+  endedAt: number | null;
+  winner: 'attackers' | 'defenders' | null;
 }
 
 export type PactType = 'non_aggression' | 'safe_passage' | 'mutual_defense' | 'joint_attack' | 'route_share' | 'local_truce';
@@ -332,6 +369,8 @@ export interface FeedEntry {
   tier: FeedTier;
   /** Network that sees this entry; null = everyone. */
   audience: NetworkId | null;
+  /** Battle to open when clicked, if any. */
+  battle: Id | null;
   text: string;
   /** Map location to jump to, if any. */
   node: Id | null;

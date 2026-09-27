@@ -11,11 +11,12 @@ import type { GameState, Id } from '../sim/state';
 import { tick } from '../sim/tick';
 import { playerNetwork } from './util';
 
-export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road'; id: Id } | null;
-export type Overlay = 'none' | 'halcones' | 'calentura' | 'income';
+export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road' | 'battle'; id: Id } | null;
+export type Overlay = 'none' | 'halcones' | 'calentura' | 'income' | 'war';
 
 /** Route planning in progress for one crew. */
 export interface PlanMode {
+  kind: 'move' | 'raid';
   crew: Id;
   destination: Id | null;
   waypoints: Id[];

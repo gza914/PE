@@ -219,6 +219,10 @@ export function crossReferenceProblems(c: Content): string[] {
     if (ch.lean && !factionIds.has(ch.lean.faction)) p.push(`${where} leans to unknown faction "${ch.lean.faction}"`);
     for (const crew of ch.crews) {
       if (!nodeIds.has(crew.location)) p.push(`${where} has a crew at unknown node "${crew.location}"`);
+      if (crew.colonia !== undefined) {
+        if (crew.location !== c.culiacan.parentNode) p.push(`${where} has a crew committed to a colonia outside ${c.culiacan.parentNode}`);
+        else if (!coloniaIds.has(crew.colonia)) p.push(`${where} has a crew in unknown colonia "${crew.colonia}"`);
+      }
       if (crew.leader !== undefined && !charIds.has(crew.leader)) p.push(`${where} has a crew with unknown leader "${crew.leader}"`);
       const seats = Object.entries(crew.vehicles).reduce(
         (sum, [v, count]) => sum + c.tuning.vehicles[v as keyof Tuning['vehicles']].seats * (count ?? 0),

@@ -1,6 +1,6 @@
 /**
- * Resolves visibility: halcón rolls queued by movement, stationary crews in
- * watched spots, patrols, and drones. Every sighting becomes a Report for the
+ * Resolves visibility: halcón rolls (called by movement as groups pass watched
+ * nodes), stationary crews in watched spots, patrols, and drones. Every sighting becomes a Report for the
  * observing network. GDD: "Visibility and intelligence".
  */
 import { isNight } from '../clock';
@@ -11,14 +11,9 @@ import { chance, randRange } from '../rng';
 import { detectionChance, signature, VEHICLE_TYPES } from '../signature';
 import type { Confidence, CrewState, DroneReaction, Id, NetworkId, ReportSource } from '../state';
 import { world } from '../world';
-import { leaderName, notifyOwner, relocateOffRoad } from './movement';
+import { leaderName, notifyOwner, relocateOffRoad } from '../orders';
 
 export function runDetection(ctx: SimContext): void {
-  for (const roll of ctx.pendingRolls) {
-    const group = roll.crews.map((id) => ctx.state.crews[id]).filter((c): c is CrewState => !!c);
-    if (group.length) rollNode(ctx, group, roll.node, roll.roadType ? ctx.content.tuning.roads[roll.roadType].visibility : ctx.content.tuning.detection.stationaryVisibility);
-  }
-  ctx.pendingRolls = [];
   rollStationary(ctx);
   runPatrols(ctx);
   runDrones(ctx);
@@ -35,8 +30,8 @@ function regionCalentura(ctx: SimContext, node: Id): number {
   return ctx.state.regions[world(ctx.content).node(node).region]?.calentura ?? 0;
 }
 
-/** Every hostile watcher of `node` rolls once against the group. */
-function rollNode(ctx: SimContext, group: CrewState[], node: Id, visibility: number): void {
+/** Every hostile watcher of `node` rolls once against the group. Returns the networks that saw it. */
+export function rollNode(ctx: SimContext, group: CrewState[], node: Id, visibility: number): NetworkId[] {
   const { state, content } = ctx;
   const own = crewNetwork(state, group[0]!);
   const sig = signature(state, content, group, {
@@ -44,12 +39,15 @@ function rollNode(ctx: SimContext, group: CrewState[], node: Id, visibility: num
     night: isNight(state.hour, content.tuning),
     calentura: regionCalentura(ctx, node),
   });
+  const seen: NetworkId[] = [];
   for (const w of watchersOf(state, content, node)) {
     if (w.network === own) continue;
     if (chance(state.rng, detectionChance(sig, w.coverage, content.tuning))) {
       report(ctx, w.network, group, 'halcon', 'estimated', node);
+      seen.push(w.network);
     }
   }
+  return seen;
 }
 
 /** Crews sitting in (or near) a hostile-watched node are rolled for periodically. */
@@ -57,7 +55,7 @@ function rollStationary(ctx: SimContext): void {
   const { state, content } = ctx;
   const { tuning } = content;
   for (const crew of groupLeaders(ctx)) {
-    if (ctx.moved.has(crew.id) || state.hour < crew.transit.nextStationaryRoll) continue;
+    if (ctx.moved.has(crew.id) || crew.battle !== null || state.hour < crew.transit.nextStationaryRoll) continue;
     crew.transit.nextStationaryRoll = state.hour + tuning.detection.stationaryRollIntervalHours;
     const group = groupOf(state, crew);
     const loc = crew.location;

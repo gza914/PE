@@ -59,6 +59,10 @@ export function StateMap() {
   return (
     <div className="mapwrap">
       <svg viewBox={pz.viewBox} className="svgmap" role="img" aria-label="Map of Sinaloa" {...pz.handlers} onClick={() => !plan && select(null)}>
+        {overlay === 'war' &&
+          content.nodes.map((n) => (
+            <circle key={`war-${n.id}`} cx={n.x} cy={n.y} r={40} className={`ov-war ${game.regions[n.region]?.warState}`} />
+          ))}
         {overlay === 'calentura' &&
           content.nodes.map((n) => {
             const cal = game.regions[n.region]?.calentura ?? 0;
@@ -152,6 +156,26 @@ export function StateMap() {
             </g>
           );
         })}
+        {Object.values(game.battles)
+          .filter((b) => b.endedAt === null && !b.colonia)
+          .map((b) => {
+            const p = locationXY(content, b.where);
+            const isSel = selected?.kind === 'battle' && selected.id === b.id;
+            return (
+              <g
+                key={b.id}
+                className={`battle${isSel ? ' sel' : ''}`}
+                transform={`translate(${p.x} ${p.y - 20}) scale(${scale})`}
+                onClick={(e) => (e.stopPropagation(), select({ kind: 'battle', id: b.id }))}
+              >
+                <title>{b.type.replace('_', ' ')}</title>
+                <circle r={11} />
+                <text textAnchor="middle" y={5}>
+                  ⚔
+                </text>
+              </g>
+            );
+          })}
         {visible.map((c) => {
           let p = locationXY(content, c.location);
           if (c.location.kind === 'node') {

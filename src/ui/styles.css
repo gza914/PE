@@ -22,7 +22,7 @@ h2 { font-size: 18px; }
 h3 { font-size: 14px; margin-top: 16px; }
 
 .app { display: grid; grid-template: 44px 1fr / 280px 1fr 320px; height: 100vh; }
-.topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .topbar > * { white-space: nowrap; }
 .topbar { font-size: 13px; }
 .topbar .spacer { flex: 1; }
@@ -96,3 +96,31 @@ ul.links { list-style: none; padding: 0; }
 .ov-halcon.rival { opacity: 0.08; stroke: #e0b64a; stroke-dasharray: 4 4; fill-opacity: 0.4; }
 .ov-income { fill: #6fc3a0; opacity: 0.25; pointer-events: none; }
 .feed .entry .mono { font-size: 12.5px; line-height: 1.35; }
+
+/* Phase 2: combat UI */
+.battle { cursor: pointer; }
+.battle circle { fill: #7a1f1f; stroke: #ff8a6b; stroke-width: 2; }
+.battle.sel circle { stroke: var(--accent); stroke-width: 3; }
+.battle text, .battleicon { fill: #fff; font-size: 13px; pointer-events: none; }
+.battleicon { font-size: 22px; }
+.side { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 8px 0; }
+.side.mine { border-color: var(--accent); }
+.side h3 { margin-top: 0; }
+.powerbar { height: 8px; background: #3f7fd6; border-radius: 4px; overflow: hidden; margin: 6px 0; }
+.powerbar .att { height: 100%; background: #d64545; }
+.bar { display: inline-block; width: 120px; height: 6px; background: var(--line); border-radius: 3px; margin-left: 8px; vertical-align: middle; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.controlbar { position: relative; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #3f7fd6, #8a7a4a 40%, #8a7a4a 60%, #d64545); margin: 8px 0; }
+.controlbar .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: #fff6; }
+.controlbar .marker { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; background: #fff; border-radius: 2px; }
+.log { padding-left: 18px; max-height: 260px; overflow-y: auto; }
+.log li { margin: 2px 0; }
+.inbattle { color: #ff8a6b; }
+.warstate { font-size: 12px; padding: 2px 6px; border-radius: 3px; background: var(--line); text-transform: capitalize; }
+.warstate.tense { background: #5a4a1a; }
+.warstate.skirmishing { background: #7a3a1a; }
+.warstate.offensive { background: #7a1f1f; }
+.ov-war { pointer-events: none; opacity: 0; }
+.ov-war.tense { fill: #e0b64a; opacity: 0.12; }
+.ov-war.skirmishing { fill: #e07a3a; opacity: 0.22; }
+.ov-war.offensive { fill: #e0503a; opacity: 0.32; }

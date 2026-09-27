@@ -26,3 +26,6 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Iterate crews via `sortedCrewIds` and consume RNG in a fixed order so runs stay deterministic.
 - Anything the UI or AI shows about rivals must come from `knowledge.ts` (reports), never from reading `state.crews` directly.
 - Only the player's network gets feed entries (`pushFeed` filters by audience); AI acts on reports.
+- Fights start in two places: movement queues `ctx.engagements` (ambush, clash, interception, raid arrival) and the combat system adds garrison attacks and Culiacán skirmishes. Crews with `battle` set do not move.
+- Culiacán is fought only colonia by colonia (`crew.colonia`); never start node-level battles there.
+- Attack decisions go through `wantsToAttack` with an enemy estimate: `reportedPower` when judging from reports, true power only at close range.

@@ -30,7 +30,11 @@ function ReportFeed() {
     <>
       {entries.length === 0 && <p className="muted">No reports yet.</p>}
       {entries.map((e) => (
-        <button key={e.id} className={`entry ${e.tier}`} onClick={() => e.node && select({ kind: 'node', id: e.node })}>
+        <button
+          key={e.id}
+          className={`entry ${e.tier}`}
+          onClick={() => (e.battle && game.battles[e.battle] ? select({ kind: 'battle', id: e.battle }) : e.node && select({ kind: 'node', id: e.node }))}
+        >
           <span className="muted small">{formatDateTime(e.hour, content.tuning)}</span>
           <span className="mono">{e.text}</span>
         </button>

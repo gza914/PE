@@ -24,7 +24,9 @@
     "culiacanMinSkirmishesPerDay": 1,
     "startingSupply": 70,
     "startingExhaustion": 0,
-    "quietDayMaxCombatHours": 0
+    "quietDayMaxCombatHours": 0,
+    "skirmishingCombatHours": 1,
+    "offensiveCombatHours": 6
   },
   "map": {
     "coloniaFlipThreshold": 60,
@@ -132,7 +134,10 @@
     "moraleBreakThreshold": 30,
     "ammoHoursOfFighting": 6,
     "startingMorale": 70,
-    "startingAlertness": 50
+    "startingAlertness": 50,
+    "moraleBaseline": 70,
+    "moraleRecoveryPerHour": 0.5,
+    "ammoResupplyPerHour": 25
   },
   "combat": {
     "casualtyRatePerHour": 0.04,
@@ -154,6 +159,61 @@
       "hills": 1.15,
       "sierra": 1.25,
       "urban": 1.1
+    },
+    "nodeTerrain": {
+      "city": "urban",
+      "town": "urban",
+      "rancheria": "hills",
+      "sierra_hub": "sierra",
+      "port": "urban",
+      "border_exit": "open_valley"
+    },
+    "violenciaBonusPerPoint": 0.02,
+    "fatiguePowerPenalty": 0.3,
+    "armoredAbsorbPerTruck": 3,
+    "armoredDamagePerAbsorbed": 12,
+    "armorPushPowerMultiplier": 2,
+    "armorPushDamageMultiplier": 2,
+    "moraleLossPerPctLost": 1.5,
+    "moraleLossPerHour": 1,
+    "leaderLossMorale": 40,
+    "routCaptureShare": 0.2,
+    "routScatterShare": 0.2,
+    "leaderRiskPerLossFraction": 0.1,
+    "leaderCaptureChanceOnRout": 0.3,
+    "leaderDeathChanceOnDestroyed": 0.3,
+    "engageRatio": 1.2,
+    "estimatedPowerPerMan": 1.2,
+    "ambushSpotAlertnessFactor": 0.3,
+    "withdrawLossMultiplier": 0.5,
+    "surrenderMorale": 35,
+    "waveringMorale": 40,
+    "battleRetentionHours": 24,
+    "reinforceMaxHours": 6,
+    "helpCrewsPerCall": 2,
+    "calenturaPerCombatHour": 1,
+    "calenturaPerCasualty": 0.3,
+    "supplyPerCombatHour": 0.3,
+    "exhaustionPerCasualty": 0.15,
+    "respectPerVictory": 5,
+    "skillUpEveryBattles": 3,
+    "capturedPlazaHalcones": 20,
+    "capturedPlazaSupportLoss": 20,
+    "siegeMinFortification": 2,
+    "siege": {
+      "casualtyMultiplier": 0.2,
+      "ammoMultiplier": 0.12,
+      "moraleMultiplier": 0.3,
+      "progressPerHourAtParity": 1.5,
+      "defenderResupplyPerHour": 5,
+      "fortificationLossOnFall": 1
+    },
+    "urban": {
+      "casualtyMultiplier": 0.25,
+      "ammoMultiplier": 0.25,
+      "moraleMultiplier": 0.5,
+      "controlShiftPerHour": 4,
+      "uncontestedShiftPerHour": 0.2
     }
   },
   "economy": {
@@ -196,7 +256,9 @@
     "opinionMin": -100,
     "opinionMax": 100,
     "heirSuccessionOpinionLoss": 20,
-    "extraditionDays": 30
+    "extraditionDays": 30,
+    "prisonerHoldDays": 7,
+    "ransomAmount": 100000
   },
   "diplomacy": {
     "neutralOpinionLossPerDay": 1,

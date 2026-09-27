@@ -22,6 +22,10 @@ function orderText(game: ReturnType<typeof useGame.getState>['game'], content: R
     case 'ambush':
     case 'patrol':
       return `${o.type === 'ambush' ? 'Ambush' : 'Patrol'} on ${w.node(w.road(o.road).from).name}–${w.node(w.road(o.road).to).name}${o.atKm === null ? ' (getting into position)' : ''}`;
+    case 'raid':
+      return `Raiding ${w.node(o.target).name}`;
+    case 'reinforce':
+      return 'Riding to reinforce a battle';
     case 'escort':
       return `Escorting ${charLabel(game!, game!.crews[o.crew]?.leader ?? '')}`;
     case 'lie_low':
@@ -32,7 +36,7 @@ function orderText(game: ReturnType<typeof useGame.getState>['game'], content: R
 }
 
 export function CrewPanel({ crew }: { crew: CrewState }) {
-  const { content, game, plan, set, enqueue, queue } = useGame();
+  const { content, game, plan, set, enqueue, queue, select } = useGame();
   const [splitMen, setSplitMen] = useState(4);
   const [splitVeh, setSplitVeh] = useState<Record<string, number>>({ pickup: 1 });
   const [showSplit, setShowSplit] = useState(false);
@@ -43,6 +47,7 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
   const here = Object.values(game.crews).filter((c) => c.id !== crew.id && c.owner === crew.owner && sameLocation(content, c.location, crew.location));
   const escorts = escortsOf(game, crew);
   const pending = queue.filter((q) => ('crew' in q && q.crew === crew.id) || (q.type === 'merge_crews' && q.into === crew.id));
+  const inCity = crew.location.kind === 'node' && crew.location.node === content.culiacan.parentNode;
   const roads = crew.location.kind === 'node' ? w.neighbors(crew.location.node).map((n) => n.road) : [w.road(crew.location.road)];
 
   return (
@@ -80,12 +85,35 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
       {escorts.length > 0 && <p className="small">Escorted by {escorts.map((e) => crewLabel(game, e)).join(', ')}</p>}
       {pending.length > 0 && <p className="small pending">Order queued: applies on the next hour.</p>}
 
+      {crew.battle !== null && game.battles[crew.battle] && (
+        <p className="inbattle">
+          Fighting now.{' '}
+          <button className="linkish" onClick={() => select({ kind: 'battle', id: crew.battle! })}>
+            Open the battle
+          </button>
+        </p>
+      )}
+      {mine && inCity && crew.battle === null && (
+        <p className="small">
+          {crew.colonia ? (
+            <>
+              Holding {content.culiacan.colonias.find((c) => c.id === crew.colonia)?.name}.{' '}
+              <button className="linkish" onClick={() => enqueue({ type: 'deploy_crew', issuer: crew.owner, crew: crew.id, colonia: null })}>
+                Pull back
+              </button>
+            </>
+          ) : (
+            'In Culiacán but not committed to a colonia. Open the Culiacán view to deploy.'
+          )}
+        </p>
+      )}
       {mine && plan?.crew === crew.id && <RoutePlanner />}
-      {mine && plan?.crew !== crew.id && (
+      {mine && plan?.crew !== crew.id && crew.battle === null && (
         <>
           <h3>Orders</h3>
           <div className="btns">
-            <button onClick={() => set({ plan: { crew: crew.id, destination: null, waypoints: [] } })}>Move…</button>
+            <button onClick={() => set({ plan: { kind: 'move', crew: crew.id, destination: null, waypoints: [] } })}>Move…</button>
+            <button onClick={() => set({ plan: { kind: 'raid', crew: crew.id, destination: null, waypoints: [] } })}>Raid…</button>
             {crew.location.kind === 'node' && <button onClick={() => order({ type: 'garrison' })}>Garrison</button>}
             {crew.location.kind === 'node' && <button onClick={() => order({ type: 'lie_low' })}>Lie low</button>}
             <button onClick={() => order({ type: 'retreat' })}>Retreat</button>

@@ -38,6 +38,8 @@ export function runAi(ctx: SimContext): Command[] {
     if (!owner || crew.owner === state.playerId || owner.status !== 'free') continue;
     if ((state.hour + stagger(crew.id, ai.operationalIntervalHours)) % ai.operationalIntervalHours !== 0) continue;
     if (crew.location.kind !== 'node' || (crew.order.type !== 'garrison' && crew.order.type !== 'idle')) continue;
+    // Crews committed to a Culiacán colonia hold the front.
+    if (crew.colonia !== null || crew.battle !== null) continue;
     if (Object.values(state.crews).some((c) => c.order.type === 'escort' && c.order.crew === crew.id)) continue;
     const cmd = crew.location.node && state.nodes[crew.location.node]?.owner === crew.owner ? supplyRun(ctx, crew) : returnHome(ctx, crew);
     if (cmd) cmds.push(cmd);

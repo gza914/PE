@@ -162,6 +162,8 @@ export const StartingCrewSchema = z.object({
   /** Crew leader; if omitted the owning character leads it. */
   leader: id.optional(),
   location: id,
+  /** Colonia the crew is committed to, for crews starting in Culiacán. */
+  colonia: id.optional(),
   men: z.number().int().min(4).max(40),
   skill: z.number().int().min(1).max(5),
   gear: z.number().int().min(1).max(5),
@@ -391,6 +393,9 @@ export const TuningSchema = z.object({
     startingExhaustion: meter,
     /** A day counts as quiet for a region or faction at or below this many combat hours. */
     quietDayMaxCombatHours: z.number().nonnegative(),
+    /** Daily combat hours at which a region shows Skirmishing / Offensive. */
+    skirmishingCombatHours: z.number().nonnegative(),
+    offensiveCombatHours: z.number().nonnegative(),
   }),
   map: z.object({
     coloniaFlipThreshold: z.number().min(0).max(100),
@@ -438,6 +443,11 @@ export const TuningSchema = z.object({
     ammoHoursOfFighting: z.number().positive(),
     startingMorale: meter,
     startingAlertness: meter,
+    /** Morale drifts back toward this while resting in a friendly plaza. */
+    moraleBaseline: meter,
+    moraleRecoveryPerHour: z.number().nonnegative(),
+    /** Percent of a full load restored per hour at a friendly plaza. */
+    ammoResupplyPerHour: z.number().nonnegative(),
   }),
   combat: z.object({
     casualtyRatePerHour: pct,
@@ -454,6 +464,68 @@ export const TuningSchema = z.object({
     powerMoraleBase: z.number(),
     powerMoraleScale: z.number(),
     terrain: z.record(Terrain, z.number().positive()),
+    /** Terrain used for fights inside a node. */
+    nodeTerrain: z.record(NodeType, Terrain),
+    /** Leader Violencia above 10 adds this much power per point (below 10 subtracts). */
+    violenciaBonusPerPoint: z.number().nonnegative(),
+    /** Power lost at 100 fatigue. */
+    fatiguePowerPenalty: pct,
+    /** Men-equivalent losses each armored truck absorbs per hour. */
+    armoredAbsorbPerTruck: z.number().nonnegative(),
+    /** Truck damage per absorbed loss; a truck is lost at 100. */
+    armoredDamagePerAbsorbed: z.number().nonnegative(),
+    armorPushPowerMultiplier: z.number().positive(),
+    armorPushDamageMultiplier: z.number().positive(),
+    /** Morale lost per percent of the crew lost in an hour. */
+    moraleLossPerPctLost: z.number().nonnegative(),
+    /** Morale lost per hour of fighting regardless of losses. */
+    moraleLossPerHour: z.number().nonnegative(),
+    leaderLossMorale: z.number().nonnegative(),
+    routCaptureShare: pct,
+    routScatterShare: pct,
+    /** Chance the leader falls in an hour = loss fraction × this × trait risk. */
+    leaderRiskPerLossFraction: z.number().nonnegative(),
+    leaderCaptureChanceOnRout: pct,
+    leaderDeathChanceOnDestroyed: pct,
+    /** A force attacks only with this power ratio or better (× leader caution). */
+    engageRatio: z.number().positive(),
+    /** Power assumed per reported man when judging an enemy from reports. */
+    estimatedPowerPerMan: z.number().positive(),
+    ambushSpotAlertnessFactor: pct,
+    withdrawLossMultiplier: z.number().nonnegative(),
+    /** Enemy average morale below which the player may accept their surrender. */
+    surrenderMorale: meter,
+    /** Own average morale below which the player is warned. */
+    waveringMorale: meter,
+    battleRetentionHours: z.number().nonnegative(),
+    reinforceMaxHours: z.number().positive(),
+    helpCrewsPerCall: z.number().int().nonnegative(),
+    calenturaPerCombatHour: z.number().nonnegative(),
+    calenturaPerCasualty: z.number().nonnegative(),
+    supplyPerCombatHour: z.number().nonnegative(),
+    exhaustionPerCasualty: z.number().nonnegative(),
+    respectPerVictory: z.number().nonnegative(),
+    skillUpEveryBattles: z.number().int().positive(),
+    capturedPlazaHalcones: meter,
+    capturedPlazaSupportLoss: meter,
+    /** Plaza fortification at which an assault becomes a siege. */
+    siegeMinFortification: z.number().int().min(0).max(3),
+    siege: z.object({
+      casualtyMultiplier: z.number().nonnegative(),
+      ammoMultiplier: z.number().nonnegative(),
+      moraleMultiplier: z.number().nonnegative(),
+      progressPerHourAtParity: z.number().nonnegative(),
+      defenderResupplyPerHour: z.number().nonnegative(),
+      fortificationLossOnFall: z.number().int().nonnegative(),
+    }),
+    urban: z.object({
+      casualtyMultiplier: z.number().nonnegative(),
+      ammoMultiplier: z.number().nonnegative(),
+      moraleMultiplier: z.number().nonnegative(),
+      /** Control shift per hour at total superiority. */
+      controlShiftPerHour: z.number().nonnegative(),
+      uncontestedShiftPerHour: z.number().nonnegative(),
+    }),
   }),
   economy: z.object({
     extortionRates: z.record(ExtortionRate, extortionTuning),
@@ -475,6 +547,9 @@ export const TuningSchema = z.object({
     opinionMax: z.number(),
     heirSuccessionOpinionLoss: z.number(),
     extraditionDays: z.number().positive(),
+    /** Placeholder until prisoner events: captives are ransomed after this long. */
+    prisonerHoldDays: z.number().positive(),
+    ransomAmount: z.number().nonnegative(),
   }),
   diplomacy: z.object({
     neutralOpinionLossPerDay: z.number(),

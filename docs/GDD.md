@@ -704,3 +704,23 @@ Design decisions made during the build:
 - Vehicle speeds were tuned so Mazatlán–Culiacán takes about 3 hours by highway.
 - Measured against the convoy balance target: a 50-truck highway convoy is detected on 100% of test trips; an elite 3-pickup crew on brechas at night on about 6%.
 
+**Phase 2: combat.** Built:
+
+- Engagements found from movement: ambushes (an alert crew may spot one; then a clash happens only if a side wants it), road clashes between hostile groups whose paths cross, garrisons intercepting groups their halcones spotted coming, garrisons attacking intruders they spot in their plaza, raids, and sieges on plazas with fortification 2+.
+- The hourly resolver exactly as specified: crew power, 4% casualties × 0.7–1.3, armored trucks absorbing the first losses, morale loss in proportion to losses, retreat below 30 and rout below 15 (men captured and scattered), one hour of ammo per hour, reinforcements joining at the start of the next hour.
+- Sieges with a progress meter that wears fortification down; a fallen plaza loses a fortification level. Relief forces are decisive, as intended: in the La Tuna test the siege falls without relief and holds with it.
+- Player decisions: withdraw in good order, send the armored truck forward, call for help, commit reserves (with ETAs), and accept surrender (prisoners, trucks seized). Battles pause the game on their key moments.
+- Culiacán colonia fighting: crews commit to colonias; rival crews in one colonia fight every hour and control shifts by the power ratio; an uncontested colonia drifts toward its holder and flips at ±60.
+- Aftermath: plaza capture (new owner, fresh halcones, seized stash), leaders killed or captured, succession to the heir (or the faction head for AI characters; the game ends if the player has no heir), skill growth every 3 battles survived, respect, calentura, faction Supply and Exhaustion.
+- The daily pulse: quiet days decay calentura and exhaustion, and each region shows Quiet, Tense, Skirmishing, or Offensive.
+- Crews reload ammo at friendly plazas (paid by their owner) and recover morale while resting.
+
+Design decisions made during the build:
+
+- Who attacks is decided from what each side knows: garrisons judge intruders by report estimates; on the road at close range both sides see true strength. A force attacks at 1.2× the enemy's power, scaled by its leader's caution (Impulsivo 0.4 … Cobarde 2.0).
+- Terrain favors whoever chose the ground: ambushers, otherwise defenders.
+- Sieges fight at lower intensity (casualties ×0.2, ammo ×0.12), so they run one to two days and end when the attackers run dry unless they win first.
+- Culiacán is only fought colonia by colonia: no interceptions or raids at the city itself.
+- Until prisoner events land, captives are ransomed automatically after 7 days.
+- Known gaps for later phases: Supply only drains (it regenerates from income in the economy phase), and nobody recruits, so a 270-day headless campaign loses about 40% of all men and roughly 10 characters, mostly small AI supply crews wiped out on the roads. The economy and utility-AI phases should change both.
+
