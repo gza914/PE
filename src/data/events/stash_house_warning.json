@@ -1,0 +1,38 @@
+{
+  "id": "stash_house_warning",
+  "scope": "plaza",
+  "chain": "stash",
+  "trigger": {
+    "owner_is_player": true,
+    "calentura_gt": 55
+  },
+  "mean_days": 25,
+  "title": "Eyes on the stash house",
+  "text": "Your halcones noticed the same grey sedan parked outside your stash house in {plaza.name} three nights running.",
+  "options": [
+    {
+      "label": "Move the cash tonight",
+      "effects": {
+        "money": -10000,
+        "state_intel": -5
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Leave it; it's probably nothing",
+      "effects": {
+        "schedule_event": "stash_house_raided",
+        "in_hours": 96
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Pay the local police to find out who it is",
+      "effects": {
+        "money": -15000,
+        "police_tips": true
+      },
+      "ai_weight": 2
+    }
+  ]
+}

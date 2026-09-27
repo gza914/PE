@@ -1,0 +1,36 @@
+{
+  "id": "roadblock_protest",
+  "scope": "plaza",
+  "trigger": {
+    "calentura_gt": 45
+  },
+  "mean_days": 25,
+  "title": "Townspeople block the highway",
+  "text": "Residents of {plaza.name} blocked the highway with burning tires, demanding the army protect them from both sides.",
+  "options": [
+    {
+      "label": "Break it up",
+      "effects": {
+        "support": -10,
+        "calentura": 10,
+        "fear": 5
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Wait it out",
+      "effects": {
+        "supply": -2
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Quietly pay the organizers",
+      "effects": {
+        "money": -15000,
+        "support": 5
+      },
+      "ai_weight": 2
+    }
+  ]
+}

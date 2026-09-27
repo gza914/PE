@@ -677,10 +677,30 @@ Every starting value in this document goes into tuning.json. The headless AI-vs-
 
 **Open questions.**
 
-- [ ] Final Culiacán colonia list and starting control values (Tony)
-- [ ] Starting plaza ownership across the state (Tony)
-- [ ] The 30-character roster: composites with skills, traits, families, and goals (Tony)
-- [ ] Faction names in game: real names or lightly fictionalized?
-- [ ] Message library and the 40 starter events (Tony)
+- [x] Final Culiacán colonia list and starting control values: first draft in `colonias.json` (16 real colonias; review)
+- [x] Starting plaza ownership across the state: first draft in `map.json` (48 nodes; review)
+- [x] The 30-character roster: first draft in `characters.json` (2 heads, 24 lieutenants, 5 crew leaders; review)
+- [ ] Faction names in game: real names or lightly fictionalized? (working names: Chapitos, Mayos)
+- [x] Message library and the 40 starter events: first drafts in `messages.json` (40) and `events/` (44); review
 - [ ] Final title: keep Cartel Conquest?
 - [ ] Where it will be released (itch.io, Steam), which sets the content review bar
+
+## Build log
+
+**Phase 0: scaffold.** Project, data schemas, content loader, deterministic tick, save/load, UI shell.
+
+**Phase 1: logistics and detection.** Built:
+
+- Route planner with Fastest, Balanced, and Safest options and custom waypoints. Risk estimates use only the planning network's knowledge: rival halcón coverage is assumed (`detection.assumedUnknownCoverage`) until intel says otherwise.
+- Hourly movement with road speeds, vehicle road limits, brecha breakdowns (doubled at night), sync arrival, escorts, split and merge, retreat to the nearest friendly plaza, and road stations for Ambush and Patrol.
+- Detection exactly as specified: one roll per watched node passed, on approach inside the halcón road-coverage zone. Crews sitting in a watched spot re-roll daily, patrols watch their segment hourly, and drones reveal a segment for 4 hours, with trait-driven reactions when a crew notices one.
+- Fog of war: networks (a faction, or a neutral character alone) share reports; last-seen markers fade after 12 hours; halcón sightings are estimates (±25% men), drone and patrol sightings are confirmed.
+- Scripted AI logistics traffic (the fallback named under AI): AI lieutenants send small crews on supply runs between friendly plazas and bring them home.
+
+Design decisions made during the build:
+
+- Crew stealth scales with skill (`detection.stealthBySkill`, 1.0 → 0.7); the Discreto trait multiplies signature by 0.8.
+- A crew moving with escorts is seen as one group with a summed signature.
+- Vehicle speeds were tuned so Mazatlán–Culiacán takes about 3 hours by highway.
+- Measured against the convoy balance target: a 50-truck highway convoy is detected on 100% of test trips; an elite 3-pickup crew on brechas at night on about 6%.
+

@@ -1,0 +1,36 @@
+{
+  "id": "mayor_seeks_protection",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "node_type": "town"
+  },
+  "mean_days": 45,
+  "title": "The mayor pays a visit",
+  "text": "The mayor of {plaza.name} came in person. He wants to know that his office and his family are safe.",
+  "options": [
+    {
+      "label": "Offer protection for a fee",
+      "effects": {
+        "money": 30000,
+        "support": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Offer it for free, to keep him close",
+      "effects": {
+        "support": 10,
+        "police_tips": true
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Tell him to stay out of your business",
+      "effects": {
+        "fear": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

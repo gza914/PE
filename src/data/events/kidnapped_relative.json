@@ -1,0 +1,38 @@
+{
+  "id": "kidnapped_relative",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "day_gt": 30
+  },
+  "mean_days": 60,
+  "title": "A cousin is taken",
+  "text": "Your cousin was pulled from his car in broad daylight. A message arrived an hour later with a number.",
+  "options": [
+    {
+      "label": "Pay the ransom",
+      "effects": {
+        "money": -200000,
+        "respect": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Send your people to get him back",
+      "effects": {
+        "calentura": 15,
+        "respect": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Refuse to negotiate",
+      "effects": {
+        "respect": 5,
+        "fear": 5,
+        "opinion_scope_allies": -10
+      },
+      "ai_weight": 1
+    }
+  ]
+}

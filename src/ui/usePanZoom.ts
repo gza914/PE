@@ -1,0 +1,68 @@
+import { useCallback, useRef, useState, type PointerEvent, type WheelEvent } from 'react';
+
+export interface ViewBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Wheel to zoom around the cursor, drag to pan. Returns SVG props. */
+export function usePanZoom(initial: ViewBox) {
+  const [vb, setVb] = useState(initial);
+  const drag = useRef<{ px: number; py: number; vb: ViewBox; moved: boolean } | null>(null);
+
+  const toSvg = (el: SVGSVGElement, clientX: number, clientY: number, box: ViewBox) => {
+    const r = el.getBoundingClientRect();
+    const scale = Math.max(box.w / r.width, box.h / r.height);
+    const offX = (r.width * scale - box.w) / 2;
+    const offY = (r.height * scale - box.h) / 2;
+    return { x: box.x - offX + (clientX - r.left) * scale, y: box.y - offY + (clientY - r.top) * scale, scale };
+  };
+
+  const onWheel = useCallback(
+    (e: WheelEvent<SVGSVGElement>) => {
+      const f = e.deltaY > 0 ? 1.15 : 1 / 1.15;
+      setVb((box) => {
+        const w = Math.min(initial.w * 1.5, Math.max(initial.w / 6, box.w * f));
+        const k = w / box.w;
+        const p = toSvg(e.currentTarget, e.clientX, e.clientY, box);
+        return { x: p.x - (p.x - box.x) * k, y: p.y - (p.y - box.y) * k, w, h: box.h * k };
+      });
+    },
+    [initial.w],
+  );
+
+  const onPointerDown = (e: PointerEvent<SVGSVGElement>) => {
+    drag.current = { px: e.clientX, py: e.clientY, vb, moved: false };
+  };
+  const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.px;
+    const dy = e.clientY - d.py;
+    if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    d.moved = true;
+    const { scale } = toSvg(e.currentTarget, 0, 0, d.vb);
+    setVb({ ...d.vb, x: d.vb.x - dx * scale, y: d.vb.y - dy * scale });
+  };
+  const onPointerUp = () => {
+    // Swallow the click that ends a drag.
+    if (drag.current?.moved) {
+      const stop = (ev: MouseEvent) => {
+        ev.stopPropagation();
+        window.removeEventListener('click', stop, true);
+      };
+      window.addEventListener('click', stop, true);
+      setTimeout(() => window.removeEventListener('click', stop, true), 0);
+    }
+    drag.current = null;
+  };
+
+  return {
+    viewBox: `${vb.x} ${vb.y} ${vb.w} ${vb.h}`,
+    zoom: initial.w / vb.w,
+    handlers: { onWheel, onPointerDown, onPointerMove, onPointerUp, onPointerLeave: onPointerUp },
+    reset: () => setVb(initial),
+  };
+}

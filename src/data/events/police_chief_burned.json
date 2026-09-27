@@ -1,0 +1,32 @@
+{
+  "id": "police_chief_burned",
+  "scope": "region",
+  "chain": "police",
+  "trigger": {},
+  "title": "The chief is arrested",
+  "text": "The police chief you had on retainer in {region.name} was picked up by federal agents. Word is he gave them a list of names.",
+  "options": [
+    {
+      "label": "Get ahead of it: move your people",
+      "effects": {
+        "money": -30000,
+        "state_intel": -10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Pay his lawyer to keep him quiet",
+      "effects": {
+        "money": -60000
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Do nothing",
+      "effects": {
+        "state_intel": 20
+      },
+      "ai_weight": 1
+    }
+  ]
+}

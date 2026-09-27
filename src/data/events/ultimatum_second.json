@@ -1,0 +1,38 @@
+{
+  "id": "ultimatum_second",
+  "scope": "character",
+  "chain": "ultimatum",
+  "trigger": {
+    "is_player": true,
+    "player_neutral": true,
+    "day_gt": 29,
+    "day_lt": 40
+  },
+  "mean_days": 2,
+  "title": "The last warning",
+  "text": "This time the messengers did not bring terms. They brought a list of your plazas, and the names of the men who want them.",
+  "options": [
+    {
+      "label": "Declare for the Chapitos",
+      "effects": {
+        "declare_alignment": "chapitos"
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Declare for the Mayos",
+      "effects": {
+        "declare_alignment": "mayos"
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Stay neutral and fortify",
+      "effects": {
+        "opinion_both_factions": -25,
+        "money": -50000
+      },
+      "ai_weight": 1
+    }
+  ]
+}

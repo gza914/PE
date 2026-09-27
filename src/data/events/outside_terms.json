@@ -1,0 +1,24 @@
+{
+  "id": "outside_terms",
+  "scope": "character",
+  "chain": "outside",
+  "trigger": {},
+  "title": "The outsiders' terms",
+  "text": "Crews and armored trucks, in exchange for a third of every route through your territory and their own people inside your plaza.",
+  "options": [
+    {
+      "label": "Accept",
+      "effects": {
+        "foreign_alliance": true,
+        "money": 150000,
+        "opinion_both_factions": -20
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Refuse",
+      "effects": {},
+      "ai_weight": 2
+    }
+  ]
+}

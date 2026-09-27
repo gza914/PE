@@ -1,0 +1,35 @@
+{
+  "id": "commander_rotation",
+  "scope": "region",
+  "chain": "commander",
+  "trigger": {
+    "days_since_bribe_gt": 45
+  },
+  "mean_days": 2,
+  "title": "A new commander",
+  "text": "The army commander you paid in {region.name} has been rotated out. His replacement arrived this morning and nobody knows his price.",
+  "options": [
+    {
+      "label": "Offer the new one the same deal",
+      "effects": {
+        "money": -80000,
+        "bribe_commander_days": 30
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Test him with something small first",
+      "effects": {
+        "money": -15000,
+        "schedule_event": "commander_test",
+        "in_hours": 72
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Wait and see",
+      "effects": {},
+      "ai_weight": 1
+    }
+  ]
+}

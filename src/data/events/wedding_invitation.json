@@ -1,0 +1,36 @@
+{
+  "id": "wedding_invitation",
+  "scope": "character",
+  "trigger": {
+    "is_player": true
+  },
+  "mean_days": 45,
+  "title": "A wedding invitation",
+  "text": "A lieutenant is marrying off his daughter and has asked you to be padrino of the wedding.",
+  "options": [
+    {
+      "label": "Attend as a guest",
+      "effects": {
+        "opinion_scope": 15,
+        "profile": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Accept and become compadres",
+      "effects": {
+        "compadrazgo": true,
+        "money": -50000,
+        "opinion_scope": 35
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Decline",
+      "effects": {
+        "opinion_scope": -10
+      },
+      "ai_weight": 1
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "leader_health",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "age_gt": 60
+  },
+  "mean_days": 60,
+  "title": "The doctor's warning",
+  "text": "Your doctor says your heart will not take many more nights like the last ones.",
+  "options": [
+    {
+      "label": "Step back for a while",
+      "effects": {
+        "profile": -5,
+        "health": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Carry on",
+      "effects": {
+        "health": -10
+      },
+      "ai_weight": 2
+    }
+  ]
+}

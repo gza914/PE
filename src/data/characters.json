@@ -1,84 +1,1418 @@
 {
-  "_comment": "PLACEHOLDER roster (2 heads + 8 lieutenants of the planned 24-30). Names are stand-ins; Tony supplies the fictional composites.",
+  "_comment": "Fictional composite characters. Names and apodos are invented and deliberately avoid real figures.",
   "characters": [
     {
-      "id": "chapitos_head", "name": "El Heredero", "age": 38, "faction": "chapitos", "rank": "head", "homePlaza": "badiraguato",
-      "skills": { "violencia": 15, "astucia": 11, "negocio": 12, "palabra": 10 },
-      "traits": ["ambicioso", "impulsivo", "carismatico"], "profile": 95, "goal": "rise_in_faction",
-      "heir": "lt_la_tuna", "lean": { "faction": "chapitos", "amount": 100 }, "startTier": "faction_head", "cash": 2000000,
+      "id": "chapitos_head",
+      "name": "Rodrigo Uriarte",
+      "alias": "El Heredero",
+      "age": 38,
+      "faction": "chapitos",
+      "rank": "head",
+      "homePlaza": "badiraguato",
+      "skills": {
+        "violencia": 15,
+        "astucia": 11,
+        "negocio": 12,
+        "palabra": 11
+      },
+      "traits": [
+        "ambicioso",
+        "impulsivo",
+        "carismatico"
+      ],
+      "profile": 95,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "sibling",
+          "target": "cl_el_menor"
+        }
+      ],
+      "heir": "cl_el_menor",
+      "lean": {
+        "faction": "chapitos",
+        "amount": 100
+      },
+      "startTier": "faction_head",
+      "cash": 2500000,
       "crews": [
-        { "location": "badiraguato", "men": 40, "skill": 4, "gear": 4, "vehicles": { "pickup": 8, "armored": 2 } },
-        { "location": "badiraguato", "men": 30, "skill": 3, "gear": 4, "vehicles": { "pickup": 8 } }
+        {
+          "location": "badiraguato",
+          "men": 40,
+          "skill": 4,
+          "gear": 4,
+          "vehicles": {
+            "pickup": 8,
+            "armored": 2
+          }
+        },
+        {
+          "location": "culiacan",
+          "men": 30,
+          "skill": 3,
+          "gear": 4,
+          "vehicles": {
+            "pickup": 8
+          },
+          "leader": "cl_el_menor"
+        },
+        {
+          "location": "badiraguato",
+          "men": 12,
+          "skill": 5,
+          "gear": 4,
+          "vehicles": {
+            "pickup": 3
+          },
+          "leader": "cl_el_gato"
+        }
       ]
     },
     {
-      "id": "mayos_head", "name": "El Viejo", "age": 68, "faction": "mayos", "rank": "head", "homePlaza": "eldorado",
-      "skills": { "violencia": 9, "astucia": 17, "negocio": 16, "palabra": 15 },
-      "traits": ["calculador", "paranoico", "discreto"], "profile": 85, "goal": "stay_alive",
-      "heir": "lt_el_salado", "lean": { "faction": "mayos", "amount": 100 }, "startTier": "faction_head", "cash": 2500000,
+      "id": "cl_el_menor",
+      "name": "Andrés Uriarte",
+      "alias": "El Menor",
+      "age": 31,
+      "faction": "chapitos",
+      "rank": "crew_leader",
+      "homePlaza": "culiacan",
+      "skills": {
+        "violencia": 13,
+        "astucia": 8,
+        "negocio": 6,
+        "palabra": 9
+      },
+      "traits": [
+        "sanguinario",
+        "impulsivo",
+        "valiente"
+      ],
+      "profile": 70,
+      "goal": "rise_in_faction",
+      "relations": [
+        {
+          "type": "sibling",
+          "target": "chapitos_head"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 100
+      },
+      "startTier": null,
+      "cash": 150000,
+      "crews": []
+    },
+    {
+      "id": "cl_el_gato",
+      "name": "Julián Parra",
+      "alias": "El Gato",
+      "age": 35,
+      "faction": "chapitos",
+      "rank": "crew_leader",
+      "homePlaza": "badiraguato",
+      "skills": {
+        "violencia": 14,
+        "astucia": 12,
+        "negocio": 5,
+        "palabra": 7
+      },
+      "traits": [
+        "discreto",
+        "calculador",
+        "valiente"
+      ],
+      "profile": 25,
+      "goal": "rise_in_faction",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 60
+      },
+      "startTier": null,
+      "cash": 60000,
+      "crews": []
+    },
+    {
+      "id": "c_la_tuna",
+      "name": "Tomás Ibarra",
+      "alias": "El Serrano",
+      "age": 34,
+      "faction": "chapitos",
+      "rank": "senior_lieutenant",
+      "homePlaza": "la_tuna",
+      "skills": {
+        "violencia": 13,
+        "astucia": 8,
+        "negocio": 7,
+        "palabra": 9
+      },
+      "traits": [
+        "leal",
+        "valiente",
+        "sanguinario"
+      ],
+      "profile": 45,
+      "goal": "rise_in_faction",
+      "relations": [
+        {
+          "type": "compadre",
+          "target": "m_el_salado"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 60
+      },
+      "startTier": "town_jefe",
+      "cash": 180000,
       "crews": [
-        { "location": "eldorado", "men": 40, "skill": 4, "gear": 3, "vehicles": { "pickup": 10, "armored": 1 } },
-        { "location": "eldorado", "men": 25, "skill": 4, "gear": 3, "vehicles": { "pickup": 7 } }
+        {
+          "location": "la_tuna",
+          "men": 20,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 5
+          }
+        },
+        {
+          "location": "santiago_de_los_caballeros",
+          "men": 10,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
       ]
     },
     {
-      "id": "lt_la_tuna", "name": "El Serrano", "age": 34, "faction": "chapitos", "rank": "senior_lieutenant", "homePlaza": "la_tuna",
-      "skills": { "violencia": 13, "astucia": 8, "negocio": 7, "palabra": 9 },
-      "traits": ["leal", "valiente", "sanguinario"], "profile": 45, "goal": "rise_in_faction",
-      "lean": { "faction": "chapitos", "amount": 40 }, "startTier": "town_jefe", "cash": 150000,
-      "crews": [ { "location": "la_tuna", "men": 20, "skill": 3, "gear": 3, "vehicles": { "pickup": 5 } } ]
-    },
-    {
-      "id": "lt_mazatlan", "name": "El del Puerto", "age": 45, "faction": "chapitos", "rank": "lieutenant", "homePlaza": "mazatlan",
-      "skills": { "violencia": 10, "astucia": 12, "negocio": 15, "palabra": 11 },
-      "traits": ["codicioso", "calculador", "ambicioso"], "profile": 60, "goal": "get_rich",
-      "lean": { "faction": "chapitos", "amount": 15 }, "startTier": "city_boss", "cash": 800000,
+      "id": "c_tameapa",
+      "name": "Rubén Soto",
+      "alias": "El Tecolote",
+      "age": 52,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "tameapa",
+      "skills": {
+        "violencia": 9,
+        "astucia": 13,
+        "negocio": 9,
+        "palabra": 8
+      },
+      "traits": [
+        "paranoico",
+        "discreto"
+      ],
+      "profile": 20,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 35
+      },
+      "startTier": "town_jefe",
+      "cash": 90000,
       "crews": [
-        { "location": "mazatlan", "men": 12, "skill": 5, "gear": 4, "vehicles": { "pickup": 3 } },
-        { "location": "mazatlan", "men": 30, "skill": 2, "gear": 3, "vehicles": { "pickup": 8, "armored": 1 } }
+        {
+          "location": "tameapa",
+          "men": 12,
+          "skill": 3,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 2,
+            "motorcycle": 2
+          }
+        }
       ]
     },
     {
-      "id": "lt_el_salado", "name": "El Ranchero", "age": 41, "faction": "mayos", "rank": "senior_lieutenant", "homePlaza": "el_salado",
-      "skills": { "violencia": 11, "astucia": 10, "negocio": 8, "palabra": 12 },
-      "traits": ["leal", "discreto", "vengativo"], "profile": 30, "goal": "stay_alive",
-      "lean": { "faction": "mayos", "amount": 40 }, "startTier": "town_jefe", "cash": 90000,
-      "crews": [ { "location": "el_salado", "men": 16, "skill": 3, "gear": 2, "vehicles": { "pickup": 4, "motorcycle": 2 } } ]
+      "id": "c_culiacan_norte",
+      "name": "Marco Verdugo",
+      "alias": "El Ingeniero",
+      "age": 42,
+      "faction": "chapitos",
+      "rank": "senior_lieutenant",
+      "homePlaza": "culiacancito",
+      "skills": {
+        "violencia": 10,
+        "astucia": 14,
+        "negocio": 13,
+        "palabra": 13
+      },
+      "traits": [
+        "calculador",
+        "carismatico",
+        "ambicioso"
+      ],
+      "profile": 60,
+      "goal": "rise_in_faction",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 45
+      },
+      "startTier": "city_boss",
+      "cash": 650000,
+      "crews": [
+        {
+          "location": "culiacan",
+          "men": 30,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 8
+          }
+        },
+        {
+          "location": "jesus_maria",
+          "men": 14,
+          "skill": 2,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
     },
     {
-      "id": "lt_los_mochis", "name": "El Norteño", "age": 50, "faction": "mayos", "rank": "lieutenant", "homePlaza": "los_mochis",
-      "skills": { "violencia": 9, "astucia": 11, "negocio": 14, "palabra": 10 },
-      "traits": ["codicioso", "cobarde", "calculador"], "profile": 50, "goal": "get_rich",
-      "lean": { "faction": "mayos", "amount": 10 }, "startTier": "city_boss", "cash": 600000,
-      "crews": [ { "location": "los_mochis", "men": 28, "skill": 3, "gear": 3, "vehicles": { "pickup": 7 } } ]
+      "id": "c_tepuche",
+      "name": "Lucía Bojórquez",
+      "alias": "La Morena",
+      "age": 36,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "tepuche",
+      "skills": {
+        "violencia": 9,
+        "astucia": 14,
+        "negocio": 11,
+        "palabra": 12
+      },
+      "traits": [
+        "carismatico",
+        "vengativo",
+        "calculador"
+      ],
+      "profile": 35,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "sibling",
+          "target": "m_navolato"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 30
+      },
+      "startTier": "town_jefe",
+      "cash": 160000,
+      "crews": [
+        {
+          "location": "tepuche",
+          "men": 16,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
     },
     {
-      "id": "lt_guasave", "name": "El Cañero", "age": 36, "faction": "mayos", "rank": "lieutenant", "homePlaza": "guasave",
-      "skills": { "violencia": 12, "astucia": 7, "negocio": 9, "palabra": 8 },
-      "traits": ["impulsivo", "vengativo", "valiente"], "profile": 35, "goal": "take_plaza",
-      "lean": { "faction": "mayos", "amount": 20 }, "startTier": "town_jefe", "cash": 120000,
-      "crews": [ { "location": "guasave", "men": 18, "skill": 3, "gear": 2, "vehicles": { "pickup": 5 } } ]
+      "id": "c_sanalona",
+      "name": "Joel Peraza",
+      "alias": "El Chato",
+      "age": 29,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "sanalona",
+      "skills": {
+        "violencia": 14,
+        "astucia": 6,
+        "negocio": 6,
+        "palabra": 7
+      },
+      "traits": [
+        "impulsivo",
+        "sanguinario",
+        "ambicioso"
+      ],
+      "profile": 30,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "vendetta",
+          "target": "m_costa_rica"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 40
+      },
+      "startTier": "town_jefe",
+      "cash": 70000,
+      "crews": [
+        {
+          "location": "sanalona",
+          "men": 12,
+          "skill": 2,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 3,
+            "motorcycle": 2
+          }
+        }
+      ]
     },
     {
-      "id": "lt_navolato", "name": "La Güera", "age": 39, "faction": "mayos", "rank": "lieutenant", "homePlaza": "navolato",
-      "skills": { "violencia": 8, "astucia": 14, "negocio": 11, "palabra": 13 },
-      "traits": ["carismatico", "calculador", "ambicioso"], "profile": 40, "goal": "rise_in_faction",
-      "lean": { "faction": "mayos", "amount": 25 }, "startTier": "town_jefe", "cash": 140000,
-      "crews": [ { "location": "navolato", "men": 15, "skill": 3, "gear": 3, "vehicles": { "pickup": 4 } } ]
+      "id": "c_mazatlan",
+      "name": "Héctor Osuna",
+      "alias": "El del Puerto",
+      "age": 45,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "mazatlan",
+      "skills": {
+        "violencia": 10,
+        "astucia": 12,
+        "negocio": 15,
+        "palabra": 11
+      },
+      "traits": [
+        "codicioso",
+        "calculador",
+        "ambicioso"
+      ],
+      "profile": 60,
+      "goal": "get_rich",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "m_villa_union"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 15
+      },
+      "startTier": "city_boss",
+      "cash": 900000,
+      "crews": [
+        {
+          "location": "mazatlan",
+          "men": 12,
+          "skill": 5,
+          "gear": 4,
+          "vehicles": {
+            "pickup": 3
+          },
+          "leader": "cl_el_zurdo"
+        },
+        {
+          "location": "mazatlan",
+          "men": 30,
+          "skill": 2,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 8,
+            "armored": 1
+          }
+        },
+        {
+          "location": "la_noria",
+          "men": 8,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 2
+          }
+        }
+      ]
     },
     {
-      "id": "lt_cosala", "name": "El Minero", "age": 47, "faction": "chapitos", "rank": "lieutenant", "homePlaza": "cosala",
-      "skills": { "violencia": 10, "astucia": 9, "negocio": 10, "palabra": 9 },
-      "traits": ["paranoico", "leal"], "profile": 20, "goal": "stay_alive",
-      "lean": { "faction": "chapitos", "amount": 20 }, "startTier": "town_jefe", "cash": 70000,
-      "crews": [ { "location": "cosala", "men": 12, "skill": 2, "gear": 2, "vehicles": { "pickup": 3 } } ]
+      "id": "cl_el_zurdo",
+      "name": "Saúl Medina",
+      "alias": "El Zurdo",
+      "age": 33,
+      "faction": "chapitos",
+      "rank": "crew_leader",
+      "homePlaza": "mazatlan",
+      "skills": {
+        "violencia": 14,
+        "astucia": 11,
+        "negocio": 5,
+        "palabra": 6
+      },
+      "traits": [
+        "discreto",
+        "valiente"
+      ],
+      "profile": 20,
+      "goal": "rise_in_faction",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 20
+      },
+      "startTier": null,
+      "cash": 40000,
+      "crews": []
     },
     {
-      "id": "lt_escuinapa", "name": "El Costeño", "age": 44, "faction": "mayos", "rank": "lieutenant", "homePlaza": "escuinapa",
-      "skills": { "violencia": 11, "astucia": 9, "negocio": 12, "palabra": 8 },
-      "traits": ["sanguinario", "codicioso"], "profile": 30, "goal": "take_plaza",
-      "lean": { "faction": "mayos", "amount": 15 }, "startTier": "town_jefe", "cash": 110000,
-      "crews": [ { "location": "escuinapa", "men": 14, "skill": 3, "gear": 3, "vehicles": { "pickup": 4 } } ]
+      "id": "c_guamuchil",
+      "name": "Óscar Camacho",
+      "alias": "El Profe",
+      "age": 48,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "guamuchil",
+      "skills": {
+        "violencia": 8,
+        "astucia": 13,
+        "negocio": 12,
+        "palabra": 14
+      },
+      "traits": [
+        "calculador",
+        "leal",
+        "carismatico"
+      ],
+      "profile": 35,
+      "goal": "stay_alive",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "m_guasave"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 40
+      },
+      "startTier": "town_jefe",
+      "cash": 220000,
+      "crews": [
+        {
+          "location": "guamuchil",
+          "men": 18,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "c_el_fuerte",
+      "name": "Ramiro Valenzuela",
+      "alias": "El Chaparral",
+      "age": 44,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "el_fuerte",
+      "skills": {
+        "violencia": 8,
+        "astucia": 10,
+        "negocio": 13,
+        "palabra": 9
+      },
+      "traits": [
+        "codicioso",
+        "cobarde",
+        "discreto"
+      ],
+      "profile": 30,
+      "goal": "get_rich",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 20
+      },
+      "startTier": "town_jefe",
+      "cash": 240000,
+      "crews": [
+        {
+          "location": "el_fuerte",
+          "men": 16,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 4
+          }
+        },
+        {
+          "location": "choix",
+          "men": 10,
+          "skill": 3,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "c_sinaloa",
+      "name": "Efraín Castro",
+      "alias": "El Venado",
+      "age": 39,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "sinaloa_de_leyva",
+      "skills": {
+        "violencia": 12,
+        "astucia": 8,
+        "negocio": 7,
+        "palabra": 9
+      },
+      "traits": [
+        "valiente",
+        "leal"
+      ],
+      "profile": 25,
+      "goal": "rise_in_faction",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 45
+      },
+      "startTier": "town_jefe",
+      "cash": 90000,
+      "crews": [
+        {
+          "location": "sinaloa_de_leyva",
+          "men": 14,
+          "skill": 3,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "c_cosala",
+      "name": "Nicolás Urías",
+      "alias": "El Minero",
+      "age": 47,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "cosala",
+      "skills": {
+        "violencia": 10,
+        "astucia": 10,
+        "negocio": 9,
+        "palabra": 8
+      },
+      "traits": [
+        "paranoico",
+        "leal"
+      ],
+      "profile": 20,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 10
+      },
+      "startTier": "town_jefe",
+      "cash": 80000,
+      "crews": [
+        {
+          "location": "cosala",
+          "men": 12,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "c_san_ignacio",
+      "name": "Jacinto Loaiza",
+      "alias": "El Vaquero",
+      "age": 55,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "san_ignacio",
+      "skills": {
+        "violencia": 7,
+        "astucia": 9,
+        "negocio": 11,
+        "palabra": 10
+      },
+      "traits": [
+        "cobarde",
+        "codicioso",
+        "discreto"
+      ],
+      "profile": 15,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 5
+      },
+      "startTier": "town_jefe",
+      "cash": 70000,
+      "crews": [
+        {
+          "location": "san_ignacio",
+          "men": 10,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "c_concordia",
+      "name": "Felipe Rendón",
+      "alias": "El Pino",
+      "age": 40,
+      "faction": "chapitos",
+      "rank": "lieutenant",
+      "homePlaza": "concordia",
+      "skills": {
+        "violencia": 13,
+        "astucia": 9,
+        "negocio": 8,
+        "palabra": 8
+      },
+      "traits": [
+        "ambicioso",
+        "impulsivo",
+        "vengativo"
+      ],
+      "profile": 30,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "m_rosario"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "chapitos",
+        "amount": 30
+      },
+      "startTier": "town_jefe",
+      "cash": 100000,
+      "crews": [
+        {
+          "location": "concordia",
+          "men": 14,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "mayos_head",
+      "name": "Aurelio Sauceda",
+      "alias": "El Viejo",
+      "age": 68,
+      "faction": "mayos",
+      "rank": "head",
+      "homePlaza": "eldorado",
+      "skills": {
+        "violencia": 9,
+        "astucia": 17,
+        "negocio": 16,
+        "palabra": 15
+      },
+      "traits": [
+        "calculador",
+        "paranoico",
+        "discreto"
+      ],
+      "profile": 85,
+      "goal": "stay_alive",
+      "relations": [
+        {
+          "type": "parent",
+          "target": "m_culiacan_sur"
+        }
+      ],
+      "heir": "m_culiacan_sur",
+      "lean": {
+        "faction": "mayos",
+        "amount": 100
+      },
+      "startTier": "faction_head",
+      "cash": 3000000,
+      "crews": [
+        {
+          "location": "eldorado",
+          "men": 40,
+          "skill": 4,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 10,
+            "armored": 1
+          }
+        },
+        {
+          "location": "quila",
+          "men": 20,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 5
+          },
+          "leader": "cl_el_callado"
+        },
+        {
+          "location": "eldorado",
+          "men": 12,
+          "skill": 5,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 3
+          },
+          "leader": "cl_la_sombra"
+        }
+      ]
+    },
+    {
+      "id": "m_culiacan_sur",
+      "name": "Leonel Sauceda",
+      "alias": "El Licenciado",
+      "age": 40,
+      "faction": "mayos",
+      "rank": "senior_lieutenant",
+      "homePlaza": "culiacan",
+      "skills": {
+        "violencia": 8,
+        "astucia": 14,
+        "negocio": 14,
+        "palabra": 14
+      },
+      "traits": [
+        "carismatico",
+        "calculador",
+        "ambicioso"
+      ],
+      "profile": 55,
+      "goal": "rise_in_faction",
+      "relations": [
+        {
+          "type": "child",
+          "target": "mayos_head"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 100
+      },
+      "startTier": null,
+      "cash": 400000,
+      "crews": [
+        {
+          "location": "culiacan",
+          "men": 30,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 8
+          }
+        }
+      ]
+    },
+    {
+      "id": "cl_la_sombra",
+      "name": "Graciela Montoya",
+      "alias": "La Sombra",
+      "age": 37,
+      "faction": "mayos",
+      "rank": "crew_leader",
+      "homePlaza": "eldorado",
+      "skills": {
+        "violencia": 13,
+        "astucia": 14,
+        "negocio": 6,
+        "palabra": 7
+      },
+      "traits": [
+        "discreto",
+        "calculador",
+        "leal"
+      ],
+      "profile": 10,
+      "goal": "rise_in_faction",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 80
+      },
+      "startTier": null,
+      "cash": 50000,
+      "crews": []
+    },
+    {
+      "id": "cl_el_callado",
+      "name": "Benito Aguilar",
+      "alias": "El Callado",
+      "age": 45,
+      "faction": "mayos",
+      "rank": "crew_leader",
+      "homePlaza": "quila",
+      "skills": {
+        "violencia": 12,
+        "astucia": 10,
+        "negocio": 5,
+        "palabra": 5
+      },
+      "traits": [
+        "paranoico",
+        "valiente",
+        "leal"
+      ],
+      "profile": 15,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 80
+      },
+      "startTier": null,
+      "cash": 40000,
+      "crews": []
+    },
+    {
+      "id": "m_el_salado",
+      "name": "Faustino Rojo",
+      "alias": "El Ranchero",
+      "age": 41,
+      "faction": "mayos",
+      "rank": "senior_lieutenant",
+      "homePlaza": "el_salado",
+      "skills": {
+        "violencia": 11,
+        "astucia": 10,
+        "negocio": 8,
+        "palabra": 12
+      },
+      "traits": [
+        "leal",
+        "discreto",
+        "vengativo"
+      ],
+      "profile": 30,
+      "goal": "stay_alive",
+      "relations": [
+        {
+          "type": "compadre",
+          "target": "c_la_tuna"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 60
+      },
+      "startTier": "town_jefe",
+      "cash": 110000,
+      "crews": [
+        {
+          "location": "el_salado",
+          "men": 16,
+          "skill": 3,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 4,
+            "motorcycle": 2
+          }
+        },
+        {
+          "location": "tacuichamona",
+          "men": 8,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_costa_rica",
+      "name": "Arturo Cuadras",
+      "alias": "El Tractor",
+      "age": 46,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "costa_rica",
+      "skills": {
+        "violencia": 14,
+        "astucia": 7,
+        "negocio": 10,
+        "palabra": 7
+      },
+      "traits": [
+        "sanguinario",
+        "valiente",
+        "codicioso"
+      ],
+      "profile": 40,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "vendetta",
+          "target": "c_sanalona"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 45
+      },
+      "startTier": "town_jefe",
+      "cash": 150000,
+      "crews": [
+        {
+          "location": "costa_rica",
+          "men": 18,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_navolato",
+      "name": "Mariana Echeverría",
+      "alias": "La Güera",
+      "age": 39,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "navolato",
+      "skills": {
+        "violencia": 8,
+        "astucia": 14,
+        "negocio": 11,
+        "palabra": 13
+      },
+      "traits": [
+        "carismatico",
+        "calculador",
+        "ambicioso"
+      ],
+      "profile": 40,
+      "goal": "rise_in_faction",
+      "relations": [
+        {
+          "type": "sibling",
+          "target": "c_tepuche"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 35
+      },
+      "startTier": "town_jefe",
+      "cash": 170000,
+      "crews": [
+        {
+          "location": "navolato",
+          "men": 15,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        },
+        {
+          "location": "altata",
+          "men": 8,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_los_mochis",
+      "name": "Gilberto Armenta",
+      "alias": "El Norteño",
+      "age": 50,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "los_mochis",
+      "skills": {
+        "violencia": 9,
+        "astucia": 11,
+        "negocio": 14,
+        "palabra": 10
+      },
+      "traits": [
+        "codicioso",
+        "cobarde",
+        "calculador"
+      ],
+      "profile": 50,
+      "goal": "get_rich",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 10
+      },
+      "startTier": "city_boss",
+      "cash": 700000,
+      "crews": [
+        {
+          "location": "los_mochis",
+          "men": 28,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 7,
+            "armored": 1
+          }
+        },
+        {
+          "location": "topolobampo",
+          "men": 10,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_jjr",
+      "name": "Samuel Apodaca",
+      "alias": "El Jornalero",
+      "age": 37,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "juan_jose_rios",
+      "skills": {
+        "violencia": 10,
+        "astucia": 8,
+        "negocio": 8,
+        "palabra": 9
+      },
+      "traits": [
+        "leal",
+        "valiente"
+      ],
+      "profile": 20,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 30
+      },
+      "startTier": "town_jefe",
+      "cash": 80000,
+      "crews": [
+        {
+          "location": "juan_jose_rios",
+          "men": 12,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_guasave",
+      "name": "Ricardo Gámez",
+      "alias": "El Cañero",
+      "age": 36,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "guasave",
+      "skills": {
+        "violencia": 12,
+        "astucia": 7,
+        "negocio": 9,
+        "palabra": 8
+      },
+      "traits": [
+        "impulsivo",
+        "vengativo",
+        "valiente"
+      ],
+      "profile": 35,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "c_guamuchil"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 20
+      },
+      "startTier": "town_jefe",
+      "cash": 140000,
+      "crews": [
+        {
+          "location": "guasave",
+          "men": 18,
+          "skill": 3,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_angostura",
+      "name": "Pedro Montes",
+      "alias": "El Pescador",
+      "age": 58,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "angostura",
+      "skills": {
+        "violencia": 7,
+        "astucia": 10,
+        "negocio": 10,
+        "palabra": 11
+      },
+      "traits": [
+        "discreto",
+        "leal"
+      ],
+      "profile": 10,
+      "goal": "stay_alive",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 25
+      },
+      "startTier": "town_jefe",
+      "cash": 60000,
+      "crews": [
+        {
+          "location": "angostura",
+          "men": 10,
+          "skill": 2,
+          "gear": 2,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_la_cruz",
+      "name": "Gerardo Tirado",
+      "alias": "El Salinero",
+      "age": 43,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "la_cruz",
+      "skills": {
+        "violencia": 10,
+        "astucia": 11,
+        "negocio": 12,
+        "palabra": 9
+      },
+      "traits": [
+        "codicioso",
+        "calculador"
+      ],
+      "profile": 30,
+      "goal": "get_rich",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 15
+      },
+      "startTier": "town_jefe",
+      "cash": 180000,
+      "crews": [
+        {
+          "location": "la_cruz",
+          "men": 14,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_villa_union",
+      "name": "Consuelo Ríos",
+      "alias": "La Viuda",
+      "age": 51,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "villa_union",
+      "skills": {
+        "violencia": 9,
+        "astucia": 14,
+        "negocio": 11,
+        "palabra": 10
+      },
+      "traits": [
+        "vengativo",
+        "calculador",
+        "paranoico"
+      ],
+      "profile": 30,
+      "goal": "avenge",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "c_mazatlan"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 40
+      },
+      "startTier": "town_jefe",
+      "cash": 130000,
+      "crews": [
+        {
+          "location": "villa_union",
+          "men": 12,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_rosario",
+      "name": "Aarón Velarde",
+      "alias": "El Tigre",
+      "age": 33,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "el_rosario",
+      "skills": {
+        "violencia": 14,
+        "astucia": 7,
+        "negocio": 7,
+        "palabra": 8
+      },
+      "traits": [
+        "sanguinario",
+        "impulsivo",
+        "ambicioso"
+      ],
+      "profile": 35,
+      "goal": "take_plaza",
+      "relations": [
+        {
+          "type": "rival",
+          "target": "c_concordia"
+        }
+      ],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 30
+      },
+      "startTier": "town_jefe",
+      "cash": 90000,
+      "crews": [
+        {
+          "location": "el_rosario",
+          "men": 14,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "m_escuinapa",
+      "name": "Ignacio Zatarain",
+      "alias": "El Costeño",
+      "age": 44,
+      "faction": "mayos",
+      "rank": "lieutenant",
+      "homePlaza": "escuinapa",
+      "skills": {
+        "violencia": 12,
+        "astucia": 9,
+        "negocio": 11,
+        "palabra": 8
+      },
+      "traits": [
+        "sanguinario",
+        "codicioso"
+      ],
+      "profile": 30,
+      "goal": "get_rich",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "mayos",
+        "amount": 15
+      },
+      "startTier": "town_jefe",
+      "cash": 120000,
+      "crews": [
+        {
+          "location": "escuinapa",
+          "men": 14,
+          "skill": 3,
+          "gear": 3,
+          "vehicles": {
+            "pickup": 4
+          }
+        }
+      ]
     }
   ]
 }

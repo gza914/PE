@@ -1,0 +1,35 @@
+{
+  "id": "deserters_return",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "missed_payroll": true
+  },
+  "mean_days": 7,
+  "title": "Deserters at the door",
+  "text": "Three men who walked off when payroll was late are back, asking for their old jobs.",
+  "options": [
+    {
+      "label": "Take them back",
+      "effects": {
+        "men": 3,
+        "crew_morale": -3
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Turn them away",
+      "effects": {},
+      "ai_weight": 2
+    },
+    {
+      "label": "Make an example of them",
+      "effects": {
+        "fear": 10,
+        "crew_morale": -5,
+        "calentura": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

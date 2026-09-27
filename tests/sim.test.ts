@@ -7,7 +7,7 @@ import { parseSave, serializeSave } from '../src/sim/save';
 import { tick } from '../src/sim/tick';
 
 const content = bundledContent();
-const opts = { seed: 1234, playerId: 'lt_mazatlan' };
+const opts = { seed: 1234, playerId: 'c_mazatlan' };
 
 describe('newGame', () => {
   it('builds state from content', () => {
@@ -37,7 +37,7 @@ describe('tick', () => {
     const run = () => {
       let s = newGame(content, opts);
       for (let h = 0; h < 24 * 14; h++) {
-        const cmds = h === 5 ? [{ type: 'set_extortion_rate' as const, issuer: 'lt_mazatlan', node: 'mazatlan', rate: 'high' as const }] : [];
+        const cmds = h === 5 ? [{ type: 'set_extortion_rate' as const, issuer: 'c_mazatlan', node: 'mazatlan', rate: 'high' as const }] : [];
         s = tick(s, cmds, content).state;
       }
       return JSON.stringify(s);
@@ -50,15 +50,15 @@ describe('tick', () => {
     const { state, rejected } = tick(
       s0,
       [
-        { type: 'set_extortion_rate', issuer: 'lt_mazatlan', node: 'mazatlan', rate: 'brutal' },
-        { type: 'set_extortion_rate', issuer: 'lt_mazatlan', node: 'la_tuna', rate: 'brutal' },
-        { type: 'declare_alignment', issuer: 'lt_mazatlan', faction: null },
+        { type: 'set_extortion_rate', issuer: 'c_mazatlan', node: 'mazatlan', rate: 'brutal' },
+        { type: 'set_extortion_rate', issuer: 'c_mazatlan', node: 'la_tuna', rate: 'brutal' },
+        { type: 'declare_alignment', issuer: 'c_mazatlan', faction: null },
       ],
       content,
     );
     expect(state.nodes.mazatlan!.extortionRate).toBe('brutal');
     expect(state.nodes.la_tuna!.extortionRate).toBe('medium');
-    expect(state.characters.lt_mazatlan!.faction).toBeNull();
+    expect(state.characters.c_mazatlan!.faction).toBeNull();
     expect(rejected).toHaveLength(1);
     expect(rejected[0]!.reason).toMatch(/does not own/);
   });

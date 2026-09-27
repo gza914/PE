@@ -6,10 +6,10 @@ import type { Content } from '../data/content';
 import type { NewGameOptions } from './newGame';
 import { newGame } from './newGame';
 import type { GameState } from './state';
-import { tick } from './tick';
+import { advance } from './tick';
 
 export function runHeadless(content: Content, opts: NewGameOptions, maxHours = content.tuning.clock.maxDays * 24): GameState {
-  let state = newGame(content, opts);
-  while (!state.ended && state.hour < maxHours) state = tick(state, [], content).state;
+  const state = newGame(content, opts);
+  while (!state.ended && state.hour < maxHours) advance(state, [], content);
   return state;
 }

@@ -1,0 +1,38 @@
+{
+  "id": "informant_in_ranks",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "profile_gt": 40
+  },
+  "mean_days": 40,
+  "title": "An informant in your ranks",
+  "text": "Your lawyer saw a file with details only your inner circle should know. Someone close is talking to the federales.",
+  "options": [
+    {
+      "label": "Investigate quietly",
+      "effects": {
+        "money": -15000,
+        "state_intel": -15
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Purge anyone who might be the leak",
+      "effects": {
+        "fear": 10,
+        "crew_morale": -10,
+        "state_intel": -25
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Feed the leak false information",
+      "effects": {
+        "plant_rumor": true,
+        "state_intel": -5
+      },
+      "ai_weight": 2
+    }
+  ]
+}

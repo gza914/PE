@@ -2,12 +2,35 @@
   "id": "army_lab_raid",
   "scope": "plaza",
   "chain": "lab_raid",
-  "trigger": { "labs_gt": 0 },
+  "trigger": {
+    "labs_gt": 0
+  },
   "title": "Army finds your lab",
-  "text": "Soldiers are moving on your lab outside {plaza.name}.",
+  "text": "Soldiers are moving on your lab outside {plaza.name}. Your cooks are already running.",
   "options": [
-    { "label": "Fight the raid", "effects": { "start_military_clash": true, "calentura": 30 }, "ai_weight": 1 },
-    { "label": "Abandon it", "effects": { "labs": -1 }, "ai_weight": 3 },
-    { "label": "Bribe the commander", "effects": { "money": -60000 }, "ai_weight": 2 }
+    {
+      "label": "Fight the raid",
+      "effects": {
+        "start_military_clash": true,
+        "calentura": 30
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Abandon it",
+      "effects": {
+        "labs": -1,
+        "money": -20000
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Bribe the commander",
+      "effects": {
+        "money": -60000,
+        "calentura": 5
+      },
+      "ai_weight": 2
+    }
   ]
 }

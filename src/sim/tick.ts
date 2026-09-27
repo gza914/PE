@@ -5,7 +5,7 @@
 import type { Content } from '../data/content';
 import { isIncomeHour, isPayrollHour } from './clock';
 import { applyCommand, type Command, type Rejection } from './commands';
-import type { SimContext } from './context';
+import { newContext } from './context';
 import type { GameState } from './state';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -27,9 +27,17 @@ export interface TickResult {
 
 export function tick(prev: GameState, commands: readonly Command[], content: Content): TickResult {
   const state = structuredClone(prev);
-  if (state.ended) return { state, rejected: [] };
+  return { state, rejected: advance(state, commands, content) };
+}
 
-  const ctx: SimContext = { state, content };
+/**
+ * Advances `state` in place by one hour. For callers that own their state
+ * (the headless runner); everyone else should use tick().
+ */
+export function advance(state: GameState, commands: readonly Command[], content: Content): Rejection[] {
+  if (state.ended) return [];
+
+  const ctx = newContext(state, content);
   const rejected: Rejection[] = [];
   const apply = (cmds: readonly Command[]) => {
     for (const command of cmds) {
@@ -64,5 +72,5 @@ export function tick(prev: GameState, commands: readonly Command[], content: Con
   apply(runAi(ctx));
 
   checkEndings(ctx);
-  return { state, rejected };
+  return rejected;
 }

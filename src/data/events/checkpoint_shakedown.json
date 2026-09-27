@@ -1,0 +1,35 @@
+{
+  "id": "checkpoint_shakedown",
+  "scope": "region",
+  "trigger": {
+    "military_presence_gt": 1,
+    "calentura_gt": 30
+  },
+  "mean_days": 20,
+  "title": "Checkpoint on the highway",
+  "text": "The Guardia set up a new checkpoint on the main highway through {region.name}. Your drivers say the soldiers there want a monthly fee.",
+  "options": [
+    {
+      "label": "Pay the fee",
+      "effects": {
+        "money": -12000
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Route around it",
+      "effects": {
+        "supply": -3
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Push through with force",
+      "effects": {
+        "calentura": 20,
+        "start_military_clash": true
+      },
+      "ai_weight": 1
+    }
+  ]
+}

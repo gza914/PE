@@ -1,0 +1,38 @@
+{
+  "id": "lieutenant_son_killed",
+  "scope": "character",
+  "trigger": {
+    "family_member_died": true
+  },
+  "mean_days": 3,
+  "title": "A lieutenant's son is killed",
+  "text": "{character.name}'s son was killed in the fighting. He is asking what you intend to do about it.",
+  "options": [
+    {
+      "label": "Promise vengeance now",
+      "effects": {
+        "opinion_scope": 20,
+        "calentura": 10,
+        "set_goal": "avenge"
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Tell him the time will come",
+      "effects": {
+        "opinion_scope": 5,
+        "add_vendetta": true
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Pay the family and buy peace",
+      "effects": {
+        "money": -100000,
+        "opinion_scope": -15,
+        "respect": -5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

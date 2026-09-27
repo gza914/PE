@@ -18,3 +18,11 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Run `npm run typecheck && npm test` before committing.
 - Adding a tuning value means updating both `tuning.json` and `TuningSchema`.
 - Adding a content cross-reference means adding a check in `crossReferenceProblems`.
+- Event triggers and effects use a closed vocabulary (`EventConditionsSchema`, `EventEffectsSchema`). Add a key there before using it in content.
+
+## Sim conventions
+
+- Systems mutate the cloned state inside `tick`; `advance` mutates in place and is only for callers that own their state (the headless runner).
+- Iterate crews via `sortedCrewIds` and consume RNG in a fixed order so runs stay deterministic.
+- Anything the UI or AI shows about rivals must come from `knowledge.ts` (reports), never from reading `state.crews` directly.
+- Only the player's network gets feed entries (`pushFeed` filters by audience); AI acts on reports.

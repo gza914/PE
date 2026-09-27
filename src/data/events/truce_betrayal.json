@@ -1,0 +1,27 @@
+{
+  "id": "truce_betrayal",
+  "scope": "region",
+  "chain": "truce",
+  "trigger": {},
+  "title": "Breaking the truce",
+  "text": "Your crews are in position. The other side is relaxed, still honoring the truce in {region.name}. It's your call.",
+  "options": [
+    {
+      "label": "Strike now",
+      "effects": {
+        "respect": 5,
+        "credibility": -15,
+        "calentura": 20,
+        "opinion_rival_faction": -30
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Stand down and keep your word",
+      "effects": {
+        "credibility": 10
+      },
+      "ai_weight": 2
+    }
+  ]
+}

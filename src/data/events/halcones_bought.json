@@ -1,0 +1,36 @@
+{
+  "id": "halcones_bought",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "halcones_bought": true
+  },
+  "mean_days": 5,
+  "title": "Your halcones were bought",
+  "text": "A boy who sells gum at the {plaza.name} bus station admitted it: the other side has been paying your lookouts double.",
+  "options": [
+    {
+      "label": "Purge them and hire new ones",
+      "effects": {
+        "halcones": -20,
+        "money": -15000,
+        "support": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Keep them, and feed them false intel",
+      "effects": {
+        "plant_rumor": true
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Outbid the other side",
+      "effects": {
+        "money": -40000
+      },
+      "ai_weight": 1
+    }
+  ]
+}

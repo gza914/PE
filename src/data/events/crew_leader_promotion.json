@@ -1,0 +1,38 @@
+{
+  "id": "crew_leader_promotion",
+  "scope": "character",
+  "trigger": {
+    "has_trait": "ambicioso",
+    "rank_is": "crew_leader"
+  },
+  "mean_days": 30,
+  "title": "A crew leader wants more",
+  "text": "{character.name} has been winning fights. Now he wants a plaza of his own and a seat at the table.",
+  "options": [
+    {
+      "label": "Promote him",
+      "effects": {
+        "promote_scope": true,
+        "opinion_scope": 25
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Pay him off",
+      "effects": {
+        "money": -50000,
+        "opinion_scope": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Put him down",
+      "effects": {
+        "kill_scope_character": true,
+        "fear": 10,
+        "opinion_scope_allies": -30
+      },
+      "ai_weight": 1
+    }
+  ]
+}

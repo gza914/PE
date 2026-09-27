@@ -1,0 +1,39 @@
+{
+  "id": "ultimatum_first",
+  "scope": "character",
+  "chain": "ultimatum",
+  "trigger": {
+    "is_player": true,
+    "player_neutral": true,
+    "day_gt": 13,
+    "day_lt": 20
+  },
+  "mean_days": 2,
+  "title": "The first ultimatum",
+  "text": "Messengers from both sides arrived the same morning. Each says the same thing: choose now, and the terms will never be this good again.",
+  "options": [
+    {
+      "label": "Declare for the Chapitos",
+      "effects": {
+        "declare_alignment": "chapitos",
+        "money": 150000
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Declare for the Mayos",
+      "effects": {
+        "declare_alignment": "mayos",
+        "money": 150000
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Stay neutral",
+      "effects": {
+        "opinion_both_factions": -15
+      },
+      "ai_weight": 1
+    }
+  ]
+}

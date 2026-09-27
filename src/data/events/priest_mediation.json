@@ -1,0 +1,38 @@
+{
+  "id": "priest_mediation",
+  "scope": "region",
+  "trigger": {
+    "combat_hours_gt": 48
+  },
+  "mean_days": 25,
+  "title": "The priest offers to mediate",
+  "text": "The parish priest in {region.name} is carrying messages between both sides. He asks for a week of peace so families can bury their dead.",
+  "options": [
+    {
+      "label": "Accept the talks",
+      "effects": {
+        "truce_days": 7,
+        "support": 10
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Refuse",
+      "effects": {
+        "support": -5,
+        "fear": 5
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Accept, and use the talks as cover",
+      "effects": {
+        "truce_days": 7,
+        "credibility": -20,
+        "schedule_event": "truce_betrayal",
+        "in_hours": 72
+      },
+      "ai_weight": 1
+    }
+  ]
+}

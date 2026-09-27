@@ -1,0 +1,37 @@
+{
+  "id": "payroll_convoy_robbed",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "cash_on_road": true
+  },
+  "mean_days": 5,
+  "title": "Payroll convoy robbed",
+  "text": "The car carrying this week's payroll was stopped on the road and emptied. The drivers swear they never saw faces.",
+  "options": [
+    {
+      "label": "Hunt the robbers",
+      "effects": {
+        "calentura": 10,
+        "respect": 5,
+        "money": -5000
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Eat the loss",
+      "effects": {
+        "respect": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Blame a rival publicly",
+      "effects": {
+        "credibility": -5,
+        "opinion_rival_faction": -10
+      },
+      "ai_weight": 1
+    }
+  ]
+}

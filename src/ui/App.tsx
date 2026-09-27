@@ -21,17 +21,19 @@ function useGameLoop() {
 function useHotkeys() {
   const togglePause = useGame((s) => s.togglePause);
   const setSpeed = useGame((s) => s.setSpeed);
+  const set = useGame((s) => s.set);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.code === 'Space') {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === 'Escape') set({ plan: null });
+      else if (e.code === 'Space') {
         e.preventDefault();
         togglePause();
       } else if (/^[1-5]$/.test(e.key)) setSpeed(Number(e.key));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [togglePause, setSpeed]);
+  }, [togglePause, setSpeed, set]);
 }
 
 export function App() {

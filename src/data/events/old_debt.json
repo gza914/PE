@@ -1,0 +1,28 @@
+{
+  "id": "old_debt",
+  "scope": "character",
+  "trigger": {
+    "is_player": true
+  },
+  "mean_days": 60,
+  "title": "An old debt called in",
+  "text": "A man who helped you when you were nobody has come to collect. He wants a favor, and he wants it paid in cash.",
+  "options": [
+    {
+      "label": "Pay him",
+      "effects": {
+        "money": -60000,
+        "respect": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Refuse",
+      "effects": {
+        "respect": -5,
+        "add_vendetta": true
+      },
+      "ai_weight": 1
+    }
+  ]
+}

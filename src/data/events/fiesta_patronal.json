@@ -1,0 +1,34 @@
+{
+  "id": "fiesta_patronal",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true
+  },
+  "mean_days": 90,
+  "title": "The town fiesta",
+  "text": "The patron saint's fiesta in {plaza.name} is next week and the organizers are short of money.",
+  "options": [
+    {
+      "label": "Sponsor the fiesta",
+      "effects": {
+        "money": -40000,
+        "support": 15,
+        "respect": 5,
+        "profile": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Stay away",
+      "effects": {},
+      "ai_weight": 1
+    },
+    {
+      "label": "Send people to watch who shows up",
+      "effects": {
+        "halcones": 10
+      },
+      "ai_weight": 2
+    }
+  ]
+}

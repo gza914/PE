@@ -173,6 +173,8 @@ export const RelationSchema = z.object({ type: RelationType, target: id });
 export const CharacterSchema = z.object({
   id,
   name: z.string(),
+  /** Apodo shown in the UI, e.g. "El Serrano". */
+  alias: z.string().nullable().default(null),
   age: z.number().int().min(14).max(99),
   health: meter.default(100),
   faction: id,
@@ -217,13 +219,112 @@ export const MessagesFileSchema = z.object({ messages: z.array(MessageTemplateSc
 // events/*.json (Paradox-style events). Snake case matches the GDD example.
 // ---------------------------------------------------------------------------
 
-const conditions = z.record(z.string(), z.union([z.number(), z.boolean(), z.string()]));
-const effects = z.record(z.string(), z.union([z.number(), z.boolean(), z.string()]));
+/**
+ * Trigger vocabulary. Each key is a condition the event system checks against
+ * the event's scope (plaza, character, faction, or region). Unknown keys are
+ * rejected so content cannot drift ahead of the code that reads it.
+ */
+export const EventConditionsSchema = z
+  .object({
+    is_player: z.boolean(),
+    owner_is_player: z.boolean(),
+    player_neutral: z.boolean(),
+    player_aligned: z.boolean(),
+    has_foreign_ally: z.boolean(),
+    labs_gt: z.number(),
+    businesses_gt: z.number(),
+    calentura_gt: z.number(),
+    calentura_lt: z.number(),
+    support_gt: z.number(),
+    support_lt: z.number(),
+    military_presence_gt: z.number(),
+    combat_hours_gt: z.number(),
+    exhaustion_gt: z.number(),
+    supply_lt: z.number(),
+    profile_gt: z.number(),
+    respect_gt: z.number(),
+    cash_gt: z.number(),
+    cash_lt: z.number(),
+    age_gt: z.number(),
+    day_gt: z.number(),
+    day_lt: z.number(),
+    days_since_bribe_gt: z.number(),
+    has_trait: id,
+    rank_is: Rank,
+    node_type: NodeType,
+    extortion_rate_is: ExtortionRate,
+    family_member_died: z.boolean(),
+    man_held_by_state: z.boolean(),
+    losing_ground: z.boolean(),
+    missed_payroll: z.boolean(),
+    halcones_bought: z.boolean(),
+    battle_in_populated_node: z.boolean(),
+    cash_on_road: z.boolean(),
+    commissioned_corrido: z.boolean(),
+  })
+  .partial()
+  .strict();
+
+/**
+ * Effect vocabulary. Deltas apply to the event's scope and, for money and
+ * reputation, to the character taking the decision.
+ */
+export const EventEffectsSchema = z
+  .object({
+    money: z.number(),
+    calentura: z.number(),
+    support: z.number(),
+    fear: z.number(),
+    respect: z.number(),
+    credibility: z.number(),
+    profile: z.number(),
+    health: z.number(),
+    state_intel: z.number(),
+    halcones: z.number(),
+    labs: z.number(),
+    labs_move_to: z.enum(['nearest_sierra_owned']),
+    businesses_pct: z.number(),
+    men: z.number(),
+    crew_morale: z.number(),
+    supply: z.number(),
+    exhaustion: z.number(),
+    opinion_scope: z.number(),
+    opinion_scope_allies: z.number(),
+    opinion_own_faction: z.number(),
+    opinion_rival_faction: z.number(),
+    opinion_both_factions: z.number(),
+    extortion_rate: ExtortionRate,
+    /** A major faction id, or "neutral". */
+    declare_alignment: id,
+    schedule_event: id,
+    in_hours: z.number().nonnegative(),
+    delay_event: id,
+    delay_days: z.number().positive(),
+    start_military_clash: z.boolean(),
+    truce_days: z.number().positive(),
+    bribe_commander_days: z.number().positive(),
+    police_tips: z.boolean(),
+    foreign_alliance: z.boolean(),
+    add_vendetta: z.boolean(),
+    set_goal: Goal,
+    compadrazgo: z.boolean(),
+    promote_scope: z.boolean(),
+    kill_scope_character: z.boolean(),
+    release_character: z.boolean(),
+    plant_rumor: z.boolean(),
+    lie_low_region: z.boolean(),
+    gain_scope_plazas: z.boolean(),
+    reveal_schemer: z.boolean(),
+  })
+  .partial()
+  .strict()
+  .refine((e) => e.in_hours === undefined || e.schedule_event !== undefined, 'in_hours needs schedule_event')
+  .refine((e) => e.delay_days === undefined || e.delay_event !== undefined, 'delay_days needs delay_event');
 
 export const EventOptionSchema = z.object({
   label: z.string(),
-  conditions: conditions.optional(),
-  effects: effects.default({}),
+  conditions: EventConditionsSchema.optional(),
+  effects: EventEffectsSchema.default({}),
   ai_weight: z.number().min(0).default(1),
 });
 
@@ -232,7 +333,7 @@ export const EventSchema = z.object({
   scope: EventScope,
   /** Events in the same chain never fire back to back. */
   chain: id.optional(),
-  trigger: conditions,
+  trigger: EventConditionsSchema,
   /** Mean time to happen, in days. Omit for events only fired by other events. */
   mean_days: z.number().positive().optional(),
   title: z.string(),
@@ -258,6 +359,8 @@ const vehicleTuning = z.object({
   roads: z.array(RoadType).min(1),
   baseSpeedKmh: z.number().positive(),
   combatPower: z.number().nonnegative().optional(),
+  /** Extra speed factor on brechas (motorcycles are fast off-road). */
+  brechaSpeedMultiplier: z.number().positive().optional(),
 });
 
 const extortionTuning = z.object({
@@ -299,11 +402,34 @@ export const TuningSchema = z.object({
     coefficient: z.number().positive(),
     minChance: pct,
     maxChance: pct,
-    eliteStealthMultiplier: z.number().positive(),
     lastSeenFadeHours: z.number().positive(),
     droneRevealHours: z.number().positive(),
     droneNoticeAlertnessFactor: z.number().nonnegative(),
     droneCost: z.number().nonnegative(),
+    /** Crew stealth multiplier indexed by skill − 1. */
+    stealthBySkill: z.array(z.number().positive()).length(5),
+    ambushSignatureMultiplier: z.number().nonnegative(),
+    /** Coverage a patrolling crew provides on its road segment. */
+    patrolCoverage: meter,
+    /** How often a crew sitting in a watched node rolls again. */
+    stationaryRollIntervalHours: z.number().int().positive(),
+    /** Road-visibility stand-in for a crew sitting in a node. */
+    stationaryVisibility: z.number().nonnegative(),
+    /** Coverage a network assumes for rival plazas it has no intel on. */
+    assumedUnknownCoverage: meter,
+    /** Halcón sightings report men within ± this fraction. */
+    halconMenEstimateError: pct,
+    reportRetentionHours: z.number().positive(),
+  }),
+  movement: z.object({
+    fatiguePerTravelHour: z.number().nonnegative(),
+    fatigueRecoveryPerHour: z.number().nonnegative(),
+    breakdownDelayHours: z.number().int().nonnegative(),
+  }),
+  routing: z.object({
+    /** Route cost = hours + weight × expected detections. */
+    balancedRiskWeightHours: z.number().nonnegative(),
+    safestRiskWeightHours: z.number().nonnegative(),
   }),
   crews: z.object({
     minMen: z.number().int().positive(),
@@ -392,6 +518,12 @@ export const TuningSchema = z.object({
   ai: z.object({
     strategicIntervalHours: z.number().int().positive(),
     operationalIntervalHours: z.number().int().positive(),
+    /** Scripted logistics traffic until the utility AI lands. */
+    trafficChancePerCheck: pct,
+    returnHomeChancePerCheck: pct,
+    trafficMaxTripHours: z.number().positive(),
+    /** Only crews this small run supplies; big crews stay put. */
+    trafficMaxMen: z.number().int().positive(),
   }),
 });
 

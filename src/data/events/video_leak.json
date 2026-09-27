@@ -1,0 +1,38 @@
+{
+  "id": "video_leak",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "profile_gt": 50
+  },
+  "mean_days": 30,
+  "title": "A video leaks",
+  "text": "A phone video of your men at a checkpoint is circulating online. You can see faces and truck plates.",
+  "options": [
+    {
+      "label": "Deny it's yours",
+      "effects": {
+        "credibility": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Claim it",
+      "effects": {
+        "fear": 10,
+        "respect": 5,
+        "calentura": 15,
+        "profile": 10
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Say it's the other side in disguise",
+      "effects": {
+        "credibility": -10,
+        "opinion_rival_faction": -5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

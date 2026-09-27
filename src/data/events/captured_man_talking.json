@@ -1,0 +1,38 @@
+{
+  "id": "captured_man_talking",
+  "scope": "character",
+  "trigger": {
+    "man_held_by_state": true
+  },
+  "mean_days": 7,
+  "title": "Your man is talking",
+  "text": "One of your people held by the army has started talking. Your lawyer says he has already given up a stash house.",
+  "options": [
+    {
+      "label": "Get him out",
+      "effects": {
+        "money": -150000,
+        "release_character": true
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Silence him",
+      "effects": {
+        "kill_scope_character": true,
+        "fear": 5,
+        "opinion_scope_allies": -20,
+        "calentura": 15
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Relocate everything he knows about",
+      "effects": {
+        "money": -30000,
+        "state_intel": -20
+      },
+      "ai_weight": 3
+    }
+  ]
+}

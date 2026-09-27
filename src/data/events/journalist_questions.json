@@ -1,0 +1,38 @@
+{
+  "id": "journalist_questions",
+  "scope": "plaza",
+  "trigger": {
+    "calentura_gt": 40,
+    "owner_is_player": true
+  },
+  "mean_days": 30,
+  "title": "A reporter asking questions",
+  "text": "A reporter from Culiacán has been in {plaza.name} for a week, asking who runs the town.",
+  "options": [
+    {
+      "label": "Offer her money to go home",
+      "effects": {
+        "money": -20000,
+        "credibility": -5
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Ignore her",
+      "effects": {
+        "profile": 5
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Send people to scare her off",
+      "effects": {
+        "fear": 5,
+        "calentura": 15,
+        "state_intel": 10,
+        "support": -5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

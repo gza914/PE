@@ -1,0 +1,36 @@
+{
+  "id": "flip_offer",
+  "scope": "character",
+  "chain": "flip",
+  "trigger": {},
+  "title": "He wants to switch",
+  "text": "The lieutenant is ready. He'll bring his plaza and his men, in exchange for your protection and a cut.",
+  "options": [
+    {
+      "label": "Take him in",
+      "effects": {
+        "gain_scope_plazas": true,
+        "opinion_rival_faction": -20,
+        "respect": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Take his money and send him back",
+      "effects": {
+        "money": 80000,
+        "credibility": -10
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Set a trap and hand him to his bosses",
+      "effects": {
+        "opinion_rival_faction": 10,
+        "credibility": -5,
+        "fear": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

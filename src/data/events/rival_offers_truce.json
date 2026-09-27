@@ -1,0 +1,39 @@
+{
+  "id": "rival_offers_truce",
+  "scope": "region",
+  "chain": "truce",
+  "trigger": {
+    "exhaustion_gt": 60,
+    "player_aligned": true
+  },
+  "mean_days": 20,
+  "title": "An offer across the line",
+  "text": "A go-between says the other side's people in {region.name} are tired too. They propose two weeks without shooting.",
+  "options": [
+    {
+      "label": "Accept",
+      "effects": {
+        "truce_days": 14,
+        "exhaustion": -5
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Accept, and use the calm to set up a strike",
+      "effects": {
+        "truce_days": 14,
+        "credibility": -15,
+        "schedule_event": "truce_betrayal",
+        "in_hours": 120
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Refuse",
+      "effects": {
+        "respect": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

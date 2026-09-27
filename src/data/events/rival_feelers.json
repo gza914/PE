@@ -1,0 +1,35 @@
+{
+  "id": "rival_feelers",
+  "scope": "character",
+  "chain": "flip",
+  "trigger": {
+    "is_player": true,
+    "player_aligned": true,
+    "day_gt": 20
+  },
+  "mean_days": 30,
+  "title": "Feelers from the other side",
+  "text": "A lieutenant on the other side sent a cousin to ask, carefully, what kind of welcome a man might get if he changed sides.",
+  "options": [
+    {
+      "label": "Encourage him",
+      "effects": {
+        "schedule_event": "flip_offer",
+        "in_hours": 72
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Report it to your faction",
+      "effects": {
+        "opinion_own_faction": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Ignore it",
+      "effects": {},
+      "ai_weight": 1
+    }
+  ]
+}

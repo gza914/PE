@@ -228,15 +228,24 @@ export function crossReferenceProblems(c: Content): string[] {
     }
   }
 
-  // Event effects that name other events must point at real events.
+  // Event effects that name other events, factions, or traits must point at real ones.
+  const majorIds = new Set(c.factions.filter((f) => f.kind === 'major').map((f) => f.id));
   for (const ev of c.events) {
+    for (const t of [ev.trigger.has_trait, ...ev.options.map((o) => o.conditions?.has_trait)]) {
+      if (t !== undefined && !traitIds.has(t)) p.push(`events/${ev.id}: unknown trait "${t}"`);
+    }
     for (const opt of ev.options) {
       for (const key of ['schedule_event', 'delay_event'] as const) {
         const target = opt.effects[key];
-        if (typeof target === 'string' && !eventIds.has(target))
+        if (target !== undefined && !eventIds.has(target))
           p.push(`events/${ev.id}: option "${opt.label}" ${key} targets unknown event "${target}"`);
       }
+      const side = opt.effects.declare_alignment;
+      if (side !== undefined && side !== 'neutral' && !majorIds.has(side))
+        p.push(`events/${ev.id}: option "${opt.label}" declares for unknown faction "${side}"`);
     }
+    if (ev.mean_days === undefined && !c.events.some((e) => e.options.some((o) => o.effects.schedule_event === ev.id)))
+      p.push(`events/${ev.id}: has no mean_days and nothing schedules it, so it can never fire`);
   }
 
   const w = c.tuning.endings.scoreWeights;

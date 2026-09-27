@@ -1,0 +1,38 @@
+{
+  "id": "marines_surge",
+  "scope": "region",
+  "trigger": {
+    "calentura_gt": 70
+  },
+  "mean_days": 15,
+  "title": "Marines in the streets",
+  "text": "Federal forces are pouring into {region.name}: convoys on every highway, helicopters over the rancherías. Everyone expects raids.",
+  "options": [
+    {
+      "label": "Lie low until it passes",
+      "effects": {
+        "lie_low_region": true,
+        "supply": -5
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Move cash out of the stash houses",
+      "effects": {
+        "money": -20000,
+        "state_intel": -10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Hit a patrol to show you're not afraid",
+      "effects": {
+        "calentura": 30,
+        "start_military_clash": true,
+        "fear": 10,
+        "respect": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

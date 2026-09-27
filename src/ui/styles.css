@@ -54,3 +54,45 @@ ul { padding-left: 18px; }
 .seed input { width: 140px; margin-left: 6px; background: var(--panel); color: var(--text); border: 1px solid var(--line); padding: 4px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 20px; }
 .card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 14px; border-width: 2px; }
+
+/* Phase 1: logistics UI */
+select { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 3px; }
+input[type='number'] { width: 56px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 3px; padding: 2px 4px; }
+button.small, .small button { padding: 2px 6px; font-size: 12px; }
+button:disabled { opacity: 0.45; cursor: default; }
+.row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+.grow { flex: 1; }
+.btns { display: flex; flex-wrap: wrap; gap: 4px; }
+.btns.col { flex-direction: column; align-items: stretch; }
+.linkish { background: none; border: none; padding: 0; color: var(--accent); cursor: pointer; margin-top: 12px; }
+ul.links { list-style: none; padding: 0; }
+.error { color: #ff7b6b; }
+.pending { color: var(--accent); }
+.tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.tabs button.on { border-color: var(--accent); color: var(--accent); }
+.entry.stale { opacity: 0.55; }
+.planner { border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-top: 12px; }
+.routeopt { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin: 4px 0; border-left-width: 4px; text-align: left; }
+.split { padding: 6px 0; }
+
+.mapwrap { position: relative; width: 100%; height: 100%; }
+.maphint { position: absolute; left: 10px; bottom: 8px; display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+.svgmap { cursor: grab; user-select: none; touch-action: none; }
+.roadhit { stroke: transparent; stroke-width: 12; cursor: pointer; }
+.road.drone { stroke: #b58cff; }
+.road.sel { stroke: var(--accent); }
+.route { fill: none; stroke-linejoin: round; stroke-linecap: round; opacity: 0.85; pointer-events: none; }
+.route.current { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 4; }
+.node .exit.sel { stroke: var(--accent); stroke-width: 3; }
+.crew { cursor: pointer; }
+.crew rect { stroke: #0b0c0f; stroke-width: 1.5; }
+.crew.sel rect { stroke: var(--accent); stroke-width: 3; }
+.crew.hidden { opacity: 0.5; }
+.crew text, .sighting text { fill: #fff; font: 600 10px ui-monospace, Menlo, monospace; pointer-events: none; }
+.sighting rect { fill: #111317; stroke-width: 2; }
+.sighting rect.rumor { stroke-dasharray: 3 2; }
+.ov-halcon { fill: #e0b64a; pointer-events: none; }
+.ov-halcon.own { opacity: 0.18; }
+.ov-halcon.rival { opacity: 0.08; stroke: #e0b64a; stroke-dasharray: 4 4; fill-opacity: 0.4; }
+.ov-income { fill: #6fc3a0; opacity: 0.25; pointer-events: none; }
+.feed .entry .mono { font-size: 12.5px; line-height: 1.35; }

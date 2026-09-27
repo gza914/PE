@@ -58,7 +58,7 @@
         "paved",
         "brecha"
       ],
-      "baseSpeedKmh": 90
+      "baseSpeedKmh": 75
     },
     "suv": {
       "seats": 5,
@@ -68,7 +68,7 @@
         "highway",
         "paved"
       ],
-      "baseSpeedKmh": 100
+      "baseSpeedKmh": 85
     },
     "motorcycle": {
       "seats": 2,
@@ -79,7 +79,8 @@
         "paved",
         "brecha"
       ],
-      "baseSpeedKmh": 100
+      "baseSpeedKmh": 80,
+      "brechaSpeedMultiplier": 1.8
     },
     "armored": {
       "seats": 6,
@@ -89,7 +90,7 @@
         "highway",
         "paved"
       ],
-      "baseSpeedKmh": 70,
+      "baseSpeedKmh": 65,
       "combatPower": 30
     }
   },
@@ -97,11 +98,33 @@
     "coefficient": 0.08,
     "minChance": 0.02,
     "maxChance": 0.95,
-    "eliteStealthMultiplier": 0.7,
     "lastSeenFadeHours": 12,
     "droneRevealHours": 4,
     "droneNoticeAlertnessFactor": 0.5,
-    "droneCost": 3000
+    "droneCost": 3000,
+    "stealthBySkill": [
+      1.0,
+      1.0,
+      0.9,
+      0.8,
+      0.7
+    ],
+    "ambushSignatureMultiplier": 0.3,
+    "patrolCoverage": 60,
+    "stationaryRollIntervalHours": 24,
+    "stationaryVisibility": 0.5,
+    "assumedUnknownCoverage": 50,
+    "halconMenEstimateError": 0.25,
+    "reportRetentionHours": 168
+  },
+  "movement": {
+    "fatiguePerTravelHour": 2,
+    "fatigueRecoveryPerHour": 3,
+    "breakdownDelayHours": 3
+  },
+  "routing": {
+    "balancedRiskWeightHours": 3,
+    "safestRiskWeightHours": 40
   },
   "crews": {
     "minMen": 4,
@@ -227,6 +250,10 @@
   },
   "ai": {
     "strategicIntervalHours": 24,
-    "operationalIntervalHours": 6
+    "operationalIntervalHours": 6,
+    "trafficChancePerCheck": 0.12,
+    "returnHomeChancePerCheck": 0.6,
+    "trafficMaxTripHours": 8,
+    "trafficMaxMen": 20
   }
 }

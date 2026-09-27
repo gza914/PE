@@ -1,0 +1,36 @@
+{
+  "id": "ammo_shortage",
+  "scope": "faction",
+  "trigger": {
+    "supply_lt": 30,
+    "player_aligned": true
+  },
+  "mean_days": 10,
+  "title": "Running low on ammunition",
+  "text": "Your crews are counting cartridges. The usual suppliers want double for what's left.",
+  "options": [
+    {
+      "label": "Buy from an army dealer",
+      "effects": {
+        "money": -80000,
+        "supply": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Ration what you have",
+      "effects": {
+        "crew_morale": -5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Ask the faction for help",
+      "effects": {
+        "supply": 6,
+        "opinion_own_faction": -5
+      },
+      "ai_weight": 2
+    }
+  ]
+}

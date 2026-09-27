@@ -1,25 +1,245 @@
 {
-  "_comment": "PLACEHOLDER. Final colonia list (~16) and starting control values will come from Tony. Positive control = Chapitos-side.",
+  "_comment": "Culiacán sub-map. Real colonia names; positions schematic. North leans Chapitos, south Mayos, central band contested.",
   "parentNode": "culiacan",
   "positiveFaction": "chapitos",
   "colonias": [
-    { "id": "col_norte_a", "name": "Norte A", "x": 300, "y": 100, "control": 80, "businesses": 250 },
-    { "id": "col_norte_b", "name": "Norte B", "x": 550, "y": 120, "control": 65, "businesses": 200 },
-    { "id": "col_centro_a", "name": "Centro A", "x": 250, "y": 320, "control": 20, "businesses": 400 },
-    { "id": "col_centro_b", "name": "Centro B", "x": 500, "y": 300, "control": 0, "businesses": 600 },
-    { "id": "col_centro_c", "name": "Centro C", "x": 720, "y": 340, "control": -25, "businesses": 300 },
-    { "id": "col_sur_a", "name": "Sur A", "x": 350, "y": 540, "control": -65, "businesses": 250 },
-    { "id": "col_sur_b", "name": "Sur B", "x": 620, "y": 560, "control": -80, "businesses": 200 }
+    {
+      "id": "col_loma_de_rodriguera",
+      "name": "Loma de Rodriguera",
+      "x": 470,
+      "y": 60,
+      "control": 80,
+      "businesses": 120
+    },
+    {
+      "id": "col_humaya",
+      "name": "Humaya",
+      "x": 600,
+      "y": 90,
+      "control": 72,
+      "businesses": 300
+    },
+    {
+      "id": "col_infonavit_humaya",
+      "name": "Infonavit Humaya",
+      "x": 720,
+      "y": 150,
+      "control": 62,
+      "businesses": 260
+    },
+    {
+      "id": "col_tierra_blanca",
+      "name": "Tierra Blanca",
+      "x": 380,
+      "y": 190,
+      "control": 45,
+      "businesses": 280
+    },
+    {
+      "id": "col_tres_rios",
+      "name": "Tres Ríos",
+      "x": 620,
+      "y": 230,
+      "control": 35,
+      "businesses": 450
+    },
+    {
+      "id": "col_aguaruto",
+      "name": "Aguaruto",
+      "x": 120,
+      "y": 250,
+      "control": 30,
+      "businesses": 150
+    },
+    {
+      "id": "col_bachigualato",
+      "name": "Bachigualato",
+      "x": 240,
+      "y": 320,
+      "control": 15,
+      "businesses": 200
+    },
+    {
+      "id": "col_centro",
+      "name": "Centro",
+      "x": 470,
+      "y": 330,
+      "control": 0,
+      "businesses": 800
+    },
+    {
+      "id": "col_guadalupe",
+      "name": "Guadalupe",
+      "x": 360,
+      "y": 410,
+      "control": 10,
+      "businesses": 300
+    },
+    {
+      "id": "col_las_quintas",
+      "name": "Las Quintas",
+      "x": 620,
+      "y": 360,
+      "control": -10,
+      "businesses": 350
+    },
+    {
+      "id": "col_chapultepec",
+      "name": "Chapultepec",
+      "x": 500,
+      "y": 440,
+      "control": -20,
+      "businesses": 300
+    },
+    {
+      "id": "col_colinas_de_san_miguel",
+      "name": "Colinas de San Miguel",
+      "x": 790,
+      "y": 380,
+      "control": -40,
+      "businesses": 220
+    },
+    {
+      "id": "col_valle_alto",
+      "name": "Valle Alto",
+      "x": 230,
+      "y": 500,
+      "control": -45,
+      "businesses": 250
+    },
+    {
+      "id": "col_infonavit_barrancos",
+      "name": "Infonavit Barrancos",
+      "x": 640,
+      "y": 520,
+      "control": -62,
+      "businesses": 260
+    },
+    {
+      "id": "col_barrancos",
+      "name": "Barrancos",
+      "x": 500,
+      "y": 580,
+      "control": -70,
+      "businesses": 240
+    },
+    {
+      "id": "col_el_diez",
+      "name": "El Diez",
+      "x": 330,
+      "y": 640,
+      "control": -78,
+      "businesses": 180
+    }
   ],
   "streets": [
-    { "from": "col_norte_a", "to": "col_norte_b" },
-    { "from": "col_norte_a", "to": "col_centro_a" },
-    { "from": "col_norte_b", "to": "col_centro_b" },
-    { "from": "col_centro_a", "to": "col_centro_b" },
-    { "from": "col_centro_b", "to": "col_centro_c" },
-    { "from": "col_centro_a", "to": "col_sur_a" },
-    { "from": "col_centro_b", "to": "col_sur_a" },
-    { "from": "col_centro_c", "to": "col_sur_b" },
-    { "from": "col_sur_a", "to": "col_sur_b" }
+    {
+      "from": "col_loma_de_rodriguera",
+      "to": "col_humaya"
+    },
+    {
+      "from": "col_loma_de_rodriguera",
+      "to": "col_tierra_blanca"
+    },
+    {
+      "from": "col_humaya",
+      "to": "col_infonavit_humaya"
+    },
+    {
+      "from": "col_humaya",
+      "to": "col_tres_rios"
+    },
+    {
+      "from": "col_infonavit_humaya",
+      "to": "col_tres_rios"
+    },
+    {
+      "from": "col_tierra_blanca",
+      "to": "col_centro"
+    },
+    {
+      "from": "col_tierra_blanca",
+      "to": "col_aguaruto"
+    },
+    {
+      "from": "col_tierra_blanca",
+      "to": "col_bachigualato"
+    },
+    {
+      "from": "col_aguaruto",
+      "to": "col_bachigualato"
+    },
+    {
+      "from": "col_tres_rios",
+      "to": "col_centro"
+    },
+    {
+      "from": "col_tres_rios",
+      "to": "col_las_quintas"
+    },
+    {
+      "from": "col_infonavit_humaya",
+      "to": "col_colinas_de_san_miguel"
+    },
+    {
+      "from": "col_bachigualato",
+      "to": "col_guadalupe"
+    },
+    {
+      "from": "col_centro",
+      "to": "col_guadalupe"
+    },
+    {
+      "from": "col_centro",
+      "to": "col_las_quintas"
+    },
+    {
+      "from": "col_centro",
+      "to": "col_chapultepec"
+    },
+    {
+      "from": "col_las_quintas",
+      "to": "col_colinas_de_san_miguel"
+    },
+    {
+      "from": "col_las_quintas",
+      "to": "col_chapultepec"
+    },
+    {
+      "from": "col_guadalupe",
+      "to": "col_valle_alto"
+    },
+    {
+      "from": "col_guadalupe",
+      "to": "col_chapultepec"
+    },
+    {
+      "from": "col_chapultepec",
+      "to": "col_barrancos"
+    },
+    {
+      "from": "col_colinas_de_san_miguel",
+      "to": "col_infonavit_barrancos"
+    },
+    {
+      "from": "col_las_quintas",
+      "to": "col_infonavit_barrancos"
+    },
+    {
+      "from": "col_infonavit_barrancos",
+      "to": "col_barrancos"
+    },
+    {
+      "from": "col_valle_alto",
+      "to": "col_el_diez"
+    },
+    {
+      "from": "col_barrancos",
+      "to": "col_el_diez"
+    },
+    {
+      "from": "col_valle_alto",
+      "to": "col_barrancos"
+    }
   ]
 }

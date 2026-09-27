@@ -1,0 +1,37 @@
+{
+  "id": "police_chief_offer",
+  "scope": "region",
+  "chain": "police",
+  "trigger": {
+    "calentura_gt": 25
+  },
+  "mean_days": 30,
+  "title": "The police chief calls",
+  "text": "The municipal police chief in {region.name} wants to talk. He can pass along army movements, for a monthly retainer.",
+  "options": [
+    {
+      "label": "Put him on the payroll",
+      "effects": {
+        "money": -25000,
+        "police_tips": true
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Decline",
+      "effects": {},
+      "ai_weight": 1
+    },
+    {
+      "label": "Take his tips, then sell him out to the army",
+      "effects": {
+        "police_tips": true,
+        "money": -10000,
+        "credibility": -10,
+        "schedule_event": "police_chief_burned",
+        "in_hours": 240
+      },
+      "ai_weight": 1
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "precursor_seizure",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "node_type": "port",
+    "military_presence_gt": 0
+  },
+  "mean_days": 30,
+  "title": "Shipment seized at the port",
+  "text": "Customs and the navy seized a container of precursors at {plaza.name}. The labs in the sierra will run dry within a week.",
+  "options": [
+    {
+      "label": "Buy a replacement shipment at a premium",
+      "effects": {
+        "money": -120000
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Take the loss",
+      "effects": {
+        "supply": -8
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Hit the warehouse and take it back",
+      "effects": {
+        "calentura": 25,
+        "start_military_clash": true,
+        "respect": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

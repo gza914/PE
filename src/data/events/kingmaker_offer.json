@@ -1,0 +1,40 @@
+{
+  "id": "kingmaker_offer",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "player_neutral": true,
+    "day_gt": 90,
+    "exhaustion_gt": 60
+  },
+  "mean_days": 10,
+  "title": "Kingmaker",
+  "text": "One faction head is bleeding and knows it. He offers you half a million dollars and your pick of plazas if you join him now.",
+  "options": [
+    {
+      "label": "Join the Chapitos",
+      "effects": {
+        "declare_alignment": "chapitos",
+        "money": 500000,
+        "respect": 15
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Join the Mayos",
+      "effects": {
+        "declare_alignment": "mayos",
+        "money": 500000,
+        "respect": 15
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Hold out for more",
+      "effects": {
+        "opinion_both_factions": -10
+      },
+      "ai_weight": 1
+    }
+  ]
+}

@@ -1,12 +1,351 @@
 {
-  "_comment": "PLACEHOLDER library. Tony writes the real message templates, banner wording, corrido titles, and rumor text.",
+  "_comment": "Message library for information warfare. Variables: {sender.name}, {target.name}, {plaza.name}, {road.name}, {faction.name}, {rival_faction.name}, {number}.",
   "messages": [
-    { "id": "manta_claim_plaza", "kind": "narcomanta", "text": "{plaza.name} tiene dueño. Atentamente, {sender.name}.", "tags": ["claim"] },
-    { "id": "manta_accuse_rival", "kind": "narcomanta", "text": "{target.name} le vende información al gobierno.", "tags": ["accuse"] },
-    { "id": "video_rally", "kind": "video", "text": "{sender.name} addresses the men of {faction.name}.", "tags": ["morale"] },
-    { "id": "claim_victory", "kind": "social_claim", "text": "{faction.name} took {plaza.name} last night.", "tags": ["victory"] },
-    { "id": "corrido_generic", "kind": "corrido", "text": "El corrido de {sender.name}", "tags": ["respect"] },
-    { "id": "rumor_fake_convoy", "kind": "rumor", "text": "A convoy of {sender.name}'s men will cross {road.name} tonight.", "tags": ["bait"] },
-    { "id": "rumor_weak_plaza", "kind": "rumor", "text": "{plaza.name} is barely guarded.", "tags": ["bait"] }
+    {
+      "id": "manta_claim_plaza",
+      "kind": "narcomanta",
+      "text": "{plaza.name} has an owner. Anyone who works here without permission answers to {sender.name}.",
+      "tags": [
+        "claim"
+      ]
+    },
+    {
+      "id": "manta_claim_new",
+      "kind": "narcomanta",
+      "text": "New management in {plaza.name}. Merchants: nothing changes if you pay on time. — {sender.name}",
+      "tags": [
+        "claim",
+        "extortion"
+      ]
+    },
+    {
+      "id": "manta_accuse_informant",
+      "kind": "narcomanta",
+      "text": "{target.name} sells information to the government. Ask yourselves who gets arrested and who never does.",
+      "tags": [
+        "accuse"
+      ]
+    },
+    {
+      "id": "manta_accuse_civilians",
+      "kind": "narcomanta",
+      "text": "{target.name}'s people are the ones robbing and killing civilians. We only deal with those who owe.",
+      "tags": [
+        "accuse",
+        "deny"
+      ]
+    },
+    {
+      "id": "manta_warn_halcones",
+      "kind": "narcomanta",
+      "text": "To the halcones of {plaza.name} who took money from {rival_faction.name}: we know who you are. Last warning.",
+      "tags": [
+        "warn",
+        "counterintel"
+      ]
+    },
+    {
+      "id": "manta_warn_rival",
+      "kind": "narcomanta",
+      "text": "{target.name}: stay in your hills. Come down to {plaza.name} and you will not go back up.",
+      "tags": [
+        "warn"
+      ]
+    },
+    {
+      "id": "manta_traitor",
+      "kind": "narcomanta",
+      "text": "{target.name} changed sides once. Whoever trusts him will learn what he is worth.",
+      "tags": [
+        "accuse",
+        "traitor"
+      ]
+    },
+    {
+      "id": "manta_calm",
+      "kind": "narcomanta",
+      "text": "Families of {plaza.name}: go about your lives. This is not your war. — {sender.name}",
+      "tags": [
+        "support"
+      ]
+    },
+    {
+      "id": "manta_extortion_relief",
+      "kind": "narcomanta",
+      "text": "Cobro de piso in {plaza.name} is lowered starting today. We take care of those who take care of us.",
+      "tags": [
+        "support",
+        "extortion"
+      ]
+    },
+    {
+      "id": "manta_blame_army",
+      "kind": "narcomanta",
+      "text": "The soldiers who came to {plaza.name} work for {target.name}. Everyone saw whose houses they skipped.",
+      "tags": [
+        "accuse",
+        "state"
+      ]
+    },
+    {
+      "id": "video_rally",
+      "kind": "video",
+      "text": "{sender.name} speaks to the men of {faction.name}: the war will be won by those who stay loyal.",
+      "tags": [
+        "morale"
+      ]
+    },
+    {
+      "id": "video_threat",
+      "kind": "video",
+      "text": "{sender.name}, surrounded by armed men, names {target.name} and gives him a week to leave Sinaloa.",
+      "tags": [
+        "threat",
+        "profile"
+      ]
+    },
+    {
+      "id": "video_denial",
+      "kind": "video",
+      "text": "{sender.name} denies any part in the attack in {plaza.name} and blames {rival_faction.name}.",
+      "tags": [
+        "deny"
+      ]
+    },
+    {
+      "id": "video_show_armor",
+      "kind": "video",
+      "text": "A video shows a column of armored trucks with {faction.name} markings rolling through {plaza.name}.",
+      "tags": [
+        "show_of_force",
+        "morale"
+      ]
+    },
+    {
+      "id": "video_captives",
+      "kind": "video",
+      "text": "Men claiming to be {target.name}'s people confess on camera that their boss abandoned them.",
+      "tags": [
+        "morale",
+        "humiliate"
+      ]
+    },
+    {
+      "id": "video_peace_call",
+      "kind": "video",
+      "text": "{sender.name} calls on both sides to leave the families of Culiacán out of it.",
+      "tags": [
+        "support",
+        "truce"
+      ]
+    },
+    {
+      "id": "claim_victory",
+      "kind": "social_claim",
+      "text": "{faction.name} took {plaza.name} last night. The other side ran.",
+      "tags": [
+        "victory"
+      ]
+    },
+    {
+      "id": "claim_enemy_fled",
+      "kind": "social_claim",
+      "text": "{target.name} has fled Sinaloa. His men are asking who pays them now.",
+      "tags": [
+        "weakness"
+      ]
+    },
+    {
+      "id": "claim_enemy_broke",
+      "kind": "social_claim",
+      "text": "{rival_faction.name} can't make payroll. Their halcones are selling out for nothing.",
+      "tags": [
+        "weakness",
+        "money"
+      ]
+    },
+    {
+      "id": "claim_casualties",
+      "kind": "social_claim",
+      "text": "Twelve of {target.name}'s men fell on the road to {plaza.name}. We lost none.",
+      "tags": [
+        "victory"
+      ]
+    },
+    {
+      "id": "claim_foreign",
+      "kind": "social_claim",
+      "text": "{target.name} has sold his plaza to outsiders from Jalisco. Sinaloa belongs to Sinaloans.",
+      "tags": [
+        "accuse",
+        "foreign"
+      ]
+    },
+    {
+      "id": "claim_army_ally",
+      "kind": "social_claim",
+      "text": "The army does the dirty work for {rival_faction.name}. Look at which plazas they never raid.",
+      "tags": [
+        "accuse",
+        "state"
+      ]
+    },
+    {
+      "id": "claim_leader_dead",
+      "kind": "social_claim",
+      "text": "Sources confirm {target.name} was wounded in {plaza.name} and cannot walk.",
+      "tags": [
+        "weakness"
+      ]
+    },
+    {
+      "id": "claim_recruiting",
+      "kind": "social_claim",
+      "text": "{faction.name} pays on time, every Sunday. Good men are welcome.",
+      "tags": [
+        "recruit",
+        "money"
+      ]
+    },
+    {
+      "id": "corrido_name",
+      "kind": "corrido",
+      "text": "El corrido de {sender.name}",
+      "tags": [
+        "respect"
+      ]
+    },
+    {
+      "id": "corrido_road",
+      "kind": "corrido",
+      "text": "La troca negra de {plaza.name}",
+      "tags": [
+        "respect",
+        "logistics"
+      ]
+    },
+    {
+      "id": "corrido_sierra",
+      "kind": "corrido",
+      "text": "Siete de la sierra",
+      "tags": [
+        "respect"
+      ]
+    },
+    {
+      "id": "corrido_never_slept",
+      "kind": "corrido",
+      "text": "El que nunca dormía",
+      "tags": [
+        "respect"
+      ]
+    },
+    {
+      "id": "corrido_ambush",
+      "kind": "corrido",
+      "text": "La emboscada del kilómetro {number}",
+      "tags": [
+        "respect",
+        "victory"
+      ]
+    },
+    {
+      "id": "corrido_loyal",
+      "kind": "corrido",
+      "text": "Leal hasta el final",
+      "tags": [
+        "respect",
+        "loyalty"
+      ]
+    },
+    {
+      "id": "corrido_rise",
+      "kind": "corrido",
+      "text": "De {plaza.name} para el mundo",
+      "tags": [
+        "respect",
+        "ambition"
+      ]
+    },
+    {
+      "id": "corrido_ghost",
+      "kind": "corrido",
+      "text": "El fantasma de la brecha",
+      "tags": [
+        "respect",
+        "stealth"
+      ]
+    },
+    {
+      "id": "rumor_fake_convoy",
+      "kind": "rumor",
+      "text": "A convoy of {sender.name}'s men will cross {road.name} tonight.",
+      "tags": [
+        "bait",
+        "convoy"
+      ]
+    },
+    {
+      "id": "rumor_weak_plaza",
+      "kind": "rumor",
+      "text": "{plaza.name} is barely guarded. Most of the garrison left for Culiacán.",
+      "tags": [
+        "bait",
+        "weakness"
+      ]
+    },
+    {
+      "id": "rumor_lab_location",
+      "kind": "rumor",
+      "text": "{sender.name}'s biggest lab is hidden outside {plaza.name}.",
+      "tags": [
+        "bait",
+        "lab"
+      ]
+    },
+    {
+      "id": "rumor_betrayal",
+      "kind": "rumor",
+      "text": "{target.name} has been meeting with {rival_faction.name}'s people in secret.",
+      "tags": [
+        "betrayal"
+      ]
+    },
+    {
+      "id": "rumor_informant",
+      "kind": "rumor",
+      "text": "{target.name} is giving names to the federales in exchange for his brother's release.",
+      "tags": [
+        "betrayal",
+        "state"
+      ]
+    },
+    {
+      "id": "rumor_payroll_car",
+      "kind": "rumor",
+      "text": "{sender.name}'s payroll moves every Saturday on {road.name}, one car, two men.",
+      "tags": [
+        "bait",
+        "money"
+      ]
+    },
+    {
+      "id": "rumor_leader_location",
+      "kind": "rumor",
+      "text": "{sender.name} is staying at a ranch outside {plaza.name} with only a few guards.",
+      "tags": [
+        "bait",
+        "leader"
+      ]
+    },
+    {
+      "id": "rumor_foreign_deal",
+      "kind": "rumor",
+      "text": "{target.name} has promised a route to the outsiders from Jalisco.",
+      "tags": [
+        "betrayal",
+        "foreign"
+      ]
+    }
   ]
 }

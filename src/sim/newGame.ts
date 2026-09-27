@@ -3,14 +3,18 @@ import type { Content } from '../data/content';
 import type { VehicleType } from '../data/schemas';
 import { newId } from './context';
 import { seedRng } from './rng';
-import { SAVE_VERSION, type CharacterState, type CrewState, type GameState, type OpinionModifier } from './state';
+import { SAVE_VERSION, type CharacterState, type CrewState, type CrewTransit, type GameState, type OpinionModifier } from './state';
 
 export interface NewGameOptions {
   seed: number;
   playerId: string;
 }
 
-const NO_VEHICLES: Record<VehicleType, number> = { pickup: 0, suv: 0, motorcycle: 0, armored: 0 };
+export function newTransit(): CrewTransit {
+  return { waitUntil: null, rolled: [], lastRolledNode: null, nextStationaryRoll: 0, shiftAt: null, shiftAvoidRoad: null };
+}
+
+export const NO_VEHICLES: Record<VehicleType, number> = { pickup: 0, suv: 0, motorcycle: 0, armored: 0 };
 
 export function newGame(content: Content, opts: NewGameOptions): GameState {
   const { tuning } = content;
@@ -33,6 +37,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     pacts: [],
     schemes: [],
     reports: [],
+    drones: [],
     battles: {},
     pendingEvents: [],
     scheduledEvents: [],
@@ -90,6 +95,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     const ch: CharacterState = {
       id: def.id,
       name: def.name,
+      alias: def.alias,
       age: def.age,
       health: def.health,
       faction: def.faction,
@@ -131,6 +137,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
         armorDamage: 0,
         location: { kind: 'node', node: c.location },
         order: { type: 'garrison' },
+        transit: newTransit(),
       };
       state.crews[id] = crew;
     }

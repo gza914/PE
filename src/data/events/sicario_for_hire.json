@@ -1,0 +1,26 @@
+{
+  "id": "sicario_for_hire",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "cash_gt": 100000
+  },
+  "mean_days": 35,
+  "title": "A professional offers his services",
+  "text": "A former soldier, recommended by an old contact, is offering his crew for hire: disciplined, well armed, no questions.",
+  "options": [
+    {
+      "label": "Hire them",
+      "effects": {
+        "money": -60000,
+        "men": 4
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Decline",
+      "effects": {},
+      "ai_weight": 2
+    }
+  ]
+}

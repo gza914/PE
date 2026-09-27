@@ -26,6 +26,7 @@ export interface GameState {
   pacts: Pact[];
   schemes: Scheme[];
   reports: Report[];
+  drones: Drone[];
   battles: Record<Id, Battle>;
   /** Events waiting for a decision. */
   pendingEvents: PendingEvent[];
@@ -104,6 +105,8 @@ export interface Relation {
 export interface CharacterState {
   id: Id;
   name: string;
+  /** Nickname shown in the UI, if any. */
+  alias: string | null;
   age: number;
   health: number;
   /** Faction the character is aligned with; null means neutral. */
@@ -151,19 +154,53 @@ export type CrewLocation =
   | { kind: 'node'; node: Id }
   | { kind: 'road'; road: Id; from: Id; to: Id; progressKm: number };
 
-export type RoutePreference = 'fastest' | 'safest' | 'balanced';
+export type RoutePreference = 'fastest' | 'balanced' | 'safest';
+
+/** One road segment of a planned path, driven toward node `to`. */
+export interface PathStep {
+  road: Id;
+  to: Id;
+}
 
 export type CrewOrder =
   | { type: 'idle' }
   | { type: 'garrison' }
   | { type: 'lie_low' }
-  | { type: 'move'; destination: Id; route: Id[]; preference: RoutePreference; arriveAt: number | null }
-  | { type: 'ambush'; road: Id }
-  | { type: 'patrol'; road: Id }
-  | { type: 'raid'; target: Id; route: Id[] }
-  | { type: 'reinforce'; battle: Id; route: Id[] }
-  | { type: 'retreat'; route: Id[] }
+  | {
+      type: 'move';
+      destination: Id;
+      preference: RoutePreference;
+      waypoints: Id[];
+      path: PathStep[];
+      /** Sync arrival: the crew waits at its start until this hour. */
+      departAt: number | null;
+      arriveAt: number | null;
+    }
+  /** Hold a point on a road; `atKm` is measured from the road's `from` node (null = midpoint). */
+  | { type: 'ambush'; road: Id; atKm: number | null }
+  | { type: 'patrol'; road: Id; atKm: number | null }
+  | { type: 'raid'; target: Id; path: PathStep[] }
+  | { type: 'reinforce'; battle: Id; path: PathStep[] }
+  | { type: 'retreat'; destination: Id; path: PathStep[] }
   | { type: 'escort'; crew: Id };
+
+export type DroneReaction = 'relocate' | 'ambush' | 'feign' | 'hold';
+
+/** Bookkeeping for movement and detection; not player-facing. */
+export interface CrewTransit {
+  /** Breakdowns: no movement until this hour. */
+  waitUntil: number | null;
+  /** Nodes already rolled for on the current segment. */
+  rolled: Id[];
+  /** Last node rolled on approach this trip, so leaving it does not roll twice. */
+  lastRolledNode: Id | null;
+  /** Next hour a stationary crew in a watched spot rolls again. */
+  nextStationaryRoll: number;
+  /** A Calculador leader's delayed shift after spotting a drone. */
+  shiftAt: number | null;
+  /** Road to avoid when shifting. */
+  shiftAvoidRoad: Id | null;
+}
 
 export interface CrewState {
   id: Id;
@@ -184,6 +221,7 @@ export interface CrewState {
   armorDamage: number;
   location: CrewLocation;
   order: CrewOrder;
+  transit: CrewTransit;
 }
 
 // ---------------------------------------------------------------------------
@@ -191,18 +229,40 @@ export interface CrewState {
 // ---------------------------------------------------------------------------
 
 export type Confidence = 'confirmed' | 'estimated' | 'rumor';
+export type ReportSource = 'halcon' | 'patrol' | 'drone' | 'rumor';
+
+/**
+ * A network is a faction id, or a neutral character's own id. Everyone in a
+ * network shares halcones and reports.
+ */
+export type NetworkId = Id;
 
 export interface Report {
   id: Id;
-  /** Character whose network produced (or received) the report. */
-  observer: Id;
-  subject: { kind: 'crew'; crew: Id; men: number; vehicles: Partial<Record<VehicleType, number>> };
+  network: NetworkId;
+  crew: Id;
+  /** Owner of the sighted crew, as far as the network can tell. */
+  owner: Id;
+  men: number;
+  vehicles: Partial<Record<VehicleType, number>>;
   where: CrewLocation;
   roadType: RoadType | null;
   hour: number;
   confidence: Confidence;
+  source: ReportSource;
   /** True if planted by a rival; the observer does not know this. */
   planted: boolean;
+}
+
+export interface Drone {
+  id: Id;
+  network: NetworkId;
+  owner: Id;
+  road: Id;
+  launchedAt: number;
+  until: number;
+  /** Crews that already rolled to notice this drone. */
+  rolled: Id[];
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +330,8 @@ export interface FeedEntry {
   id: Id;
   hour: number;
   tier: FeedTier;
+  /** Network that sees this entry; null = everyone. */
+  audience: NetworkId | null;
   text: string;
   /** Map location to jump to, if any. */
   node: Id | null;

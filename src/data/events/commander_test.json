@@ -1,0 +1,34 @@
+{
+  "id": "commander_test",
+  "scope": "region",
+  "chain": "commander",
+  "trigger": {},
+  "title": "The commander's answer",
+  "text": "Your small gift to the new commander in {region.name} was accepted. He sent word that the rest of the arrangement will cost more than the last man's.",
+  "options": [
+    {
+      "label": "Pay his price",
+      "effects": {
+        "money": -110000,
+        "bribe_commander_days": 30
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Refuse and go quiet",
+      "effects": {
+        "lie_low_region": true
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Leak his name to the press",
+      "effects": {
+        "calentura": 10,
+        "credibility": -5,
+        "profile": 5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

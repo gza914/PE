@@ -1,0 +1,37 @@
+{
+  "id": "funeral_procession",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "combat_hours_gt": 6
+  },
+  "mean_days": 10,
+  "title": "A funeral with a band",
+  "text": "The family of one of your fallen men wants a procession through {plaza.name}, with a banda and trucks.",
+  "options": [
+    {
+      "label": "Allow it",
+      "effects": {
+        "support": 5,
+        "respect": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Use it to recruit",
+      "effects": {
+        "men": 4,
+        "calentura": 5,
+        "profile": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Keep it quiet",
+      "effects": {
+        "support": -5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

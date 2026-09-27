@@ -1,0 +1,34 @@
+{
+  "id": "outside_envoy",
+  "scope": "character",
+  "chain": "outside",
+  "trigger": {
+    "is_player": true,
+    "losing_ground": true
+  },
+  "mean_days": 20,
+  "title": "An envoy from outside",
+  "text": "A well-dressed man from Jalisco asked for a meeting. His people can help you, he says, with men and weapons.",
+  "options": [
+    {
+      "label": "Hear his terms",
+      "effects": {
+        "schedule_event": "outside_terms",
+        "in_hours": 24
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Refuse",
+      "effects": {},
+      "ai_weight": 2
+    },
+    {
+      "label": "Report it to your faction",
+      "effects": {
+        "opinion_own_faction": 15
+      },
+      "ai_weight": 1
+    }
+  ]
+}

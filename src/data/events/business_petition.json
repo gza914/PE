@@ -1,0 +1,39 @@
+{
+  "id": "business_petition",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "extortion_rate_is": "high"
+  },
+  "mean_days": 21,
+  "title": "The merchants' petition",
+  "text": "The shop owners of {plaza.name} sent a delegation: the cobro is killing them. Four businesses closed last month.",
+  "options": [
+    {
+      "label": "Lower the rate",
+      "effects": {
+        "extortion_rate": "medium",
+        "support": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Refuse",
+      "effects": {
+        "support": -5,
+        "fear": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Make an example",
+      "effects": {
+        "fear": 15,
+        "support": -15,
+        "calentura": 10,
+        "businesses_pct": -0.03
+      },
+      "ai_weight": 1
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "lab_explosion",
+  "scope": "plaza",
+  "trigger": {
+    "owner_is_player": true,
+    "labs_gt": 0
+  },
+  "mean_days": 60,
+  "title": "Fire at the lab",
+  "text": "A lab outside {plaza.name} caught fire overnight. The smoke could be seen from the highway.",
+  "options": [
+    {
+      "label": "Cover it up",
+      "effects": {
+        "money": -30000
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Abandon the lab",
+      "effects": {
+        "labs": -1,
+        "calentura": 5
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Say it was a rival's lab",
+      "effects": {
+        "credibility": -5,
+        "calentura": 10
+      },
+      "ai_weight": 1
+    }
+  ]
+}

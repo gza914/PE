@@ -1,0 +1,31 @@
+{
+  "id": "corrido_viral",
+  "scope": "character",
+  "trigger": {
+    "is_player": true,
+    "commissioned_corrido": true,
+    "respect_gt": 50
+  },
+  "mean_days": 10,
+  "title": "A corrido about you goes viral",
+  "text": "The corrido you paid for is playing in every truck from Guasave to Escuinapa. Now everyone knows your name, including the army.",
+  "options": [
+    {
+      "label": "Embrace it",
+      "effects": {
+        "respect": 10,
+        "profile": 15,
+        "state_intel": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Pay to have it taken down",
+      "effects": {
+        "money": -20000,
+        "profile": -5
+      },
+      "ai_weight": 1
+    }
+  ]
+}

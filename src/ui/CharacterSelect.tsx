@@ -7,7 +7,10 @@ export function CharacterSelect() {
   const content = useGame((s) => s.content);
   const start = useGame((s) => s.start);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1e9));
-  const playable = content.characters.filter((c) => c.startTier !== null);
+  const order = { faction_head: 0, city_boss: 1, town_jefe: 2 };
+  const playable = content.characters
+    .filter((c) => c.startTier !== null)
+    .sort((a, b) => a.faction.localeCompare(b.faction) || order[a.startTier!] - order[b.startTier!]);
   const traitName = (id: string) => content.traits.find((t) => t.id === id)?.name ?? id;
   const factionOf = (id: string) => content.factions.find((f) => f.id === id);
   const nodeName = (id: string | null) => content.nodes.find((n) => n.id === id)?.name ?? '—';
@@ -25,7 +28,8 @@ export function CharacterSelect() {
           const men = c.crews.reduce((n, crew) => n + crew.men, 0);
           return (
             <button key={c.id} className="card" onClick={() => start(c.id, seed)} style={{ borderColor: f?.color }}>
-              <strong>{c.name}</strong>
+              <strong>{c.alias ?? c.name}</strong>
+              {c.alias && <span className="muted small">{c.name}</span>}
               <span className="muted">{TIER_LABEL[c.startTier!]}</span>
               <span>
                 {f?.name} · {nodeName(c.homePlaza)}
