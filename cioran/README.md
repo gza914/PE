@@ -59,6 +59,10 @@ python3 stills.py 31 43   # optional: inspect single frames
 
 `render.py` produces a high-bitrate master. The committed file was then re-encoded at about 10 Mb/s.
 
+## Image candidates
+
+Every image screened for the film, including the ones that were cut, is in [`candidates/`](candidates/).
+
 ## Image credits
 
 All stock photographs are CC0 (public domain dedication), from Wikimedia Commons:
