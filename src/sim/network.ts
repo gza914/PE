@@ -4,6 +4,7 @@
  */
 import type { Content } from '../data/content';
 import type { CrewState, GameState, Id, NetworkId } from './state';
+import { world } from './world';
 
 export function networkOf(state: GameState, character: Id): NetworkId {
   return state.characters[character]?.faction ?? character;
@@ -25,7 +26,13 @@ export interface Watcher {
 export function watchersOf(state: GameState, content: Content, node: Id): Watcher[] {
   const plaza = state.nodes[node];
   if (!plaza || plaza.halconCoverage <= 0) return [];
-  if (plaza.owner) return [{ network: networkOf(state, plaza.owner), coverage: plaza.halconCoverage }];
+  if (plaza.owner) {
+    // Police on the owner's payroll add eyes; bought halcones report to the buyer instead.
+    const region = world(content).node(node).region;
+    const police = state.police.some((p) => p.owner === plaza.owner && p.region === region && p.until > state.hour);
+    const coverage = Math.min(100, plaza.halconCoverage + (police ? content.tuning.state.police.halconBonus : 0));
+    return [{ network: plaza.halconesBoughtBy ?? networkOf(state, plaza.owner), coverage }];
+  }
   if (node === content.culiacan.parentNode) {
     return content.factions
       .filter((f) => f.kind === 'major')

@@ -4,7 +4,12 @@
  * of the next tick. Orders name intent (go here, fastest); the sim plans the
  * path itself with the issuer's own knowledge.
  */
-import type { ExtortionRate, VehicleType } from '../data/schemas';
+import type { ExtortionRate, SchemeType, VehicleType } from '../data/schemas';
+import { declare } from './diplomacy';
+import { chooseOption } from './systems/events';
+import { infowarCommand, type InfowarCommand } from './systems/infowar';
+import { cancelScheme, startScheme } from './systems/schemes';
+import { stateCommand, type StateCommand } from './systems/stateForces';
 import { newId, pushFeed, type SimContext } from './context';
 import { escortsOf, groupOf, sameLocation } from './crews';
 import { crewNetwork, networkOf, ownedBy } from './network';
@@ -63,7 +68,11 @@ export type Command =
   | (Base & { type: 'battle_call_help'; battle: Id })
   | (Base & { type: 'battle_commit'; battle: Id; crew: Id })
   | (Base & { type: 'battle_accept_surrender'; battle: Id })
-  | (Base & { type: 'choose_event_option'; instance: Id; option: number });
+  | (Base & { type: 'choose_event_option'; instance: Id; option: number })
+  | (Base & { type: 'start_scheme'; scheme: SchemeType; target: Id })
+  | (Base & { type: 'cancel_scheme'; scheme: Id })
+  | StateCommand
+  | InfowarCommand;
 
 export interface Rejection {
   command: Command;
@@ -75,15 +84,14 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
   const { state, content } = ctx;
   const issuer = state.characters[cmd.issuer];
   if (!issuer) return `unknown issuer "${cmd.issuer}"`;
-  if (issuer.status !== 'free') return `${issuer.name} is ${issuer.status}`;
+  // A prisoner can still answer events about their situation; nothing else.
+  if (issuer.status !== 'free' && !(cmd.type === 'choose_event_option' && issuer.status === 'jailed')) return `${issuer.name} is ${issuer.status}`;
 
   switch (cmd.type) {
     case 'declare_alignment': {
       if (cmd.faction !== null && !content.factions.some((f) => f.id === cmd.faction && f.kind === 'major'))
         return `"${cmd.faction}" is not a major faction`;
-      // TODO(diplomacy): side-switch penalties once day 0 has passed.
-      if (issuer.faction !== cmd.faction) issuer.declaredAt = state.hour;
-      issuer.faction = cmd.faction;
+      declare(ctx, issuer.id, cmd.faction);
       return null;
     }
     case 'set_extortion_rate': {
@@ -161,16 +169,26 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       });
       return null;
     }
-    case 'choose_event_option': {
-      const idx = state.pendingEvents.findIndex((e) => e.instance === cmd.instance);
-      if (idx < 0) return `no pending event "${cmd.instance}"`;
-      const pending = state.pendingEvents[idx]!;
-      const def = content.events.find((e) => e.id === pending.event);
-      if (!def || cmd.option < 0 || cmd.option >= def.options.length) return `invalid option ${cmd.option}`;
-      // TODO(events): apply def.options[cmd.option].effects.
-      state.pendingEvents.splice(idx, 1);
-      return null;
-    }
+    case 'choose_event_option':
+      return chooseOption(ctx, cmd.issuer, cmd.instance, cmd.option);
+    case 'start_scheme':
+      if (!content.tuning.schemes.enabled) return 'schemes are switched off';
+      return startScheme(ctx, cmd.issuer, cmd.scheme, cmd.target);
+    case 'cancel_scheme':
+      return cancelScheme(ctx, cmd.issuer, cmd.scheme);
+    case 'bribe_commander':
+    case 'bribe_police':
+    case 'tip_off':
+    case 'hand_over_scapegoat':
+    case 'lie_low_region':
+      return stateCommand(ctx, cmd);
+    case 'narcomanta':
+    case 'video':
+    case 'social_claim':
+    case 'commission_corrido':
+    case 'plant_rumor':
+    case 'show_of_force':
+      return infowarCommand(ctx, cmd);
   }
 }
 
@@ -449,8 +467,11 @@ function economyCommand(ctx: SimContext, cmd: EconomyCommand): string | null {
       crew.vehicles[cmd.vehicle] += cmd.count;
       return null;
     }
-    case 'move_cash':
-      return moveCash(state, cmd.issuer, cmd.from, cmd.to, cmd.amount);
+    case 'move_cash': {
+      const err = moveCash(state, cmd.issuer, cmd.from, cmd.to, cmd.amount);
+      if (err === null) state.characters[cmd.issuer]!.lastCashMoveAt = state.hour;
+      return err;
+    }
     case 'request_aid': {
       const me = state.characters[cmd.issuer]!;
       if (!me.faction) return 'neutrals have no faction to ask';

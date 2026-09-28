@@ -16,6 +16,7 @@ const INCOME_LABEL: Record<IncomeStream, string> = {
   tribute: 'Tribute received',
   aid: 'Faction aid',
   ransom: 'Ransoms',
+  deals: 'Deals',
 };
 const COST_LABEL: Record<CostStream, string> = {
   payroll: 'Payroll',
@@ -27,6 +28,12 @@ const COST_LABEL: Record<CostStream, string> = {
   recruits: 'Recruits',
   drones: 'Drones',
   ransom: 'Ransoms',
+  bribes: 'Bribes',
+  messages: 'Messages',
+  schemes: 'Schemes',
+  seized: 'Seized by the State',
+  deals: 'Deals',
+  foreign: 'Outside partners',
 };
 const total = (o: Partial<Record<string, number>>) => Object.values(o).reduce<number>((n, v) => n + (v ?? 0), 0);
 

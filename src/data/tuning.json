@@ -192,8 +192,8 @@
     "battleRetentionHours": 24,
     "reinforceMaxHours": 6,
     "helpCrewsPerCall": 2,
-    "calenturaPerCombatHour": 1,
-    "calenturaPerCasualty": 0.3,
+    "calenturaPerCombatHour": 3,
+    "calenturaPerCasualty": 0.8,
     "supplyPerCombatHour": 0.3,
     "exhaustionPerCasualty": 1.0,
     "respectPerVictory": 5,
@@ -321,7 +321,13 @@
     "truceExhaustionThreshold": 70,
     "truceSustainDays": 14,
     "foreignRouteCutMin": 0.25,
-    "foreignRouteCutMax": 0.4
+    "foreignRouteCutMax": 0.4,
+    "foreignCrew": {
+      "men": 20,
+      "skill": 4,
+      "gear": 4,
+      "pickups": 5
+    }
   },
   "state": {
     "startingCalentura": 25,
@@ -336,11 +342,239 @@
     "commanderRotationDays": 45,
     "fightStateCalentura": 30,
     "captureOpProfileThreshold": 70,
-    "captureOpIntelThreshold": 100
+    "captureOpIntelThreshold": 100,
+    "enabled": true,
+    "statewideSurgeCalentura": 10,
+    "checkpoints": {
+      "chance": {
+        "normal": {
+          "highway": 0.04,
+          "paved": 0.0,
+          "brecha": 0.0
+        },
+        "elevated": {
+          "highway": 0.12,
+          "paved": 0.06,
+          "brecha": 0.02
+        },
+        "surge": {
+          "highway": 0.2,
+          "paved": 0.12,
+          "brecha": 0.05
+        },
+        "occupation": {
+          "highway": 0.3,
+          "paved": 0.2,
+          "brecha": 0.1
+        }
+      },
+      "delayHours": 2,
+      "feePerVehicle": 1500,
+      "bribedMultiplier": 0.25,
+      "stateIntelPerStop": 2
+    },
+    "raids": {
+      "dailyChance": {
+        "surge": 0.03,
+        "occupation": 0.07
+      },
+      "bribedMultiplier": 0.3,
+      "stashMin": 100000,
+      "leadHours": 48,
+      "stashSeizedShare": 0.5
+    },
+    "commanderBribeCost": 80000,
+    "police": {
+      "cost": 25000,
+      "days": 30,
+      "halconBonus": 10
+    },
+    "tipOff": {
+      "cost": 20000,
+      "stateIntel": 25,
+      "traceBaseChance": 0.1,
+      "tracePerAstucia": 0.02,
+      "traceOpinion": -40
+    },
+    "scapegoat": {
+      "calenturaDrop": 20,
+      "men": 2,
+      "opinion": -20,
+      "cooldownDays": 14
+    },
+    "lieLow": {
+      "days": 7,
+      "extraDecayPerDay": 2,
+      "incomeMultiplier": 0.5
+    },
+    "captureOps": {
+      "intelPerProfilePoint": 0.04,
+      "decayPerDay": 1,
+      "escortSlowdown": 0.1,
+      "intelAfterEscape": 20,
+      "fleeCashLossShare": 0.2,
+      "fightEscapeChance": 0.5,
+      "jailBribeCost": 500000,
+      "jailBribeChance": 0.6,
+      "breakoutChance": 0.35
+    },
+    "militaryClash": {
+      "lossShareMin": 0.1,
+      "lossShareMax": 0.35,
+      "calentura": 20,
+      "leaderCaptureChance": 0.15
+    }
   },
   "events": {
     "targetPlayerEventsPerWeekMin": 2,
-    "targetPlayerEventsPerWeekMax": 4
+    "targetPlayerEventsPerWeekMax": 4,
+    "enabled": true,
+    "playerWeeklyCap": 4,
+    "repeatCooldownDays": 30,
+    "chainCooldownDays": 5,
+    "autoResolveHours": 72,
+    "familyDeathWindowDays": 7,
+    "losingGroundShare": 0.7,
+    "cashOnRoadHours": 24,
+    "populatedBattleDays": 3,
+    "combatWeekKeep": 0.857,
+    "eventLogDays": 60,
+    "opinionDecayDays": 90,
+    "meanDaysMultiplier": 0.6
+  },
+  "infowar": {
+    "credibilityBase": 0.5,
+    "narcomanta": {
+      "cost": 5000,
+      "fear": 3,
+      "rivalOpinion": -10,
+      "calentura": 2,
+      "support": 3
+    },
+    "video": {
+      "cost": 20000,
+      "morale": 10,
+      "profile": 10,
+      "respect": 3,
+      "calentura": 15,
+      "statewideCalentura": 3,
+      "cooldownDays": 7
+    },
+    "claim": {
+      "morale": 5,
+      "trueWindowDays": 3,
+      "exposureDays": 14,
+      "exposureBaseChance": 0.03,
+      "exposurePerAstucia": 0.006,
+      "credibilityLoss": 15,
+      "cooldownDays": 3
+    },
+    "corrido": {
+      "cost": 60000,
+      "days": 30,
+      "respectPerDay": 0.5,
+      "recruitsPerDay": 0.3,
+      "profile": 10,
+      "stateIntel": 10
+    },
+    "rumor": {
+      "cost": 10000,
+      "lastsHours": 36,
+      "discoveryBaseChance": 0.05,
+      "discoveryPerAstucia": 0.015,
+      "credibilityLoss": 10,
+      "targetOpinion": -25,
+      "betrayalOpinion": -30,
+      "purgeBelowOpinion": -20,
+      "fakeConvoyMen": 20,
+      "fakeGarrisonMen": 4
+    },
+    "showOfForce": {
+      "fear": 10,
+      "respect": 3,
+      "recruits": 5,
+      "calentura": 20,
+      "support": -5
+    }
+  },
+  "schemes": {
+    "enabled": true,
+    "maxActive": 2,
+    "discoveredOpinion": -40,
+    "types": {
+      "flip": {
+        "cost": 100000,
+        "skill": "palabra",
+        "base": 2,
+        "perSkill": 0.35,
+        "discoveryBase": 0.02,
+        "discoveryPerAstucia": 0.002,
+        "successBase": 0.3,
+        "successPerSkill": 0.02
+      },
+      "assassinate": {
+        "cost": 80000,
+        "skill": "astucia",
+        "base": 2,
+        "perSkill": 0.4,
+        "discoveryBase": 0.03,
+        "discoveryPerAstucia": 0.003,
+        "successBase": 0.4,
+        "successPerSkill": 0.02
+      },
+      "frame": {
+        "cost": 30000,
+        "skill": "astucia",
+        "base": 3,
+        "perSkill": 0.4,
+        "discoveryBase": 0.02,
+        "discoveryPerAstucia": 0.002,
+        "successBase": 0.6,
+        "successPerSkill": 0.015
+      },
+      "leak_location": {
+        "cost": 10000,
+        "skill": "astucia",
+        "base": 5,
+        "perSkill": 0.5,
+        "discoveryBase": 0.03,
+        "discoveryPerAstucia": 0.002,
+        "successBase": 0.8,
+        "successPerSkill": 0.01
+      },
+      "buy_halcones": {
+        "cost": 60000,
+        "skill": "negocio",
+        "base": 4,
+        "perSkill": 0.4,
+        "discoveryBase": 0.02,
+        "discoveryPerAstucia": 0.002,
+        "successBase": 0.7,
+        "successPerSkill": 0.01
+      },
+      "compadrazgo": {
+        "cost": 50000,
+        "skill": "palabra",
+        "base": 3,
+        "perSkill": 0.4,
+        "discoveryBase": 0.0,
+        "discoveryPerAstucia": 0.0,
+        "successBase": 0.6,
+        "successPerSkill": 0.02
+      }
+    },
+    "flipOpinionWeight": 0.01,
+    "assassinateSecurityPerCrew": 0.05,
+    "assassinateParanoicoPenalty": 0.2,
+    "frameOpinion": -30,
+    "frameStateIntel": 20,
+    "leakStateIntel": 40,
+    "compadrazgoOpinion": 20,
+    "halconNotice": {
+      "base": 0.05,
+      "perAstucia": 0.01,
+      "buyBackCost": 40000
+    }
   },
   "endings": {
     "factionCollapseSuccessionDays": 7,
@@ -493,13 +727,34 @@
       "operational": true,
       "tactical": true,
       "economy": true,
-      "traffic": true
+      "traffic": true,
+      "events": true,
+      "shadow": true
     },
     "economyReserveWeeks": 0.5,
     "forceGrowth": {
       "startDay": 90,
       "min": 0.85,
       "max": 1.25
+    },
+    "shadow": {
+      "reserveWeeks": 3,
+      "bribeCommanderTier": 2,
+      "lieLowTier": 2,
+      "lieLowMinWeight": 1.2,
+      "scapegoatTier": 3,
+      "schemeDailyChance": 0.03,
+      "messageDailyChance": 0.05,
+      "rumorDailyChance": 0.004,
+      "corridoCashMultiple": 10,
+      "claimBannerDays": 2,
+      "rallyMoraleBelow": 50,
+      "claimBannerChance": 0.5,
+      "rallyDailyChance": 0.2,
+      "schemeMix": {
+        "flip": 0.35,
+        "buyHalcones": 0.4
+      }
     }
   }
 }

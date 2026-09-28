@@ -1,0 +1,31 @@
+{
+  "id": "capture_operation",
+  "scope": "character",
+  "fired_by_system": true,
+  "trigger": {},
+  "title": "They are coming for you",
+  "text": "Your people at the checkpoint called it in: army trucks and marines, heading for {character.home}. The State has had enough of {character.name}.",
+  "options": [
+    {
+      "label": "Fight your way out",
+      "effects": {
+        "resolve_capture": "fight"
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Run for the sierra tonight",
+      "effects": {
+        "resolve_capture": "flee"
+      },
+      "ai_weight": 5
+    },
+    {
+      "label": "Give yourself up and call your lawyers",
+      "effects": {
+        "resolve_capture": "surrender"
+      },
+      "ai_weight": 1
+    }
+  ]
+}

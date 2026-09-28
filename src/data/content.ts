@@ -29,6 +29,17 @@ import {
   type Tuning,
 } from './schemas';
 
+/** Events the simulation fires by id (the State, rumors); content must define them. */
+export const SYSTEM_EVENT_IDS = [
+  'capture_operation',
+  'rumor_betrayal',
+  'lab_raid_warning',
+  'stash_house_warning',
+  'army_lab_raid',
+  'stash_house_raided',
+] as const;
+export type SystemEventId = (typeof SYSTEM_EVENT_IDS)[number];
+
 export interface Content {
   regions: Region[];
   nodes: MapNode[];
@@ -268,9 +279,15 @@ export function crossReferenceProblems(c: Content): string[] {
       if (side !== undefined && side !== 'neutral' && !majorIds.has(side))
         p.push(`events/${ev.id}: option "${opt.label}" declares for unknown faction "${side}"`);
     }
-    if (ev.mean_days === undefined && !c.events.some((e) => e.options.some((o) => o.effects.schedule_event === ev.id)))
+    const scheduled = c.events.some((e) => e.options.some((o) => o.effects.schedule_event === ev.id));
+    if (ev.mean_days === undefined && !ev.fired_by_system && !scheduled)
       p.push(`events/${ev.id}: has no mean_days and nothing schedules it, so it can never fire`);
+    if (ev.fired_by_system && !(SYSTEM_EVENT_IDS as readonly string[]).includes(ev.id))
+      p.push(`events/${ev.id}: fired_by_system, but no system fires "${ev.id}"`);
+    if (ev.counterpart !== undefined && ev.scope !== 'character') p.push(`events/${ev.id}: a counterpart needs character scope`);
   }
+  // Events the systems fire by id must exist.
+  for (const id of SYSTEM_EVENT_IDS) if (!eventIds.has(id)) p.push(`events: missing "${id}", which the sim fires`);
 
   const w = c.tuning.endings.scoreWeights;
   const sum = w.territory + w.wealth + w.standing + w.reputation + w.force;

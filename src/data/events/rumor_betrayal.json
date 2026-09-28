@@ -1,0 +1,34 @@
+{
+  "id": "rumor_betrayal",
+  "scope": "character",
+  "fired_by_system": true,
+  "trigger": {},
+  "title": "Is he talking to the other side?",
+  "text": "Word reaches you that {character.name} has been meeting people from the other side. Nobody can say for sure where the story came from.",
+  "options": [
+    {
+      "label": "Have him killed",
+      "effects": {
+        "kill_scope_character": true,
+        "fear": 5,
+        "opinion_scope_allies": -20
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Watch him closely",
+      "effects": {
+        "decider_opinion_of_other": -20
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Ask him straight out",
+      "effects": {
+        "decider_opinion_of_other": -5,
+        "opinion_scope": -5
+      },
+      "ai_weight": 2
+    }
+  ]
+}

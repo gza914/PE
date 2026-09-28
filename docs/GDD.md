@@ -787,3 +787,61 @@ Measured over 80 AI-vs-AI campaigns (`RUNS=80 npm run balance`; neutrals on odd 
 | Invariants | 0 problems | pass |
 
 Money pressure is still a miss. AI lieutenants cut costs when broke and heads bail them out, so few ever miss a payday. It likely needs costlier wars (ammo, vehicle losses) or a smaller aid pot, and it is left for the balance pass.
+
+**Phase 5: the State, information warfare, schemes, and events.** Built:
+
+- The event engine (`systems/events.ts`): daily mean-time-to-happen rolls, scheduled follow-ups, delays, and events fired by systems. Every trigger condition and option effect in the closed vocabulary is implemented, and option conditions and costs are checked before a choice is allowed. AI deciders choose by `ai_weight`, with risky options discounted by caution. The player gets a popup with a hover preview of each option's effects, can put a decision aside, and an unanswered event resolves with the advisor's pick after 72 hours.
+- Who decides an event: plaza events go to the plaza's owner, region events to each character holding plazas there, faction events to each member, and character events to the character or, with `decided_by: "boss"`, their superior. Events about the decider themselves can name a counterpart (an ally, a rival lieutenant, a relative), whom opinion, compadrazgo, and flip effects aim at.
+- Pacing: at most 4 mean-time events a week reach the player, the same event does not repeat for a scope within 30 days, one chain's events are at least 5 days apart for a decider, and truce and crackdown events fire once per region (`once_per_scope`). A global `meanDaysMultiplier` sets the overall frequency.
+- The State (`systems/stateForces.ts`):
+  - Calentura tiers set military presence, checkpoint odds by road type (a delay, a fee, and State intel on the owner), and in a surge army raids on labs and stash houses. A stash raid seizes half the stash.
+  - Commanders can be bribed per region until they rotate out (then the commander_rotation event asks whether to pay again).
+  - Police on the payroll warn of raids first and add halcón coverage.
+  - Player options: anonymous tip-offs (a raid on a rival, who may trace it back), scapegoats (−20 calentura for two men and their leader's anger), and lying low (faster cooling, half income in the region).
+  - Profiles above 70 fill a State intel meter; at 100 a capture operation offers fight, flee, or surrender. Prison ends in a bribe, a breakout, or extradition after 30 days (extradition works like death for succession).
+  - Occupation raises every signature by half.
+- Information warfare (`systems/infowar.ts`):
+  - Banners claim a plaza, warn, or name a rival.
+  - Videos rally your side or threaten a rival statewide.
+  - Social media claims move morale; false ones can be exposed by a sharp rival, which costs credibility.
+  - Corridos build respect and recruits for 30 days.
+  - A show of force parades crews for fear and recruits, and reveals them to everyone.
+  - Planted rumors feed a rival network a fake convoy or a fake weak garrison, both indistinguishable from real reports, or tell a head that one of his lieutenants is talking to the other side. A Paranoico head, or one who already distrusts him, may purge him. Rumors can be found out.
+  - Every message scales with credibility (0.5 + credibility/100). Fear gain, calentura, and profile growth follow trait hooks.
+- Schemes (`systems/schemes.ts`): flip, assassinate, frame, leak a location, buy halcones, and compadrazgo. Each has daily progress from the schemer's skill (Calculador faster), daily discovery against the target's Astucia (Paranoico harder), and a final roll. Discovery ends a scheme and names the schemer. Bought halcones report to the buyer until the owner purges or outbids them.
+- Side switching: leaving a faction costs the old head's opinion permanently (traitor) and starts the new one suspicious. A flipped lieutenant brings his plazas and crews and is pulled out of his old side's battles and requests.
+- Local truces (`pacts.ts`): no fighting between the two sides in the region; the AI skips truce regions when picking targets.
+- AI:
+  - The shadow layer (`ai/shadow.ts`) bribes commanders where labs or cash sit in a surge, buys police, lies low when cautious, hands over scapegoats under occupation, hangs banners on taken plazas, posts rally videos when morale sags, commissions corridos when rich, runs schemes (vengeance first, then flipping, blinding, or striking a neighbor), and plants rumors.
+  - A captured or jailed head no longer paralyzes his faction: the most senior free member runs the war (`actingHead`).
+- UI:
+  - The event popup, and a Decisions button for parked events.
+  - A character panel (skills, traits, opinions both ways with breakdowns, relationships, plazas, schemes and rumors against them).
+  - A Shadows tab with your reputation and State intel meter, the State region by region with its actions, messages, rumors, your schemes, and truces.
+  - Plaza actions (banner, show of force, tip-off, buy halcones), and clickable names everywhere.
+- Content: 5 new events (capture operation, prison, extradition push, federal crackdown, rumored betrayal), for 49 in all. Raids and raid warnings are now fired by the State, and payroll robberies take the money.
+
+Design decisions made during the build:
+
+- **Truces froze the war.** Region events fired once per holder, so every lieutenant in a region could sign a truce; with the AI still planning attacks the truce then blocked, whole campaigns went 60 days without an hour of fighting. Truce events now fire once per region, and the AI does not target truce regions.
+- **Heads kept getting caught.** At the first tuning a 95-profile head faced a capture operation every three weeks, and about a third ended in prison, which stopped his faction's planning and shortened wars to a median of 99 days. State intel now builds at 0.04 per profile point a day, an escape resets it to 20, AI heads prefer to run, and a held head's senior man takes over the war.
+- **Rumors doubled the body count.** AI rumors against the Paranoico Mayos head produced 15 to 35 purge decisions a campaign. Rumors are now rare, one at a time per planter, and the same rumor cannot reach a head about the same man within 30 days.
+- **Calentura now climbs with fighting:** 3 per combat hour and 0.8 per casualty (up from 1 and 0.3), so heavy fighting reaches a surge while quiet regions still cool by 2 a day as specified.
+- Army units are not on the map: fights with the State (a raid resisted, a checkpoint broken, a capture operation fought) resolve at once, costing each crew present 10–35% of its men and heating the whole state.
+
+Measured over 80 AI-vs-AI campaigns (`RUNS=80 npm run balance`; neutrals on odd seeds):
+
+| Target | Result | |
+| --- | --- | --- |
+| War length | median 133.5 days | pass |
+| Time cap | 6% of runs | pass |
+| Faction balance | Chapitos 44%, Mayos 56% of decided runs | pass |
+| Pulse | 8.7 quiet stretches per campaign | pass |
+| Neutral risk | 45% hold a plaza on day 60 | pass |
+| Event pacing | 2.1 events a week reach the player | pass |
+| Money pressure | 29% of lieutenants miss a payroll | **miss** |
+| Invariants | 0 problems | pass |
+
+Per campaign the State spends 8% of region-days at surge or worse and makes 2.6 raids and 3.5 capture operations; 0.7 characters are jailed and 0.3 extradited. About 160 events fire in all, and 5.7 characters die. A tick takes about 3 ms, up from 1.3.
+
+Money pressure improved with checkpoint fees, bribes, and seizures, but it is still a miss. Not built in this phase: pacts other than local truces (non-aggression, safe passage, mutual defense, joint attack, route share), foreign allies' ambition meter, and faction rank progression.

@@ -2,6 +2,7 @@ import { lastSeen } from '../../sim/knowledge';
 import { crewNetwork, networkOf } from '../../sim/network';
 import { useGame } from '../store';
 import { PlazaEconomy } from './PlazaEconomy';
+import { PlazaShadowActions } from './PlazaShadowActions';
 import { charLabel, crewLabel, playerNetwork } from '../util';
 
 export function NodePanel({ id }: { id: string }) {
@@ -28,7 +29,17 @@ export function NodePanel({ id }: { id: string }) {
       </p>
       <dl>
         <dt>Owner</dt>
-        <dd>{owner ? charLabel(game, owner.id) : def.hasSubmap ? 'Contested (see Culiacán view)' : 'None'}</dd>
+        <dd>
+          {owner ? (
+            <button className="linkish" onClick={() => select({ kind: 'character', id: owner.id })}>
+              {charLabel(game, owner.id)}
+            </button>
+          ) : def.hasSubmap ? (
+            'Contested (see Culiacán view)'
+          ) : (
+            'None'
+          )}
+        </dd>
         <dt>Fortification</dt>
         <dd>{p.fortification} / 3</dd>
         <dt>Support</dt>
@@ -36,7 +47,7 @@ export function NodePanel({ id }: { id: string }) {
         <dt>Halcones</dt>
         <dd>{known(p.halconCoverage)}</dd>
         <dt>Businesses</dt>
-        <dd>{p.businesses}</dd>
+        <dd>{Math.round(p.businesses)}</dd>
         <dt>Labs</dt>
         <dd>{known(p.labs)}</dd>
         <dt>Military</dt>
@@ -59,6 +70,7 @@ export function NodePanel({ id }: { id: string }) {
         </div>
       )}
       {mine && <PlazaEconomy id={id} />}
+      <PlazaShadowActions id={id} />
       {crews.length > 0 && (
         <>
           <h3>Crews here</h3>

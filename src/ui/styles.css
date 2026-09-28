@@ -162,3 +162,20 @@ ul.plain { list-style: none; padding: 0; margin: 4px 0; }
 .endcard h1 { font-size: 32px; margin: 4px 0 8px; color: var(--accent); }
 .endcard table { width: 100%; margin: 8px 0; }
 .endcard td { padding: 2px 4px; }
+
+/* Phase 5: events, characters, the State, messages, schemes */
+.eventcard { max-width: 520px; }
+.eventcard h2 { margin: 2px 0 8px; color: var(--accent); }
+.eventcard .options { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.eventcard .option { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 2px; padding: 8px 10px; }
+.trait { display: inline-block; margin: 0 4px 4px 0; padding: 1px 6px; border: 1px solid var(--line); border-radius: 10px; cursor: help; }
+.actions { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; align-items: center; }
+.meter { display: inline-block; width: 80px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; vertical-align: middle; }
+.meter span { display: block; height: 100%; background: var(--accent); }
+.warn { color: #ff7b6b; }
+.stateregion { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.stateregion .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.tier.elevated { color: #e3c16f; }
+.tier.surge { color: #ff9b5b; }
+.tier.occupation { color: #ff5b5b; font-weight: 600; }
+.scheme { display: flex; align-items: center; gap: 6px; justify-content: space-between; margin: 4px 0; }

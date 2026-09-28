@@ -40,15 +40,15 @@ export function captureCharacter(ctx: SimContext, id: Id, captor: Id): void {
   }
 }
 
-/** Kills a character and hands their plazas, crews, and cash to a successor. */
-export function killCharacter(ctx: SimContext, id: Id): void {
+/** Kills (or extradites) a character and hands their plazas, crews, and cash to a successor. */
+export function killCharacter(ctx: SimContext, id: Id, fate: 'dead' | 'extradited' = 'dead'): void {
   const { state } = ctx;
   const ch = state.characters[id];
-  if (!ch || ch.status === 'dead') return;
-  ch.status = 'dead';
+  if (!ch || ch.status === 'dead' || ch.status === 'extradited') return;
+  ch.status = fate;
   ch.statusSince = state.hour;
   ch.captor = null;
-  pushFeed(state, 'critical', `${charName(ctx, id)} is dead.`, ch.homePlaza, null);
+  pushFeed(state, 'critical', fate === 'dead' ? `${charName(ctx, id)} is dead.` : `${charName(ctx, id)} was extradited and is gone for good.`, ch.homePlaza, null);
 
   const heir = successorOf(ctx, id);
   if (id === state.playerId && !heir) {
@@ -78,7 +78,7 @@ function successorOf(ctx: SimContext, id: Id): Id | null {
   if (id === state.playerId && !state.autoplay) return null;
   const head = ch.faction ? state.factions[ch.faction]?.head : null;
   const hs = head ? state.characters[head]?.status : undefined;
-  if (head && head !== id && (hs === 'free' || hs === 'captured')) return head;
+  if (head && head !== id && (hs === 'free' || hs === 'captured' || hs === 'jailed')) return head;
   const RANK = { head: 5, inner_circle: 4, senior_lieutenant: 3, lieutenant: 2, associate: 1, crew_leader: 1 } as const;
   const member = Object.values(state.characters)
     .filter((c) => c.id !== id && c.status === 'free' && ch.faction !== null && c.faction === ch.faction)

@@ -3,9 +3,9 @@
   "scope": "character",
   "trigger": {
     "is_player": true,
-    "player_neutral": true,
     "day_gt": 90,
-    "exhaustion_gt": 60
+    "exhaustion_gt": 60,
+    "decider_neutral": true
   },
   "mean_days": 10,
   "title": "Kingmaker",

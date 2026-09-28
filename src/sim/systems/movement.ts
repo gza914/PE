@@ -18,6 +18,7 @@ import { allowedRoadTypes, groupSpeedKmh } from '../signature';
 import type { CrewLocation, CrewOrder, CrewState, Id, PathStep } from '../state';
 import { otherEnd, world } from '../world';
 import { rollNode } from './detection';
+import { checkpointStop } from './stateForces';
 
 const EPS = 1e-9;
 
@@ -158,6 +159,8 @@ function enterRoad(run: MoveRun, crew: CrewState, group: CrewState[], roadId: Id
       return false;
     }
   }
+  // State checkpoints hold groups up at the edge of town.
+  if (checkpointStop(ctx, group, fromNode, road.type)) return false;
   return true;
 }
 

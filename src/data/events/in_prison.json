@@ -1,0 +1,31 @@
+{
+  "id": "in_prison",
+  "scope": "character",
+  "mean_days": 4,
+  "trigger": {
+    "jailed": true
+  },
+  "title": "Behind bars",
+  "text": "{character.name} sits in a federal prison while the extradition paperwork moves. The lawyers say time is short.",
+  "options": [
+    {
+      "label": "Pay the judge and the warden",
+      "effects": {
+        "jail_bribe": true
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Organize a breakout",
+      "effects": {
+        "jail_breakout": true
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Let the lawyers work",
+      "effects": {},
+      "ai_weight": 1
+    }
+  ]
+}

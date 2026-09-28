@@ -98,3 +98,14 @@ export function ledgerTotals(state: GameState, id: Id, days: number): { income: 
   const sum = (o: Partial<Record<string, number>>) => Object.values(o).reduce<number>((n, v) => n + (v ?? 0), 0);
   return { income: entries.reduce((n, e) => n + sum(e.income), 0), costs: entries.reduce((n, e) => n + sum(e.costs), 0) };
 }
+
+/** The State seizes a share of one plaza's stash. Returns the amount taken. */
+export function seizeStash(state: GameState, content: Content, node: Id, share: number): number {
+  const p = state.nodes[node];
+  if (!p || p.stash <= 0 || !p.owner) return 0;
+  const taken = p.stash * Math.max(0, Math.min(1, share));
+  p.stash -= taken;
+  const t = today(state, content, p.owner);
+  if (t) t.costs.seized = (t.costs.seized ?? 0) + taken;
+  return taken;
+}

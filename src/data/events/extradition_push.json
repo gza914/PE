@@ -1,0 +1,36 @@
+{
+  "id": "extradition_push",
+  "scope": "character",
+  "mean_days": 60,
+  "trigger": {
+    "profile_gt": 80,
+    "day_gt": 30
+  },
+  "title": "Washington wants a name",
+  "text": "A foreign government is pressing Mexico City for extraditions, and {character.name} is on the list the newspapers are printing.",
+  "options": [
+    {
+      "label": "Drop out of sight for a while",
+      "effects": {
+        "profile": -10,
+        "state_intel": 10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Grease the right desks in the capital",
+      "effects": {
+        "money": -150000,
+        "state_intel": -10
+      },
+      "ai_weight": 2
+    },
+    {
+      "label": "Ignore it",
+      "effects": {
+        "state_intel": 30
+      },
+      "ai_weight": 1
+    }
+  ]
+}

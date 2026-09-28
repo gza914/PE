@@ -38,14 +38,33 @@ const OPINION_LABEL: Record<string, string> = {
   shared_a_victory: 'Shared a victory',
   paid_late: 'Paid late',
   starting_lean: 'Old loyalties',
+  traitor: 'Traitor',
+  turncoat: 'Changed sides',
+  snitched_to_the_army: 'Snitched to the army',
+  gave_up_my_men: 'Gave up my men',
+  named_on_a_banner: 'Named on a banner',
+  rumored_turncoat: 'Rumored to be talking to the other side',
+  planted_lies: 'Planted lies',
+  blamed_for_a_disaster: 'Blamed for a disaster',
+  compadres: 'Compadres',
+  helped_defend: 'Helped defend',
 };
 
-function Opinion({ from, to }: { from: string; to: string }) {
+function opinionLabel(content: { events: { id: string; title: string }[] }, key: string): string {
+  if (OPINION_LABEL[key]) return OPINION_LABEL[key]!;
+  const ev = content.events.find((e) => e.id === key);
+  if (ev) return ev.title;
+  if (key.startsWith('schemed_')) return 'Schemed against me';
+  return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+}
+
+/** An opinion value with a CK3-style hover breakdown. */
+export function Opinion({ from, to }: { from: string; to: string }) {
   const { content, game } = useGame();
   if (!game) return null;
   const lines = opinionBreakdown(game, content, from, to);
   const v = Math.round(opinionOf(game, content, from, to));
-  const title = lines.map((l) => `${OPINION_LABEL[l.key] ?? l.key}: ${l.value > 0 ? '+' : ''}${Math.round(l.value)}`).join('\n') || 'No history';
+  const title = lines.map((l) => `${opinionLabel(content, l.key)}: ${l.value > 0 ? '+' : ''}${Math.round(l.value)}`).join('\n') || 'No history';
   return (
     <span className={`opinion ${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}`} title={title}>
       {v > 0 ? '+' : ''}
@@ -55,7 +74,7 @@ function Opinion({ from, to }: { from: string; to: string }) {
 }
 
 export function FactionPanel() {
-  const { content, game, enqueue, queue } = useGame();
+  const { content, game, enqueue, queue, select } = useGame();
   if (!game) return null;
   const me = game.characters[game.playerId]!;
   const w = world(content);
@@ -112,7 +131,17 @@ export function FactionPanel() {
           <h3>{content.factions.find((f) => f.id === me.faction)?.name}</h3>
           <dl className="small">
             <dt>Head</dt>
-            <dd>{iAmHead ? 'You' : head ? charLabel(game, head.id) : 'Nobody'}</dd>
+            <dd>
+              {iAmHead ? (
+                'You'
+              ) : head ? (
+                <button className="linkish" onClick={() => select({ kind: 'character', id: head.id })}>
+                  {charLabel(game, head.id)}
+                </button>
+              ) : (
+                'Nobody'
+              )}
+            </dd>
             <dt>Supply</dt>
             <dd>{Math.round(fs.supply)}</dd>
             <dt>Exhaustion</dt>

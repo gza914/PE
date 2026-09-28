@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { CharacterSelect } from './CharacterSelect';
 import { DetailPanel } from './DetailPanel';
 import { EndScreen } from './EndScreen';
+import { EventPopup } from './EventPopup';
 import { Feed } from './Feed';
 import { CuliacanMap } from './map/CuliacanMap';
 import { StateMap } from './map/StateMap';
@@ -55,6 +56,7 @@ export function App() {
       <aside className="panel right">
         <Feed />
       </aside>
+      <EventPopup />
       <EndScreen />
     </div>
   );

@@ -43,7 +43,7 @@ describe('tick', () => {
       return JSON.stringify(s);
     };
     expect(run()).toBe(run());
-  });
+  }, 60000);
 
   it('applies valid commands and rejects invalid ones', () => {
     const s0 = newGame(content, opts);

@@ -1,4 +1,5 @@
 import { BattlePanel } from './panels/BattlePanel';
+import { CharacterPanel } from './panels/CharacterPanel';
 import { ColoniaPanel } from './panels/ColoniaPanel';
 import { CrewPanel } from './panels/CrewPanel';
 import { NodePanel } from './panels/NodePanel';
@@ -27,6 +28,7 @@ export function DetailPanel() {
       </>
     );
   }
+  if (selected.kind === 'character') return (<>{error}<CharacterPanel id={selected.id} /></>);
   if (selected.kind === 'node') return (<>{error}<NodePanel id={selected.id} /></>);
   if (selected.kind === 'road') return (<>{error}<RoadPanel id={selected.id} /></>);
   if (selected.kind === 'battle') {

@@ -2,7 +2,7 @@
   "id": "captured_man_talking",
   "scope": "character",
   "trigger": {
-    "man_held_by_state": true
+    "jailed": true
   },
   "mean_days": 7,
   "title": "Your man is talking",
@@ -34,5 +34,6 @@
       },
       "ai_weight": 3
     }
-  ]
+  ],
+  "decided_by": "boss"
 }

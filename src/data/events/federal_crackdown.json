@@ -1,0 +1,38 @@
+{
+  "id": "federal_crackdown",
+  "scope": "region",
+  "mean_days": 45,
+  "trigger": {
+    "calentura_gt": 55,
+    "day_gt": 20
+  },
+  "title": "A crackdown from the capital",
+  "text": "The Interior Ministry announces an operation in {region.name}. Checkpoints double overnight and the governor is on television.",
+  "options": [
+    {
+      "label": "Pull your people off the highways",
+      "effects": {
+        "lie_low_region": true,
+        "supply": -3
+      },
+      "ai_weight": 3
+    },
+    {
+      "label": "Carry on as usual",
+      "effects": {
+        "calentura": 10,
+        "state_intel": 5
+      },
+      "ai_weight": 1
+    },
+    {
+      "label": "Pay to be left off the list",
+      "effects": {
+        "money": -50000,
+        "bribe_commander_days": 14
+      },
+      "ai_weight": 2
+    }
+  ],
+  "once_per_scope": true
+}

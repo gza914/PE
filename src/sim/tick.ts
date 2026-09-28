@@ -8,6 +8,7 @@ import { applyCommand, type Command, type Rejection } from './commands';
 import { newContext } from './context';
 import type { GameState } from './state';
 import { pruneOpinions } from './opinion';
+import { prunePacts } from './pacts';
 import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -69,6 +70,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runInfowarDaily(ctx);
     runEventsDaily(ctx);
     pruneOpinions(state);
+    prunePacts(state);
   }
   if (isPayrollHour(state.hour, tuning)) payWeeklyPayroll(ctx);
 

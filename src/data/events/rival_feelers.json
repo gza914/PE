@@ -4,8 +4,8 @@
   "chain": "flip",
   "trigger": {
     "is_player": true,
-    "player_aligned": true,
-    "day_gt": 20
+    "day_gt": 20,
+    "decider_aligned": true
   },
   "mean_days": 30,
   "title": "Feelers from the other side",
@@ -31,5 +31,6 @@
       "effects": {},
       "ai_weight": 1
     }
-  ]
+  ],
+  "counterpart": "rival_lieutenant"
 }

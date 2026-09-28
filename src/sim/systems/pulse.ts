@@ -38,6 +38,7 @@ export function runPulseDaily(ctx: SimContext): void {
     } else {
       r.quietDays = 0;
     }
+    r.combatHoursWeek = r.combatHoursWeek * content.tuning.events.combatWeekKeep + hours;
     r.combatHoursToday = 0;
   }
 

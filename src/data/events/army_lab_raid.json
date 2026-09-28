@@ -32,5 +32,6 @@
       },
       "ai_weight": 2
     }
-  ]
+  ],
+  "fired_by_system": true
 }

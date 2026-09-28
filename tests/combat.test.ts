@@ -9,7 +9,7 @@ import { crewPower } from '../src/sim/power';
 import type { Battle, GameState } from '../src/sim/state';
 import { killCharacter } from '../src/sim/systems/characters';
 import { tick } from '../src/sim/tick';
-import { addCrew, calm, certain, empty, noAi, noBreakdowns, tuned } from './helpers';
+import { addCrew, calm, certain, empty, noAi, noBreakdowns, tuned, noWorld } from './helpers';
 
 function step(s: GameState, cmds: Command[] = [], c: Content = calm) {
   const r = tick(s, cmds, c);
@@ -73,6 +73,7 @@ describe('road engagements', () => {
     const c = tuned((t) => {
       noBreakdowns(t);
       noAi(t);
+      noWorld(t);
       t.combat.ambushSpotAlertnessFactor = 1;
     });
     let s = empty('c_mazatlan', c);
@@ -194,6 +195,7 @@ describe('morale, ammo, and leaders', () => {
     const c = tuned((t) => {
       noBreakdowns(t);
       noAi(t);
+      noWorld(t);
       t.combat.armoredDamagePerAbsorbed = 100;
     });
     let s = empty('c_mazatlan', c);
@@ -240,6 +242,7 @@ describe('morale, ammo, and leaders', () => {
   it('captives are ransomed after the hold period (placeholder for prisoner events)', () => {
     const c = tuned((t) => {
       noAi(t);
+      noWorld(t);
       t.characters.prisonerHoldDays = 1;
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });

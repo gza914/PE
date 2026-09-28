@@ -179,7 +179,7 @@ export function roadLabel(ctx: SimContext, roadId: Id): string {
   return `the ${road.type} ${w.node(road.from).name}–${w.node(road.to).name}`;
 }
 
-function report(ctx: SimContext, network: NetworkId, group: CrewState[], source: ReportSource, confidence: Confidence, node: Id | null): void {
+export function report(ctx: SimContext, network: NetworkId, group: CrewState[], source: ReportSource, confidence: Confidence, node: Id | null): void {
   const { state, content } = ctx;
   const { tuning } = content;
   const fade = tuning.detection.lastSeenFadeHours;

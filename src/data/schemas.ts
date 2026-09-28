@@ -26,7 +26,22 @@ export const RelationType = z.enum(['parent', 'child', 'sibling', 'spouse', 'com
 export const EventScope = z.enum(['character', 'plaza', 'faction', 'region']);
 export const MessageKind = z.enum(['narcomanta', 'video', 'social_claim', 'corrido', 'rumor']);
 /** Actions the utility AI scores; traits and goals weight them. */
-export const AiAction = z.enum(['accept_request', 'raid', 'defend', 'ambush', 'scout', 'commit_colonia', 'lie_low', 'supply_run', 'withdraw']);
+export const AiAction = z.enum([
+  'accept_request',
+  'raid',
+  'defend',
+  'ambush',
+  'scout',
+  'commit_colonia',
+  'lie_low',
+  'supply_run',
+  'withdraw',
+  'scheme',
+  'message',
+  'bribe',
+]);
+export const SchemeType = z.enum(['flip', 'assassinate', 'frame', 'leak_location', 'buy_halcones', 'compadrazgo']);
+export type SchemeType = z.infer<typeof SchemeType>;
 
 export type NodeType = z.infer<typeof NodeType>;
 export type RoadType = z.infer<typeof RoadType>;
@@ -249,8 +264,9 @@ export const EventConditionsSchema = z
   .object({
     is_player: z.boolean(),
     owner_is_player: z.boolean(),
-    player_neutral: z.boolean(),
-    player_aligned: z.boolean(),
+    /** The deciding character is neutral / aligned with a faction. */
+    decider_neutral: z.boolean(),
+    decider_aligned: z.boolean(),
     has_foreign_ally: z.boolean(),
     labs_gt: z.number(),
     businesses_gt: z.number(),
@@ -271,11 +287,12 @@ export const EventConditionsSchema = z
     day_lt: z.number(),
     days_since_bribe_gt: z.number(),
     has_trait: id,
+    /** The scope character is held by the State (jailed). */
+    jailed: z.boolean(),
     rank_is: Rank,
     node_type: NodeType,
     extortion_rate_is: ExtortionRate,
     family_member_died: z.boolean(),
-    man_held_by_state: z.boolean(),
     losing_ground: z.boolean(),
     missed_payroll: z.boolean(),
     halcones_bought: z.boolean(),
@@ -323,6 +340,8 @@ export const EventEffectsSchema = z
     delay_days: z.number().positive(),
     start_military_clash: z.boolean(),
     truce_days: z.number().positive(),
+    /** Break the decider's local truces in the scope's region. */
+    end_truce: z.boolean(),
     bribe_commander_days: z.number().positive(),
     police_tips: z.boolean(),
     foreign_alliance: z.boolean(),
@@ -336,6 +355,17 @@ export const EventEffectsSchema = z
     lie_low_region: z.boolean(),
     gain_scope_plazas: z.boolean(),
     reveal_schemer: z.boolean(),
+    /** The decider's own opinion of the other character. */
+    decider_opinion_of_other: z.number(),
+    calentura_statewide: z.number(),
+    /** How a capture operation ends. */
+    resolve_capture: z.enum(['fight', 'flee', 'surrender']),
+    jail_bribe: z.boolean(),
+    /** The State takes a share of the scope plaza's stash (tuning.state.raids.stashSeizedShare). */
+    seize_stash: z.boolean(),
+    /** The scope plaza's bought halcones work for its owner again. */
+    reclaim_halcones: z.boolean(),
+    jail_breakout: z.boolean(),
   })
   .partial()
   .strict()
@@ -357,6 +387,22 @@ export const EventSchema = z.object({
   trigger: EventConditionsSchema,
   /** Mean time to happen, in days. Omit for events only fired by other events. */
   mean_days: z.number().positive().optional(),
+  /**
+   * For events about the decider themselves: the second character the event
+   * involves (opinion_scope and similar effects target them). Events about
+   * someone else already have them as the scope.
+   */
+  counterpart: z.enum(['ally', 'rival_lieutenant', 'relative']).optional(),
+  /**
+   * For character events: who decides. "self" is the scope character; "boss"
+   * is their superior (the crew's owner, or their faction head), and the scope
+   * character becomes the event's other character.
+   */
+  decided_by: z.enum(['self', 'boss']).default('self'),
+  /** Fires for only one decider per scope within the repeat cooldown (e.g. one truce offer per region). */
+  once_per_scope: z.boolean().default(false),
+  /** Fired by a system (the State, schemes) rather than by mean time or other events. */
+  fired_by_system: z.boolean().default(false),
   title: z.string(),
   text: z.string(),
   options: z.array(EventOptionSchema).min(2).max(4),
@@ -623,6 +669,8 @@ export const TuningSchema = z.object({
     truceSustainDays: z.number().int().positive(),
     foreignRouteCutMin: pct,
     foreignRouteCutMax: pct,
+    /** Crew an outside cartel sends its new partner. */
+    foreignCrew: z.object({ men: z.number().int().positive(), skill: z.number().int().min(1).max(5), gear: z.number().int().min(1).max(5), pickups: z.number().int().nonnegative() }),
   }),
   state: z.object({
     startingCalentura: meter,
@@ -634,10 +682,152 @@ export const TuningSchema = z.object({
     fightStateCalentura: z.number(),
     captureOpProfileThreshold: meter,
     captureOpIntelThreshold: meter,
+    /** Off in mechanics tests: no checkpoints, raids, or capture operations. */
+    enabled: z.boolean(),
+    /** Extra calentura spread to every region when state forces are attacked. */
+    statewideSurgeCalentura: z.number().nonnegative(),
+    checkpoints: z.object({
+      /** Chance a group is stopped when it takes a road, by the region's tier and road type. */
+      chance: z.record(z.enum(['normal', 'elevated', 'surge', 'occupation']), z.record(RoadType, pct)),
+      delayHours: z.number().int().nonnegative(),
+      feePerVehicle: z.number().nonnegative(),
+      /** Checkpoint chance for a network that bribed the region's commander. */
+      bribedMultiplier: pct,
+      stateIntelPerStop: z.number().nonnegative(),
+    }),
+    raids: z.object({
+      /** Daily chance the army raids a plaza with labs or a big stash, by tier. */
+      dailyChance: z.object({ surge: pct, occupation: pct }),
+      bribedMultiplier: pct,
+      /** A stash smaller than this is not worth raiding. */
+      stashMin: z.number().nonnegative(),
+      /** Hours between the decision to raid and the raid itself. */
+      leadHours: z.number().int().positive(),
+      /** Share of a raided stash that is seized (the event's options set the rest). */
+      stashSeizedShare: pct,
+    }),
+    commanderBribeCost: z.number().nonnegative(),
+    police: z.object({ cost: z.number().nonnegative(), days: z.number().positive(), halconBonus: z.number().nonnegative() }),
+    tipOff: z.object({
+      cost: z.number().nonnegative(),
+      stateIntel: z.number().nonnegative(),
+      traceBaseChance: pct,
+      tracePerAstucia: pct,
+      traceOpinion: z.number(),
+    }),
+    scapegoat: z.object({ calenturaDrop: z.number().nonnegative(), men: z.number().int().positive(), opinion: z.number(), cooldownDays: z.number().nonnegative() }),
+    lieLow: z.object({ days: z.number().positive(), extraDecayPerDay: z.number().nonnegative(), incomeMultiplier: pct }),
+    captureOps: z.object({
+      /** State intel per day for each profile point above the threshold, scaled up by calentura. */
+      intelPerProfilePoint: z.number().nonnegative(),
+      /** Daily decay of state intel while the character stays under the profile threshold. */
+      decayPerDay: z.number().nonnegative(),
+      /** Each crew guarding the character's home plaza slows the meter by this share. */
+      escortSlowdown: pct,
+      /** Intel left after a successful escape. */
+      intelAfterEscape: meter,
+      fleeCashLossShare: pct,
+      fightEscapeChance: pct,
+      jailBribeCost: z.number().nonnegative(),
+      jailBribeChance: pct,
+      breakoutChance: pct,
+    }),
+    militaryClash: z.object({
+      lossShareMin: pct,
+      lossShareMax: pct,
+      calentura: z.number().nonnegative(),
+      /** Chance a leader present is captured by the army. */
+      leaderCaptureChance: pct,
+    }),
   }),
   events: z.object({
     targetPlayerEventsPerWeekMin: z.number().nonnegative(),
     targetPlayerEventsPerWeekMax: z.number().nonnegative(),
+    /** Off in mechanics tests. */
+    enabled: z.boolean(),
+    /** Scales every event's mean_days (below 1, events come more often). */
+    meanDaysMultiplier: z.number().positive(),
+    /** Mean-time-to-happen events stop firing for the player past this many in the last 7 days. */
+    playerWeeklyCap: z.number().int().nonnegative(),
+    /** The same event does not fire again for the same scope and decider within this. */
+    repeatCooldownDays: z.number().nonnegative(),
+    /** Two events of one chain never fire for the same decider within this (scheduled follow-ups excepted). */
+    chainCooldownDays: z.number().nonnegative(),
+    /** Unanswered player events resolve with the advisor's pick after this long. */
+    autoResolveHours: z.number().int().positive(),
+    familyDeathWindowDays: z.number().nonnegative(),
+    /** "Losing ground": holding less than this share of one's starting territory. */
+    losingGroundShare: pct,
+    cashOnRoadHours: z.number().nonnegative(),
+    populatedBattleDays: z.number().nonnegative(),
+    /** Rolling combat-hours meters keep this share each day. */
+    combatWeekKeep: pct,
+    eventLogDays: z.number().int().positive(),
+    /** Opinion modifiers from event choices fade over this many days. */
+    opinionDecayDays: z.number().positive(),
+  }),
+  infowar: z.object({
+    /** Message effects scale by (base + credibility/100). */
+    credibilityBase: z.number().nonnegative(),
+    narcomanta: z.object({ cost: z.number().nonnegative(), fear: z.number(), rivalOpinion: z.number(), calentura: z.number(), support: z.number() }),
+    video: z.object({ cost: z.number().nonnegative(), morale: z.number(), profile: z.number(), respect: z.number(), calentura: z.number(), statewideCalentura: z.number(), cooldownDays: z.number().nonnegative() }),
+    claim: z.object({
+      morale: z.number(),
+      /** A victory claim is true if the claimant's side won a battle this recently. */
+      trueWindowDays: z.number().nonnegative(),
+      exposureDays: z.number().positive(),
+      exposureBaseChance: pct,
+      exposurePerAstucia: pct,
+      credibilityLoss: z.number(),
+      cooldownDays: z.number().nonnegative(),
+    }),
+    corrido: z.object({ cost: z.number().nonnegative(), days: z.number().positive(), respectPerDay: z.number(), recruitsPerDay: z.number(), profile: z.number(), stateIntel: z.number() }),
+    rumor: z.object({
+      cost: z.number().nonnegative(),
+      /** A planted sighting stays believable this long. */
+      lastsHours: z.number().positive(),
+      discoveryBaseChance: pct,
+      discoveryPerAstucia: pct,
+      credibilityLoss: z.number(),
+      targetOpinion: z.number(),
+      betrayalOpinion: z.number(),
+      /** A Paranoico head purges a lieutenant they think this little of. */
+      purgeBelowOpinion: z.number(),
+      fakeConvoyMen: z.number().int().positive(),
+      fakeGarrisonMen: z.number().int().positive(),
+    }),
+    showOfForce: z.object({ fear: z.number(), respect: z.number(), recruits: z.number(), calentura: z.number(), support: z.number() }),
+  }),
+  schemes: z.object({
+    enabled: z.boolean(),
+    maxActive: z.number().int().positive(),
+    /** Opinion the target takes of a discovered schemer. */
+    discoveredOpinion: z.number(),
+    types: z.record(
+      SchemeType,
+      z.object({
+        cost: z.number().nonnegative(),
+        skill: Skill,
+        /** Daily progress = base + skill × perSkill (out of 100). */
+        base: z.number(),
+        perSkill: z.number(),
+        /** Daily discovery = base + target Astucia × perAstucia (Paranoico targets double it). */
+        discoveryBase: pct,
+        discoveryPerAstucia: pct,
+        /** Success when progress completes: base + skill × perSkill, then per-type adjustments. */
+        successBase: z.number(),
+        successPerSkill: z.number(),
+      }),
+    ),
+    flipOpinionWeight: z.number(),
+    assassinateSecurityPerCrew: z.number(),
+    assassinateParanoicoPenalty: z.number(),
+    frameOpinion: z.number(),
+    frameStateIntel: z.number(),
+    leakStateIntel: z.number(),
+    compadrazgoOpinion: z.number(),
+    /** AI owners notice bought halcones (daily base + Astucia × perAstucia) and buy them back. */
+    halconNotice: z.object({ base: pct, perAstucia: pct, buyBackCost: z.number().nonnegative() }),
   }),
   endings: z.object({
     factionCollapseSuccessionDays: z.number().positive(),
@@ -677,10 +867,47 @@ export const TuningSchema = z.object({
      * territory against the start, within these bounds (money becomes men).
      */
     forceGrowth: z.object({ startDay: z.number().nonnegative(), min: z.number().positive(), max: z.number().positive() }),
+    /** The AI's dealings with the State, messages, and schemes (the "shadow" layer), once a day per character. */
+    shadow: z.object({
+      /** Weeks of bills kept in reserve before spending on any of this. */
+      reserveWeeks: z.number().nonnegative(),
+      /** Region tier (0 normal … 3 occupation) at which a character bribes the commander where it has labs or cash. */
+      bribeCommanderTier: z.number().int().min(0).max(3),
+      /** Region tier at which a cautious character lies low. */
+      lieLowTier: z.number().int().min(0).max(3),
+      /** Minimum caution × lie_low weight to lie low. */
+      lieLowMinWeight: z.number().nonnegative(),
+      /** Region tier at which a character hands over a scapegoat. */
+      scapegoatTier: z.number().int().min(0).max(3),
+      /** Daily chance, before trait and goal weights, to start a scheme / send a message / plant a rumor. */
+      schemeDailyChance: pct,
+      messageDailyChance: pct,
+      rumorDailyChance: pct,
+      /** A corrido is commissioned only with this many times its cost in hand. */
+      corridoCashMultiple: z.number().positive(),
+      /** Days after taking a plaza that a banner claims it. */
+      claimBannerDays: z.number().nonnegative(),
+      /** A head posts a rally video when his crews' average morale falls below this. */
+      rallyMoraleBelow: meter,
+      claimBannerChance: pct,
+      rallyDailyChance: pct,
+      /** How a scheme against a neighbor is chosen: flip, else buy halcones, else strike (frame, or assassinate if Sanguinario). */
+      schemeMix: z.object({ flip: pct, buyHalcones: pct }),
+    }),
     /** Weeks of bills an AI keeps in reserve before spending on recruits. */
     economyReserveWeeks: z.number().nonnegative(),
     /** Switch AI layers off (tests, debugging). */
-    layers: z.object({ strategic: z.boolean(), operational: z.boolean(), tactical: z.boolean(), economy: z.boolean(), traffic: z.boolean() }),
+    layers: z.object({
+      strategic: z.boolean(),
+      operational: z.boolean(),
+      tactical: z.boolean(),
+      economy: z.boolean(),
+      traffic: z.boolean(),
+      /** AI answers to events. */
+      events: z.boolean(),
+      /** AI dealings with the State, messages, and schemes. */
+      shadow: z.boolean(),
+    }),
     /** Multipliers on AI action scores by goal (GDD "AI": goal weight). */
     goalWeights: z.record(Goal, z.partialRecord(AiAction, z.number().nonnegative())),
     /** Faction heads: war plans and offensives. */

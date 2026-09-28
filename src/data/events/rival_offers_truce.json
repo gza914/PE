@@ -4,7 +4,7 @@
   "chain": "truce",
   "trigger": {
     "exhaustion_gt": 60,
-    "player_aligned": true
+    "decider_aligned": true
   },
   "mean_days": 20,
   "title": "An offer across the line",
@@ -35,5 +35,6 @@
       },
       "ai_weight": 1
     }
-  ]
+  ],
+  "once_per_scope": true
 }

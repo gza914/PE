@@ -3,10 +3,10 @@
  * lives here; the UI only reads it. No classes, Maps, Sets, or functions, so
  * JSON round-trips it exactly.
  */
-import type { ExtortionRate, Goal, Rank, RelationType, RoadType, Skill, VehicleType } from '../data/schemas';
+import type { ExtortionRate, Goal, Rank, RelationType, RoadType, SchemeType, Skill, VehicleType } from '../data/schemas';
 import type { RngState } from './rng';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export type Id = string;
 
@@ -37,8 +37,20 @@ export interface GameState {
   offensives: Offensive[];
   /** Events waiting for a decision. */
   pendingEvents: PendingEvent[];
-  /** Events scheduled by other events' effects. */
+  /** Events scheduled by other events' effects or by systems. */
   scheduledEvents: ScheduledEvent[];
+  /** Recent events fired, for cooldowns and pacing. */
+  eventLog: EventLogEntry[];
+  /** Events held off for a scope until an hour (delay_event effects). */
+  eventBlocks: { event: Id; scope: Id; until: number }[];
+  /** Characters lying low in a region: calentura cools faster, income drops. */
+  lieLow: { owner: Id; region: Id; until: number }[];
+  /** Police on a character's payroll in a region: tips and extra halcones. */
+  police: { owner: Id; region: Id; until: number }[];
+  /** Public claims that may yet be exposed as false. */
+  publicClaims: PublicClaim[];
+  /** Rumors planted in rival networks, until they fade or are found out. */
+  rumors: Rumor[];
   feed: FeedEntry[];
   ended: EndState | null;
   /** Consecutive days both factions have been above the truce exhaustion threshold. */
@@ -78,6 +90,12 @@ export interface PlazaState {
   recruits: number;
   /** Hours of fighting at this plaza today (closes businesses, angers locals). */
   combatHoursToday: number;
+  /** Rolling combat hours over about a week. */
+  combatHoursWeek: number;
+  /** Last hour a battle ended here. */
+  lastBattleAt: number | null;
+  /** Network whose scheme bought this plaza's halcones: sightings go to them. */
+  halconesBoughtBy: NetworkId | null;
 }
 
 export interface ColoniaState {
@@ -96,7 +114,14 @@ export interface RegionState {
   quietDays: number;
   /** Hour at which a commander bribe lapses, or null. */
   commanderBribedUntil: number | null;
+  /** Network that bribed the commander, and when (kept after the bribe lapses). */
+  commanderBribedBy: NetworkId | null;
+  commanderBribedAt: number | null;
   commanderRotatesAt: number;
+  /** Rolling combat hours over about a week. */
+  combatHoursWeek: number;
+  /** Hour the last scapegoat was handed over here. */
+  scapegoatAt: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +191,15 @@ export interface CharacterState {
   missedPayrollWeeks: number;
   /** Who holds this character, if captured. */
   captor: Id | null;
+  /** A corrido commissioned about this character plays until this hour. */
+  corridoUntil: number | null;
+  /** Last hour this character moved cash between stash houses. */
+  lastCashMoveAt: number | null;
+  /** Last video and public claim, for cooldowns. */
+  lastVideoAt: number | null;
+  lastClaimAt: number | null;
+  /** An outside cartel working with this character. */
+  foreignAlly: { since: number } | null;
 }
 
 export type WarPlanMode = 'attack' | 'defend' | 'regroup';
@@ -331,8 +365,23 @@ export interface CrewState {
   establishment: number;
 }
 
-export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom';
-export type CostStream = 'payroll' | 'halcones' | 'tribute' | 'aid' | 'ammo' | 'vehicles' | 'recruits' | 'drones' | 'ransom';
+export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom' | 'deals';
+export type CostStream =
+  | 'payroll'
+  | 'halcones'
+  | 'tribute'
+  | 'aid'
+  | 'ammo'
+  | 'vehicles'
+  | 'recruits'
+  | 'drones'
+  | 'ransom'
+  | 'bribes'
+  | 'messages'
+  | 'schemes'
+  | 'seized'
+  | 'deals'
+  | 'foreign';
 
 export interface LedgerDay {
   day: number;
@@ -446,13 +495,15 @@ export interface Pact {
   region: Id | null;
 }
 
-export type SchemeType = 'flip' | 'assassinate' | 'frame' | 'leak_location' | 'buy_halcones' | 'compadrazgo';
+export type { SchemeType };
 
 export interface Scheme {
   id: Id;
   type: SchemeType;
   owner: Id;
+  /** A character, or a plaza for buy_halcones. */
   target: Id;
+  /** 0–100. */
   progress: number;
   startedAt: number;
   discovered: boolean;
@@ -463,13 +514,60 @@ export interface PendingEvent {
   event: Id;
   /** Scope target id (character, plaza, faction, or region). */
   scope: Id;
+  /** Character who chooses the option and bears its personal effects. */
+  decider: Id;
+  /** Second character involved (the scope character, or the event's counterpart), if any. */
+  other: Id | null;
   firedAt: number;
 }
 
 export interface ScheduledEvent {
   event: Id;
   scope: Id;
+  decider: Id;
+  other: Id | null;
   at: number;
+}
+
+export interface EventLogEntry {
+  event: Id;
+  scope: Id;
+  decider: Id;
+  chain: Id | null;
+  hour: number;
+  /** Fired by mean time to happen (counts toward the player's weekly cap). */
+  mtth: boolean;
+}
+
+export type ClaimKind = 'victory' | 'enemy_weak';
+
+export interface PublicClaim {
+  id: Id;
+  owner: Id;
+  kind: ClaimKind;
+  /** Rival network the claim is about. */
+  against: NetworkId;
+  isFalse: boolean;
+  at: number;
+  exposed: boolean;
+}
+
+export type RumorKind = 'fake_convoy' | 'fake_weakness' | 'fake_betrayal';
+
+export interface Rumor {
+  id: Id;
+  kind: RumorKind;
+  /** Who planted it. */
+  owner: Id;
+  /** Network fed the rumor. */
+  network: NetworkId;
+  /** The lieutenant slandered (fake_betrayal), if any. */
+  subject: Id | null;
+  /** Planted report ids, if any. */
+  reports: Id[];
+  at: number;
+  until: number;
+  discovered: boolean;
 }
 
 export type FeedTier = 'critical' | 'important' | 'routine';

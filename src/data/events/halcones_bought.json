@@ -14,7 +14,8 @@
       "effects": {
         "halcones": -20,
         "money": -15000,
-        "support": -5
+        "support": -5,
+        "reclaim_halcones": true
       },
       "ai_weight": 2
     },
@@ -28,7 +29,8 @@
     {
       "label": "Outbid the other side",
       "effects": {
-        "money": -40000
+        "money": -40000,
+        "reclaim_halcones": true
       },
       "ai_weight": 1
     }

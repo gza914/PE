@@ -6,7 +6,9 @@
  *   operational  lieutenants: requests and initiatives (every few hours, staggered)
  *   tactical     crew leaders in battle (hourly)
  *
- * Plus the economy (daily) and logistics traffic for idle crews.
+ * Plus the economy (daily), the shadow layer (the State, messages, schemes;
+ * daily), and logistics traffic for idle crews. AI answers to events run in
+ * the event system itself (tuning.ai.layers.events).
  */
 import type { Command } from '../commands';
 import type { SimContext } from '../context';
@@ -16,6 +18,7 @@ import { runEconomy } from './economy';
 import { Intel } from './intel';
 import { returnHome, supplyRun } from './logistics';
 import { runOperational } from './operational';
+import { runShadow } from './shadow';
 import { runStrategic } from './strategic';
 import { runTactical } from './tactical';
 import { isAi, stagger } from './util';
@@ -29,6 +32,7 @@ export function runAi(ctx: SimContext): Command[] {
     ...(on.strategic ? runStrategic(ctx, intel) : []),
     ...(on.operational ? runOperational(ctx, intel) : []),
     ...(on.economy ? runEconomy(ctx) : []),
+    ...(on.shadow ? runShadow(ctx) : []),
   ];
   if (!on.traffic) return cmds;
   // Idle crews that nobody gave a job this hour: supply runs and coming home.

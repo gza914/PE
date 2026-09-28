@@ -27,6 +27,16 @@ export interface CampaignStats {
   lieutenants: number;
   shortfalls: number;
   invariantProblems: string[];
+  /** Events whose decider was the player's character. */
+  playerEvents: number;
+  events: number;
+  /** Army raids (lab and stash) that went ahead, capture operations, and characters jailed or extradited. */
+  raids: number;
+  captureOps: number;
+  jailed: number;
+  extradited: number;
+  /** Region-days spent at surge or above, as a share of all region-days. */
+  surgeShare: number;
   msPerTick: number;
   /** One line every `timelineDays` days, when asked for. */
   timeline: string[];
@@ -62,6 +72,13 @@ export function runCampaign(content: Content, seed: number, opts: CampaignOption
     lieutenants: lieutenants.length,
     shortfalls: 0,
     invariantProblems: [],
+    playerEvents: 0,
+    events: 0,
+    raids: 0,
+    captureOps: 0,
+    jailed: 0,
+    extradited: 0,
+    surgeShare: 0,
     msPerTick: 0,
     timeline: [],
   };
@@ -74,6 +91,9 @@ export function runCampaign(content: Content, seed: number, opts: CampaignOption
   let owners = ownersNet(state);
   let quietRun = 0;
   let dayBattleHours = 0;
+  let regionDays = 0;
+  let surgeDays = 0;
+  const jailed = new Set<Id>();
   const t0 = performance.now();
 
   while (!state.ended && state.hour < maxHours) {
@@ -105,7 +125,19 @@ export function runCampaign(content: Content, seed: number, opts: CampaignOption
       if (net && owners[node] !== net && stats.captures[net] !== undefined) stats.captures[net] += 1;
     }
     owners = now;
+    for (const e of state.eventLog) {
+      if (e.hour !== state.hour) continue;
+      stats.events += 1;
+      if (e.decider === state.playerId) stats.playerEvents += 1;
+      if (e.event === 'army_lab_raid' || e.event === 'stash_house_raided') stats.raids += 1;
+      if (e.event === 'capture_operation') stats.captureOps += 1;
+    }
+    for (const ch of Object.values(state.characters)) if (ch.status === 'jailed') jailed.add(ch.id);
     if (state.hour % 24 === 0) {
+      for (const r of Object.values(state.regions)) {
+        regionDays += 1;
+        if (r.calentura >= content.tuning.state.tiers.surge) surgeDays += 1;
+      }
       quietRun = dayBattleHours === 0 ? quietRun + 1 : 0;
       if (quietRun === 5) stats.quietStretches += 1;
       dayBattleHours = 0;
@@ -135,6 +167,9 @@ export function runCampaign(content: Content, seed: number, opts: CampaignOption
   stats.winner = state.ended?.winner ?? null;
   stats.deaths = Object.values(state.characters).filter((c) => c.status === 'dead').length;
   stats.shortfalls = shortfall.size;
+  stats.jailed = jailed.size;
+  stats.extradited = Object.values(state.characters).filter((c) => c.status === 'extradited').length;
+  stats.surgeShare = surgeDays / Math.max(1, regionDays);
   return stats;
 }
 
@@ -196,6 +231,12 @@ export function summarize(content: Content, runs: CampaignStats[]): BalanceRepor
   L.push(`Pulse            ${report.meanQuietStretches.toFixed(1)} quiet stretches of 5+ days per campaign (target 3+)    ${ok(report.meanQuietStretches >= 3)}`);
   if (neutralHoldShare !== null) L.push(`Neutral risk     ${pct(neutralHoldShare)} of neutrals hold a plaza on day 60 (target about 50%)   ${ok(neutralHoldShare >= 0.35 && neutralHoldShare <= 0.65)}`);
   L.push(`Money pressure   ${pct(report.shortfallShare)} of lieutenants missed a payroll (target: a typical one does)   ${ok(report.shortfallShare >= 0.5)}`);
+  const weeks = runs.reduce((n, r) => n + r.days / 7, 0);
+  const perWeek = runs.reduce((n, r) => n + r.playerEvents, 0) / Math.max(1, weeks);
+  const t = content.tuning.events;
+  L.push(`Event pacing     ${perWeek.toFixed(1)} events per week for the player (target ${t.targetPlayerEventsPerWeekMin}-${t.targetPlayerEventsPerWeekMax})         ${ok(perWeek >= t.targetPlayerEventsPerWeekMin && perWeek <= t.targetPlayerEventsPerWeekMax)}`);
+  const avg = (f: (r: CampaignStats) => number) => (runs.reduce((n, r) => n + f(r), 0) / Math.max(1, runs.length)).toFixed(1);
+  L.push(`The State        surge or worse ${pct(runs.reduce((n, r) => n + r.surgeShare, 0) / Math.max(1, runs.length))} of region-days; per campaign ${avg((r) => r.raids)} raids, ${avg((r) => r.captureOps)} capture operations, ${avg((r) => r.jailed)} jailed, ${avg((r) => r.extradited)} extradited, ${avg((r) => r.events)} events in all`);
   L.push(`Invariants       ${report.invariantFailures} problems                                          ${ok(report.invariantFailures === 0)}`);
   return report;
 }

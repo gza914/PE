@@ -1,6 +1,8 @@
 import { formatDateTime } from '../sim/clock';
 import { cashOf } from '../sim/money';
 import { payrollDue } from '../sim/systems/economy';
+import { tierOf } from '../sim/systems/stateForces';
+import { DecisionsButton } from './EventPopup';
 import { useGame, type Overlay } from './store';
 import { charLabel } from './util';
 
@@ -37,7 +39,17 @@ export function TopBar() {
       ) : (
         <span className="muted">Neutral</span>
       )}
-      {calentura !== undefined && <span className="mono">Calentura {Math.round(calentura)}</span>}
+      {calentura !== undefined && (
+        <span className="mono" title={`The State at home: ${tierOf(content, calentura)}`}>
+          Calentura {Math.round(calentura)}
+        </span>
+      )}
+      {player.stateIntel >= 70 && (
+        <span className="mono warn" title="At 100 the State launches a capture operation">
+          State intel {Math.round(player.stateIntel)}
+        </span>
+      )}
+      <DecisionsButton />
       {home && <span className={`warstate ${game.regions[home.region]?.warState}`}>{game.regions[home.region]?.warState}</span>}
       {Object.values(game.battles).some((b) => b.endedAt === null && [b.attackers.network, b.defenders.network].includes(player.faction ?? player.id)) && (
         <span className="warstate offensive">⚔ fighting</span>

@@ -20,7 +20,7 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     const at = `crew ${c.id}`;
     if (!Number.isInteger(c.men) || c.men < 1 || c.men > t.crews.maxMen) p.push(`${at}: men ${c.men}`);
     if (!state.characters[c.owner]) p.push(`${at}: unknown owner ${c.owner}`);
-    else if (state.characters[c.owner]!.status === 'dead') p.push(`${at}: owner ${c.owner} is dead`);
+    else if (state.characters[c.owner]!.status === 'dead' || state.characters[c.owner]!.status === 'extradited') p.push(`${at}: owner ${c.owner} is dead`);
     if (!state.characters[c.leader]) p.push(`${at}: unknown leader ${c.leader}`);
     for (const v of VEHICLE_TYPES) if (!Number.isInteger(c.vehicles[v]) || c.vehicles[v] < 0) p.push(`${at}: ${v} ${c.vehicles[v]}`);
     if (!inRange(c.armorDamage, 0, 100)) p.push(`${at}: armorDamage ${c.armorDamage}`);
@@ -67,7 +67,7 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     if (n.owner !== null) {
       const o = state.characters[n.owner];
       if (!o) p.push(`${at}: unknown owner`);
-      else if (o.status === 'dead') p.push(`${at}: owned by the dead ${n.owner}`);
+      else if (o.status === 'dead' || o.status === 'extradited') p.push(`${at}: owned by the dead ${n.owner}`);
     }
     if (w.node(n.id).type === 'border_exit' && n.owner !== null) p.push(`${at}: border exit owned`);
     if (n.stash < -EPS || !Number.isFinite(n.stash)) p.push(`${at}: stash ${n.stash}`);
@@ -93,6 +93,21 @@ export function checkInvariants(state: GameState, content: Content): string[] {
   for (const c of Object.values(state.colonias)) if (!inRange(c.control, -100, 100)) p.push(`colonia ${c.id}: control ${c.control}`);
   for (const r of state.requests) if (!state.characters[r.to] || !state.characters[r.from]) p.push(`request ${r.id}: unknown character`);
   if (state.market.armored < 0) p.push(`market: armored ${state.market.armored}`);
+  for (const ch of Object.values(state.characters)) {
+    for (const k of ['fear', 'credibility', 'stateIntel', 'profile', 'health'] as const) if (!inRange(ch[k], 0, 100)) p.push(`character ${ch.id}: ${k} ${ch[k]}`);
+  }
+  const eventIds = new Set(content.events.map((e) => e.id));
+  for (const e of state.pendingEvents) {
+    if (!eventIds.has(e.event)) p.push(`pending event ${e.instance}: unknown event ${e.event}`);
+    if (!state.characters[e.decider]) p.push(`pending event ${e.instance}: unknown decider`);
+  }
+  for (const e of state.scheduledEvents) if (!eventIds.has(e.event)) p.push(`scheduled event: unknown event ${e.event}`);
+  for (const s of state.schemes) {
+    if (!state.characters[s.owner]) p.push(`scheme ${s.id}: unknown owner`);
+    if (!inRange(s.progress, 0, 100)) p.push(`scheme ${s.id}: progress ${s.progress}`);
+  }
+  for (const pact of state.pacts) for (const id of pact.parties) if (!state.characters[id]) p.push(`pact ${pact.id}: unknown party ${id}`);
+  for (const r of [...state.rumors, ...state.publicClaims]) if (!state.characters[r.owner]) p.push(`${r.id}: unknown owner`);
   if (!state.characters[state.playerId]) p.push(`unknown player ${state.playerId}`);
   return p;
 }

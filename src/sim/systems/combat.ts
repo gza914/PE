@@ -15,6 +15,7 @@ import { planRoute, travelHours } from '../routing';
 import type { Battle, BattleSide, CrewOrder, CrewState, Id, NetworkId } from '../state';
 import { world } from '../world';
 import { captureCharacter, killCharacter } from './characters';
+import { truceBetween } from '../pacts';
 
 type SideKey = 'attackers' | 'defenders';
 const SIDES: SideKey[] = ['attackers', 'defenders'];
@@ -70,6 +71,11 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
   if (!att.length) return null;
   const w = world(content);
   const node = e.where.kind === 'node' ? e.where.node : null;
+  // A local truce holds: the sides do not fight in that region.
+  const truceRegion = w.node(node ?? (e.where.kind === 'road' ? e.where.from : '')).region;
+  const holder = node ? state.nodes[node]?.owner : null;
+  const defNet = def.length ? crewNetwork(state, def[0]!) : holder ? networkOf(state, holder) : null;
+  if (defNet && truceBetween(state, crewNetwork(state, att[0]!), defNet, truceRegion)) return null;
   if (!def.length) {
     if (e.capture && node) {
       capturePlaza(ctx, node, att);
@@ -531,6 +537,7 @@ function endBattle(ctx: SimContext, b: Battle, forcedWinner: SideKey | null = nu
     }
   }
   const node = b.where.kind === 'node' && !b.colonia ? b.where.node : null;
+  if (b.where.kind === 'node') state.nodes[b.where.node]!.lastBattleAt = state.hour;
   if (winner === 'attackers' && b.capture && node) {
     const net = b.attackers.network;
     const holdouts = Object.values(state.crews).some(

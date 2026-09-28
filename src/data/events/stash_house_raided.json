@@ -4,12 +4,12 @@
   "chain": "stash",
   "trigger": {},
   "title": "Stash house raided",
-  "text": "Soldiers hit your stash house in {plaza.name} before dawn. The money is gone and two of your people are in custody.",
+  "text": "Soldiers hit your stash house in {plaza.name} before dawn. Half the money is gone and two of your people are in custody.",
   "options": [
     {
       "label": "Swallow the loss",
       "effects": {
-        "money": -150000,
+        "seize_stash": true,
         "state_intel": 15
       },
       "ai_weight": 2
@@ -17,18 +17,20 @@
     {
       "label": "Pay to get your people released",
       "effects": {
-        "money": -220000
+        "seize_stash": true,
+        "money": -70000
       },
       "ai_weight": 2
     },
     {
       "label": "Blame an informant and purge the crew",
       "effects": {
-        "money": -150000,
+        "seize_stash": true,
         "fear": 10,
         "crew_morale": -10
       },
       "ai_weight": 1
     }
-  ]
+  ],
+  "fired_by_system": true
 }

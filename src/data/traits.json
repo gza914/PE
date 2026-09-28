@@ -11,14 +11,17 @@
         "fearGain": 1.5,
         "calenturaMultiplier": 1.3,
         "trustOpinion": -10,
-        "caution": 0.6
+        "caution": 0.6,
+        "stateIntelMultiplier": 1.2
       },
       "droneReaction": "ambush",
       "aiWeights": {
         "raid": 1.3,
         "ambush": 1.5,
         "accept_request": 1.0,
-        "withdraw": 0.7
+        "withdraw": 0.7,
+        "message": 1.4,
+        "scheme": 1.1
       }
     },
     {
@@ -41,7 +44,10 @@
         "ambush": 1.1,
         "scout": 1.5,
         "accept_request": 1.1,
-        "defend": 1.1
+        "defend": 1.1,
+        "scheme": 1.6,
+        "message": 1.2,
+        "bribe": 1.3
       }
     },
     {
@@ -58,7 +64,8 @@
       "aiWeights": {
         "accept_request": 1.6,
         "defend": 1.2,
-        "raid": 0.9
+        "raid": 0.9,
+        "scheme": 0.6
       }
     },
     {
@@ -75,7 +82,8 @@
       "aiWeights": {
         "raid": 1.4,
         "accept_request": 1.2,
-        "commit_colonia": 1.2
+        "commit_colonia": 1.2,
+        "scheme": 1.4
       }
     },
     {
@@ -92,7 +100,9 @@
         "defend": 1.5,
         "scout": 1.3,
         "raid": 0.8,
-        "lie_low": 1.3
+        "lie_low": 1.3,
+        "scheme": 1.2,
+        "bribe": 1.2
       }
     },
     {
@@ -107,7 +117,8 @@
       },
       "aiWeights": {
         "accept_request": 1.1,
-        "commit_colonia": 1.1
+        "commit_colonia": 1.1,
+        "message": 1.5
       }
     },
     {
@@ -124,7 +135,9 @@
       "aiWeights": {
         "supply_run": 1.3,
         "raid": 1.1,
-        "accept_request": 0.8
+        "accept_request": 0.8,
+        "bribe": 1.4,
+        "scheme": 0.8
       }
     },
     {
@@ -143,7 +156,9 @@
         "raid": 1.5,
         "ambush": 1.4,
         "scout": 0.6,
-        "withdraw": 0.6
+        "withdraw": 0.6,
+        "scheme": 0.6,
+        "message": 1.2
       }
     },
     {
@@ -152,12 +167,15 @@
       "description": "Low profile growth; crews move with lower signature.",
       "modifiers": {
         "profileGainMultiplier": 0.5,
-        "signatureMultiplier": 0.8
+        "signatureMultiplier": 0.8,
+        "stateIntelMultiplier": 0.6
       },
       "aiWeights": {
         "scout": 1.4,
         "ambush": 1.2,
-        "raid": 0.9
+        "raid": 0.9,
+        "message": 0.4,
+        "bribe": 1.3
       }
     },
     {
@@ -170,7 +188,8 @@
       },
       "aiWeights": {
         "raid": 1.2,
-        "ambush": 1.2
+        "ambush": 1.2,
+        "scheme": 1.3
       }
     },
     {
@@ -189,7 +208,8 @@
         "raid": 1.2,
         "defend": 1.2,
         "withdraw": 0.6,
-        "commit_colonia": 1.2
+        "commit_colonia": 1.2,
+        "message": 1.1
       }
     },
     {
@@ -210,7 +230,9 @@
         "defend": 1.3,
         "lie_low": 1.6,
         "withdraw": 1.6,
-        "commit_colonia": 0.7
+        "commit_colonia": 0.7,
+        "bribe": 1.3,
+        "message": 0.7
       }
     }
   ]

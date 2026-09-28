@@ -127,8 +127,8 @@ export function checkEndings(ctx: SimContext): void {
       fs.headlessDays = 0;
       continue;
     }
-    // A head in enemy hands: the faction holds together while anyone could take over.
-    if (head && head.status === 'captured' && Object.values(state.characters).some((c) => c.faction === f && c.id !== head.id && c.status === 'free')) {
+    // A head in enemy hands or in prison: the faction holds together while anyone could take over.
+    if (head && (head.status === 'captured' || head.status === 'jailed') && Object.values(state.characters).some((c) => c.faction === f && c.id !== head.id && c.status === 'free')) {
       fs.headlessDays = 0;
       continue;
     }

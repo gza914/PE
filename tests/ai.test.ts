@@ -10,12 +10,13 @@ import { newGame, newTransit } from '../src/sim/newGame';
 import { opinionOf } from '../src/sim/opinion';
 import type { CrewState, GameState, Report } from '../src/sim/state';
 import { tick } from '../src/sim/tick';
-import { addCrew, noAi, tuned } from './helpers';
+import { addCrew, noAi, noWorld, tuned } from './helpers';
 
 type Layers = Content['tuning']['ai']['layers'];
 const only = (on: Partial<Layers>) =>
   tuned((t) => {
     noAi(t);
+    noWorld(t);
     t.roads.brecha.breakdownChancePerSegment = 0;
     t.ai.layers = { ...t.ai.layers, ...on };
   });
@@ -137,6 +138,7 @@ describe('strategic: faction heads', () => {
   it('a head rides with one crew; the other crews they raised can go to war', () => {
     const c = tuned((t) => {
       noAi(t);
+      noWorld(t);
       t.ai.strategic.attackForceRatio = 1;
       t.ai.strategic.lateAttackForceRatio = 1;
     });
@@ -161,6 +163,7 @@ describe('strategic: faction heads', () => {
   describe('desperation lowers the margin', () => {
     const c = tuned((t) => {
       noAi(t);
+      noWorld(t);
       t.ai.strategic.attackForceRatio = 10;
       t.ai.strategic.lateAttackForceRatio = 1;
       t.ai.strategic.lateWarStartDay = 1000;
@@ -345,6 +348,28 @@ describe('tactical: crew leaders in battle', () => {
   it('it never makes battle decisions for the player', () => {
     const { c, s } = standoff(40, 6);
     expect(runAi(newContext(s, c)).some((x) => x.issuer === 'c_mazatlan')).toBe(false);
+  });
+});
+
+describe('shadow: the AI and the State', () => {
+  it('a lieutenant with a lab in a surge region bribes the army commander', () => {
+    const c = only({ shadow: true });
+    let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
+    s.regions.sur!.calentura = 70;
+    s.nodes.el_rosario!.labs = 1;
+    s.nodes.el_rosario!.stash = 1_000_000;
+    s = runTo(s, c, 25);
+    expect(s.regions.sur!.commanderBribedBy).toBe('mayos');
+  });
+
+  it('a quiet region gets no bribes', () => {
+    const c = only({ shadow: true });
+    let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
+    s.nodes.el_rosario!.labs = 1;
+    s.nodes.el_rosario!.stash = 1_000_000;
+    for (const r of Object.values(s.regions)) r.calentura = 0;
+    s = runTo(s, c, 25);
+    expect(Object.values(s.regions).every((r) => r.commanderBribedBy === null)).toBe(true);
   });
 });
 

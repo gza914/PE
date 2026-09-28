@@ -10,7 +10,7 @@ import type { CrewState, GameState } from '../src/sim/state';
 import { tick } from '../src/sim/tick';
 import { world } from '../src/sim/world';
 
-import { addCrew, content as bundled, crewsOf, noAi, noBreakdowns, order, quiet, run, start, tuned as tunedWithAi } from './helpers';
+import { addCrew, content as bundled, crewsOf, noAi, noBreakdowns, order, quiet, run, start, tuned as tunedWithAi, noWorld } from './helpers';
 
 /** Mechanics tests run in a world with the AI switched off. */
 const content = quiet();
@@ -18,6 +18,7 @@ void bundled;
 const tuned = (mut: (t: Content['tuning']) => void) =>
   tunedWithAi((t) => {
     noAi(t);
+    noWorld(t);
     mut(t);
   });
 
@@ -367,7 +368,7 @@ describe('balance targets (GDD "Convoy trade-off")', () => {
 describe('AI traffic', () => {
   it('AI crews move and rival halcones report them; the AI never commands the player', () => {
     const c = tunedWithAi((t) => {
-      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: true };
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: true, events: false, shadow: false };
     });
     let s = newGame(c, { seed: 11, playerId: 'c_mazatlan' });
     const startLocs = new Map(Object.values(s.crews).map((x) => [x.id, JSON.stringify(x.location)]));

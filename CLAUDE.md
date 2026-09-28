@@ -38,3 +38,14 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Each layer has a switch at `tuning.ai.layers`. Mechanics tests turn the AI off (`calm`, `certain`, `noAi`, `quiet()` in `tests/helpers.ts`); AI tests turn on only the layer under test.
 - `isAi(state, id)` decides who the AI commands; it includes the player when `state.autoplay` is on (the balance runner uses this).
 - After changing AI behavior or tuning, run `npm run balance` (use `RUNS=80` for a decision; 40 runs swing by ±10 points) and keep `checkInvariants` at 0 problems.
+- The shadow layer (`ai/shadow.ts`) is the AI's dealings with the State, messages, and schemes; AI answers to events run inside the event system. Both have layer switches (`shadow`, `events`).
+- A captured or jailed head does not stop the war: `actingHead` hands the strategic plan to the most senior free member the AI plays.
+
+## Events, the State, and information warfare
+
+- Every event instance has a scope (plaza, region, faction, or character), a decider (who picks and bears personal effects), and an optional other character (the target of opinion, kill, promote, and release effects). The header of `systems/events.ts` says who decides what.
+- Systems fire events by id through `fireById`. Any id a system fires must be listed in `SYSTEM_EVENT_IDS` (`data/content.ts`) and marked `fired_by_system` in its file.
+- A new effect or condition key needs the schema key (closed vocabulary), handling in `applyEffects` or `check`, and a line in `describeEffects` for the popup's preview.
+- Mechanics tests switch the random world off with `noWorld` (events, State forces, schemes); `calm`, `certain`, and `quiet()` already include it.
+- Planted rumors are ordinary `Report`s with `planted: true` and a ghost crew id (`ghost_…`) that is not in `state.crews`. UI and AI code must not assume a report's crew exists.
+- Army units are not on the map: fights with the State resolve at once in `militaryClash`.

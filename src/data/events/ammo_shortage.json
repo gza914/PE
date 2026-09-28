@@ -3,7 +3,7 @@
   "scope": "faction",
   "trigger": {
     "supply_lt": 30,
-    "player_aligned": true
+    "decider_aligned": true
   },
   "mean_days": 10,
   "title": "Running low on ammunition",

@@ -21,6 +21,7 @@ import { cancelOffensiveRequests, createRequest, mayAsk, onDuty, settleOffensive
 import { travelHours } from '../routing';
 import type { CrewState, FactionState, GameState, Id, NetworkId, Offensive } from '../state';
 import { nodeValue, territoryShares, weeklyObligations } from '../systems/economy';
+import { truceBetween } from '../pacts';
 import { world } from '../world';
 import { withinHops, type Intel } from './intel';
 import { cautionOf, isAi, majorFactions } from './util';
@@ -121,10 +122,29 @@ export function runStrategic(ctx: SimContext, intel: Intel): Command[] {
   if (state.hour % 24 !== content.tuning.ai.strategic.hourOfDay) return cmds;
   for (const f of majorFactions(content)) {
     const fs = state.factions[f]!;
-    if (!fs.head || !isAi(state, fs.head)) continue;
-    cmds.push(...planFaction(ctx, intel, fs));
+    const acting = actingHead(ctx, f);
+    if (!acting || !isAi(state, acting)) continue;
+    // While the head is held, his most senior free man runs the war (the plan is shared).
+    cmds.push(...planFaction(ctx, intel, acting === fs.head ? fs : { ...fs, head: acting }));
   }
   return cmds;
+}
+
+const RANK_ORDER = { head: 5, inner_circle: 4, senior_lieutenant: 3, lieutenant: 2, associate: 1, crew_leader: 0 } as const;
+
+/**
+ * Who runs the faction's war today: the head if free; if he is captured or in
+ * prison, the highest-ranked free member the AI plays. Null if no one can.
+ */
+export function actingHead(ctx: SimContext, faction: Id): Id | null {
+  const { state } = ctx;
+  const head = state.factions[faction]?.head ?? null;
+  if (head && state.characters[head]?.status === 'free') return head;
+  if (!head) return null;
+  const members = Object.values(state.characters)
+    .filter((c) => c.faction === faction && c.status === 'free' && c.id !== head && c.id !== state.playerId)
+    .sort((a, b) => RANK_ORDER[b.rank] - RANK_ORDER[a.rank] || (a.id < b.id ? -1 : 1));
+  return members[0]?.id ?? null;
 }
 
 function setPlan(
@@ -244,6 +264,7 @@ export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): 
     const ownerNet = networkOf(state, owner);
     const neutral = state.characters[owner]?.faction === null;
     if (!rivals.has(ownerNet) && !(neutral && neutralsFair)) continue;
+    if (truceBetween(state, fs.id, ownerNet, n.region)) continue;
     const est = intel.defense(fs.id, n.id);
     const retake = fs.warPlan.lost.some((l) => l.node === n.id && state.hour - l.at <= s.retakeWindowDays * 24);
     // Retakes and lone neutrals (no faction to answer the call for help) take a smaller margin.
@@ -453,7 +474,7 @@ function supportBroke(ctx: SimContext, fs: FactionState): void {
   const head = fs.head!;
   const aid = content.tuning.economy.aid;
   for (const c of Object.values(state.characters).sort((a, b) => (a.id < b.id ? -1 : 1))) {
-    if (c.faction !== fs.id || c.id === head || c.status === 'dead') continue;
+    if (c.faction !== fs.id || c.id === head || c.status === 'dead' || c.status === 'extradited') continue;
     const due = weeklyObligations(state, content, c.id);
     if (c.missedPayrollWeeks === 0 && cashOf(state, c.id) >= due) continue;
     if (c.lastAidAt !== null && state.hour - c.lastAidAt < aid.cooldownDays * 24) continue;

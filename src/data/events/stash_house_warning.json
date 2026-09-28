@@ -2,11 +2,7 @@
   "id": "stash_house_warning",
   "scope": "plaza",
   "chain": "stash",
-  "trigger": {
-    "owner_is_player": true,
-    "calentura_gt": 55
-  },
-  "mean_days": 25,
+  "trigger": {},
   "title": "Eyes on the stash house",
   "text": "Your halcones noticed the same grey sedan parked outside your stash house in {plaza.name} three nights running.",
   "options": [
@@ -34,5 +30,6 @@
       },
       "ai_weight": 2
     }
-  ]
+  ],
+  "fired_by_system": true
 }

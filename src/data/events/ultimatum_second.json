@@ -4,9 +4,9 @@
   "chain": "ultimatum",
   "trigger": {
     "is_player": true,
-    "player_neutral": true,
     "day_gt": 29,
-    "day_lt": 40
+    "day_lt": 40,
+    "decider_neutral": true
   },
   "mean_days": 2,
   "title": "The last warning",

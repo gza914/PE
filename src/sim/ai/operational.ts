@@ -26,6 +26,7 @@ import { chance } from '../rng';
 import { travelHours } from '../routing';
 import type { CrewState, FactionRequest, Id, NetworkId } from '../state';
 import { nodeValue } from '../systems/economy';
+import { truceBetween } from '../pacts';
 import { world } from '../world';
 import { onDuty } from '../requests';
 import type { Intel } from './intel';
@@ -180,6 +181,7 @@ function raidOptions(ctx: SimContext, intel: Intel, id: Id, net: NetworkId, free
     const owner = state.nodes[n.id]!.owner;
     if (!owner || networkOf(state, owner) === net || n.type === 'border_exit' || n.id === content.culiacan.parentNode) continue;
     if (offensive && offensive.target === n.id) continue;
+    if (truceBetween(state, net, networkOf(state, owner), n.region)) continue;
     const force = sendable.filter((c) => (hours.get(c.id)!.get(n.id) ?? Infinity) <= op.raidMaxHours);
     if (!force.length) continue;
     const power = groupPower(state, content, force.flatMap((c) => groupOf(state, c)));

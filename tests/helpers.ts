@@ -22,7 +22,14 @@ export const noBreakdowns = (t: Content['tuning']) => {
 
 /** Every AI layer off: the world only moves when a test moves it. */
 export const noAi = (t: Content['tuning']) => {
-  t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: false };
+  t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: false, events: false, shadow: false };
+};
+
+/** No random world: no events, State forces, or schemes. */
+export const noWorld = (t: Content['tuning']) => {
+  t.events.enabled = false;
+  t.state.enabled = false;
+  t.schemes.enabled = false;
 };
 
 export function start(seed = 1, playerId = 'c_mazatlan'): GameState {
@@ -79,6 +86,7 @@ export function run(state: GameState, hours: number, c = quiet()): GameState {
 export const calm = tuned((t) => {
   noBreakdowns(t);
   noAi(t);
+  noWorld(t);
   t.ai.trafficChancePerCheck = 0;
   t.ai.returnHomeChancePerCheck = 0;
 });
@@ -87,6 +95,7 @@ export const calm = tuned((t) => {
 export const certain = (t: Content['tuning']) => {
   noBreakdowns(t);
   noAi(t);
+  noWorld(t);
   t.ai.trafficChancePerCheck = 0;
   t.ai.returnHomeChancePerCheck = 0;
   t.detection.maxChance = 1;
@@ -102,5 +111,8 @@ export function empty(playerId = 'c_mazatlan', c: Content = calm, seed = 1): Gam
 let quietContent: Content | null = null;
 /** Bundled content with every AI layer off (built once). */
 export function quiet(): Content {
-  return (quietContent ??= tuned(noAi));
+  return (quietContent ??= tuned((t) => {
+    noAi(t);
+    noWorld(t);
+  }));
 }

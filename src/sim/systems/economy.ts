@@ -38,7 +38,7 @@ export function coloniaHolder(state: GameState, content: Content, colonia: Id): 
 
 function freeHead(state: GameState, faction: NetworkId): Id | null {
   const head = state.factions[faction]?.head;
-  return head && state.characters[head]?.status !== 'dead' ? head : null;
+  return head && !['dead', 'extradited'].includes(state.characters[head]?.status ?? 'dead') ? head : null;
 }
 
 /** Who collects a colonia's money: the owner of the biggest holding crew there, else the faction head. */
@@ -130,10 +130,22 @@ export function settleDailyIncome(ctx: SimContext): void {
   fightingHurtsBusiness(ctx);
 
   const totals = new Map<Id, number>();
+  const routeIncome = new Map<Id, number>();
+  const w = world(content);
+  const quiet = content.tuning.state.lieLow.incomeMultiplier;
   for (const line of dailyIncome(state, content)) {
-    if (state.characters[line.recipient]?.status === 'dead') continue;
-    deposit(state, content, line.recipient, line.amount, line.stream, line.node);
-    totals.set(line.recipient, (totals.get(line.recipient) ?? 0) + line.amount);
+    if (state.characters[line.recipient]?.status === 'dead' || state.characters[line.recipient]?.status === 'extradited') continue;
+    // Lying low: business slows in the regions you are keeping quiet in.
+    const low = line.node !== null && state.lieLow.some((l) => l.owner === line.recipient && l.region === w.node(line.node!).region && l.until > state.hour);
+    const amount = low ? line.amount * quiet : line.amount;
+    deposit(state, content, line.recipient, amount, line.stream, line.node);
+    totals.set(line.recipient, (totals.get(line.recipient) ?? 0) + amount);
+    if (line.stream === 'trafficking' || line.stream === 'tolls') routeIncome.set(line.recipient, (routeIncome.get(line.recipient) ?? 0) + amount);
+  }
+
+  // Outside partners take their cut of the routes.
+  for (const [id, income] of [...routeIncome].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    if (state.characters[id]?.foreignAlly) spendUpTo(state, content, id, income * content.tuning.diplomacy.foreignRouteCutMin, 'foreign');
   }
 
   // Aligned characters pay their faction head a share of the day's income.
@@ -182,7 +194,7 @@ export function payWeeklyPayroll(ctx: SimContext): void {
   const e = content.tuning.economy;
   const payers = Object.keys(state.characters)
     .sort()
-    .filter((id) => state.characters[id]!.status !== 'dead');
+    .filter((id) => state.characters[id]!.status !== 'dead' && state.characters[id]!.status !== 'extradited');
   for (const id of payers) {
     payCrews(ctx, id);
     payHalcones(ctx, id);
@@ -310,6 +322,7 @@ function fightingHurtsBusiness(ctx: SimContext): void {
       plaza.businesses *= Math.max(0, 1 - e.businessLossPerCombatHour * h);
       plaza.support = Math.max(0, plaza.support - e.supportLossPerCombatHour * h);
     }
+    plaza.combatHoursWeek = plaza.combatHoursWeek * content.tuning.events.combatWeekKeep + h;
     plaza.combatHoursToday = 0;
   }
 }

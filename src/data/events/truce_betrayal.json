@@ -12,7 +12,8 @@
         "respect": 5,
         "credibility": -15,
         "calentura": 20,
-        "opinion_rival_faction": -30
+        "opinion_rival_faction": -30,
+        "end_truce": true
       },
       "ai_weight": 2
     },

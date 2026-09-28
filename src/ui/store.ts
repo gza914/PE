@@ -11,7 +11,7 @@ import type { GameState, Id } from '../sim/state';
 import { tick } from '../sim/tick';
 import { playerNetwork } from './util';
 
-export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road' | 'battle'; id: Id } | null;
+export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road' | 'battle' | 'character'; id: Id } | null;
 export type Overlay = 'none' | 'halcones' | 'calentura' | 'income' | 'war';
 
 /** Route planning in progress for one crew. */
@@ -38,12 +38,14 @@ interface GameStore {
   /** Last sync-arrival hour entered, reused so several crews can share it. */
   syncHour: number | null;
   lastError: string | null;
+  /** Pending events the player put aside for now ("Decide later"). */
+  deferredEvents: Id[];
   start: (playerId: Id, seed: number) => void;
   setSpeed: (speed: number) => void;
   togglePause: () => void;
   enqueue: (cmd: Command) => void;
   step: () => void;
-  set: (patch: Partial<Pick<GameStore, 'view' | 'selected' | 'plan' | 'overlay' | 'revealAll' | 'autoPause' | 'syncHour' | 'lastError'>>) => void;
+  set: (patch: Partial<Pick<GameStore, 'view' | 'selected' | 'plan' | 'overlay' | 'revealAll' | 'autoPause' | 'syncHour' | 'lastError' | 'deferredEvents'>>) => void;
   select: (sel: Selection) => void;
 }
 
@@ -62,7 +64,8 @@ export const useGame = create<GameStore>((set, get) => ({
   autoPause: true,
   syncHour: null,
   lastError: null,
-  start: (playerId, seed) => set({ game: newGame(get().content, { seed, playerId }), speed: 0, queue: [], selected: null, plan: null }),
+  deferredEvents: [],
+  start: (playerId, seed) => set({ game: newGame(get().content, { seed, playerId }), speed: 0, queue: [], selected: null, plan: null, deferredEvents: [] }),
   setSpeed: (speed) => {
     if (speed > 0) lastSpeed = speed;
     set({ speed });

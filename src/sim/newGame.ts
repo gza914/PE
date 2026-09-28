@@ -51,6 +51,12 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     offensives: [],
     pendingEvents: [],
     scheduledEvents: [],
+    eventLog: [],
+    eventBlocks: [],
+    lieLow: [],
+    police: [],
+    publicClaims: [],
+    rumors: [],
     feed: [],
     ended: null,
     truceDays: 0,
@@ -74,6 +80,9 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       stash: 0,
       recruits: 0,
       combatHoursToday: 0,
+      combatHoursWeek: 0,
+      lastBattleAt: null,
+      halconesBoughtBy: null,
     };
   }
 
@@ -87,6 +96,10 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       combatHoursToday: 0,
       quietDays: 0,
       commanderBribedUntil: null,
+      commanderBribedBy: null,
+      commanderBribedAt: null,
+      combatHoursWeek: 0,
+      scapegoatAt: null,
       commanderRotatesAt: tuning.state.commanderRotationDays * 24,
     };
   }
@@ -141,6 +154,11 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       factionOpinions,
       missedPayrollWeeks: 0,
       captor: null,
+      corridoUntil: null,
+      lastCashMoveAt: null,
+      lastVideoAt: null,
+      lastClaimAt: null,
+      foreignAlly: null,
     };
     state.characters[def.id] = ch;
 
