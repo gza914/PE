@@ -707,6 +707,8 @@ export const TuningSchema = z.object({
       stashSeizedShare: pct,
     }),
     commanderBribeCost: z.number().nonnegative(),
+    /** A commander about to rotate out (fewer days left than this) will not take a bribe. */
+    commanderMinDaysLeft: z.number().nonnegative(),
     police: z.object({ cost: z.number().nonnegative(), days: z.number().positive(), halconBonus: z.number().nonnegative() }),
     tipOff: z.object({
       cost: z.number().nonnegative(),

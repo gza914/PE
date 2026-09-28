@@ -17,7 +17,7 @@
  */
 import type { Content } from '../../data/content';
 import type { RoadType } from '../../data/schemas';
-import { pushFeed, type SimContext } from '../context';
+import { pushFeed, tellSide, type SimContext } from '../context';
 import { cashOf, spend, spendUpTo } from '../money';
 import { crewNetwork, networkOf } from '../network';
 import { addOpinion } from '../opinion';
@@ -82,7 +82,7 @@ export function runStateForcesDaily(ctx: SimContext): void {
       if (r.commanderBribedUntil !== null) {
         r.commanderBribedUntil = null;
         const net = r.commanderBribedBy;
-        if (net) pushFeed(state, 'important', `The army commander in ${content.regions.find((x) => x.id === id)?.name ?? id} has been rotated out. Your arrangement went with him.`, null, net);
+        if (net) pushFeed(state, 'important', `The army commander in ${content.regions.find((x) => x.id === id)?.name ?? id} has been rotated out, and our side's arrangement went with him.`, null, net);
       }
     }
   }
@@ -259,7 +259,7 @@ export function jailBribe(ctx: SimContext, jailed: Id, payer: Id): void {
   if (state.characters[jailed]?.status !== 'jailed') return;
   if (!spend(state, content, payer, c.jailBribeCost, 'bribes')) return;
   if (chance(state.rng, c.jailBribeChance)) release(ctx, jailed, 'the paperwork got lost');
-  else pushFeed(state, 'important', `The bribe for ${charName(ctx, jailed)} was taken, and nothing happened.`, null, networkOf(state, payer));
+  else tellSide(state, payer, 'important', `Your bribe for ${charName(ctx, jailed)} was taken, and nothing happened.`, (n) => `${n}'s bribe for ${charName(ctx, jailed)} was taken, and nothing happened.`);
 }
 
 /** A breakout: risky, loud, and a fight with the army either way. */
@@ -318,12 +318,15 @@ export function stateCommand(ctx: SimContext, cmd: StateCommand): string | null 
   switch (cmd.type) {
     case 'bribe_commander': {
       if (commanderBribed(ctx, cmd.region, net)) return 'your side already has the commander';
+      const left = (state.regions[cmd.region]!.commanderRotatesAt - state.hour) / 24;
+      if (left < s.commanderMinDaysLeft) return `the commander rotates out in ${Math.ceil(left)} days; wait for the new one`;
       if (!spend(state, content, cmd.issuer, s.commanderBribeCost, 'bribes')) return `the commander wants $${s.commanderBribeCost.toLocaleString()}`;
       const r = state.regions[cmd.region]!;
       r.commanderBribedUntil = Math.min(state.hour + s.commanderBribeDays * 24, r.commanderRotatesAt);
       r.commanderBribedBy = net;
       r.commanderBribedAt = state.hour;
-      pushFeed(state, 'important', `The army commander in ${regionName(cmd.region)} is yours until he rotates out.`, null, net);
+      const days = Math.floor((r.commanderBribedUntil - state.hour) / 24);
+      tellSide(state, cmd.issuer, 'important', `The army commander in ${regionName(cmd.region)} is yours for ${days} days.`, (n) => `${n} bought the army commander in ${regionName(cmd.region)} for ${days} days.`);
       return null;
     }
     case 'bribe_police': {
@@ -359,7 +362,7 @@ export function stateCommand(ctx: SimContext, cmd: StateCommand): string | null 
       r.calentura = clamp(r.calentura - s.scapegoat.calenturaDrop);
       r.scapegoatAt = state.hour;
       if (crew.leader !== cmd.issuer) addOpinion(state, content, crew.leader, cmd.issuer, 'gave_up_my_men', s.scapegoat.opinion, content.tuning.events.opinionDecayDays);
-      pushFeed(state, 'important', `${s.scapegoat.men} of your men were handed to the State in ${regionName(cmd.region)}. The heat eases.`, null, net);
+      tellSide(state, cmd.issuer, 'important', `${s.scapegoat.men} of your men were handed to the State in ${regionName(cmd.region)}. The heat eases.`, (n) => `${n} handed ${s.scapegoat.men} men to the State in ${regionName(cmd.region)}.`);
       return null;
     }
     case 'lie_low_region': {

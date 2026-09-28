@@ -27,7 +27,7 @@ function pathPoints(content: ReturnType<typeof useGame.getState>['content'], sta
 export function StateMap() {
   const { content, game, selected, select, plan, set, overlay, revealAll } = useGame();
   const options = usePlanOptions();
-  const pz = usePanZoom({ x: 0, y: 0, w: 1000, h: 1000 });
+  const pz = usePanZoom({ x: -10, y: 0, w: 1110, h: 1010 });
   if (!game) return null;
   const w = world(content);
   const net = playerNetwork(game);

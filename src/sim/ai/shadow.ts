@@ -50,7 +50,8 @@ function decide(ctx: SimContext, id: Id): Command[] {
   // The State: protect labs and cash where the army is hot.
   for (const r of regions) {
     const exposed = mine.some((n) => w.node(n.id).region === r && (n.labs > 0 || n.stash >= s.raids.stashMin));
-    if (exposed && tier(r) >= t.bribeCommanderTier && !commanderBribed(ctx, r, net) && cash >= s.commanderBribeCost && actionWeight(state, content, id, 'bribe') >= 1) {
+    const rotating = (state.regions[r]!.commanderRotatesAt - state.hour) / 24 < s.commanderMinDaysLeft;
+    if (exposed && !rotating && tier(r) >= t.bribeCommanderTier && !commanderBribed(ctx, r, net) && cash >= s.commanderBribeCost && actionWeight(state, content, id, 'bribe') >= 1) {
       cmds.push({ type: 'bribe_commander', issuer: id, region: r });
       cash -= s.commanderBribeCost;
     } else if (exposed && tier(r) >= t.bribeCommanderTier - 1 && !hasPolice(ctx, id, r) && cash >= s.police.cost && actionWeight(state, content, id, 'bribe') > 1) {

@@ -423,7 +423,8 @@
       "lossShareMax": 0.35,
       "calentura": 20,
       "leaderCaptureChance": 0.15
-    }
+    },
+    "commanderMinDaysLeft": 7
   },
   "events": {
     "targetPlayerEventsPerWeekMin": 2,

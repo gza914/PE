@@ -13,7 +13,7 @@
  * - compadrazgo: build a lasting bond (Palabra)
  */
 import type { SchemeType } from '../../data/schemas';
-import { newId, pushFeed, type SimContext } from '../context';
+import { newId, pushFeed, tellSide, type SimContext } from '../context';
 import { declare } from '../diplomacy';
 import { spend } from '../money';
 import { networkOf } from '../network';
@@ -138,7 +138,7 @@ function discovered(ctx: SimContext, s: Scheme, victim: Id): void {
   addOpinion(state, content, victim, s.owner, `schemed_${s.type}`, content.tuning.schemes.discoveredOpinion, content.tuning.events.opinionDecayDays);
   const what = SCHEME_LABEL[s.type].toLowerCase();
   pushFeed(state, 'critical', `${charName(ctx, victim)} uncovered a plot against them (${what}): ${charName(ctx, s.owner)} was behind it.`, null, networkOf(state, victim));
-  pushFeed(state, 'critical', `Your scheme against ${targetName(ctx, s)} was discovered.`, null, networkOf(state, s.owner));
+  tellSide(state, s.owner, 'critical', `Your scheme against ${targetName(ctx, s)} was discovered.`, (n) => `${n}'s scheme against ${targetName(ctx, s)} was discovered.`);
 }
 
 function complete(ctx: SimContext, s: Scheme, victim: Id): void {
@@ -160,7 +160,10 @@ function complete(ctx: SimContext, s: Scheme, victim: Id): void {
   }
   const ok = rand(state.rng) < Math.max(0, Math.min(1, p));
   const mine = networkOf(state, s.owner);
-  const say = (text: string) => pushFeed(state, 'important', text, null, mine);
+  // Scheme results are the schemer's news; teammates hear about them only when it is the player's scheme.
+  const say = (text: string) => {
+    if (s.owner === state.playerId) pushFeed(state, 'important', text, null, mine);
+  };
   if (!ok) {
     say(`Your scheme against ${targetName(ctx, s)} came to nothing.`);
     if (s.type === 'assassinate' || s.type === 'flip') discovered(ctx, s, victim);

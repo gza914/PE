@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { CharacterSelect } from './CharacterSelect';
 import { DetailPanel } from './DetailPanel';
 import { EndScreen } from './EndScreen';
+import { ErrorBoundary } from './ErrorBoundary';
 import { EventPopup } from './EventPopup';
 import { Feed } from './Feed';
 import { CuliacanMap } from './map/CuliacanMap';
@@ -41,6 +42,8 @@ function useHotkeys() {
 export function App() {
   const game = useGame((s) => s.game);
   const view = useGame((s) => s.view);
+  const select = useGame((s) => s.select);
+  const set = useGame((s) => s.set);
   useGameLoop();
   useHotkeys();
 
@@ -48,16 +51,30 @@ export function App() {
 
   return (
     <div className="app">
-      <TopBar />
+      <ErrorBoundary label="top bar">
+        <TopBar />
+      </ErrorBoundary>
       <aside className="panel left">
-        <DetailPanel />
+        <ErrorBoundary label="side panel" onReset={() => select(null)}>
+          <DetailPanel />
+        </ErrorBoundary>
       </aside>
-      <main className="map">{view === 'state' ? <StateMap /> : <CuliacanMap />}</main>
+      <main className="map">
+        <ErrorBoundary label="map" onReset={() => set({ plan: null })}>
+          {view === 'state' ? <StateMap /> : <CuliacanMap />}
+        </ErrorBoundary>
+      </main>
       <aside className="panel right">
-        <Feed />
+        <ErrorBoundary label="report panel">
+          <Feed />
+        </ErrorBoundary>
       </aside>
-      <EventPopup />
-      <EndScreen />
+      <ErrorBoundary label="event window">
+        <EventPopup />
+      </ErrorBoundary>
+      <ErrorBoundary label="end screen">
+        <EndScreen />
+      </ErrorBoundary>
     </div>
   );
 }

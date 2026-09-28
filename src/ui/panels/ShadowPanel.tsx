@@ -81,7 +81,12 @@ export function ShadowPanel() {
               </div>
               <div className="actions">
                 {!bribed && (
-                  <button className="small" title={`${money(t.state.commanderBribeCost)}: fewer checkpoints and raids here until he rotates out (${rotates} days)`} onClick={() => enqueue({ type: 'bribe_commander', issuer: id, region: r.id })}>
+                  <button
+                    className="small"
+                    disabled={rotates < t.state.commanderMinDaysLeft}
+                    title={rotates < t.state.commanderMinDaysLeft ? `He rotates out in ${rotates} days; wait for the new one` : `${money(t.state.commanderBribeCost)}: fewer checkpoints and raids here for up to ${Math.min(rotates, t.state.commanderBribeDays)} days`}
+                    onClick={() => enqueue({ type: 'bribe_commander', issuer: id, region: r.id })}
+                  >
                     Bribe commander
                   </button>
                 )}

@@ -12,8 +12,8 @@ export function usePanZoom(initial: ViewBox) {
   const [vb, setVb] = useState(initial);
   const drag = useRef<{ px: number; py: number; vb: ViewBox; moved: boolean } | null>(null);
 
-  const toSvg = (el: SVGSVGElement, clientX: number, clientY: number, box: ViewBox) => {
-    const r = el.getBoundingClientRect();
+  const toSvg = (el: SVGSVGElement, clientX: number, clientY: number, box: ViewBox) => toSvgAt(el.getBoundingClientRect(), clientX, clientY, box);
+  const toSvgAt = (r: DOMRect, clientX: number, clientY: number, box: ViewBox) => {
     const scale = Math.max(box.w / r.width, box.h / r.height);
     const offX = (r.width * scale - box.w) / 2;
     const offY = (r.height * scale - box.h) / 2;
@@ -22,12 +22,20 @@ export function usePanZoom(initial: ViewBox) {
 
   const onWheel = useCallback(
     (e: WheelEvent<SVGSVGElement>) => {
+      if (e.deltaY === 0) return;
       const f = e.deltaY > 0 ? 1.15 : 1 / 1.15;
+      // Read everything off the event now: React clears currentTarget once the
+      // handler returns, and the state updater below runs later.
+      const el = e.currentTarget;
+      const rect = el.getBoundingClientRect();
+      const { clientX, clientY } = e;
+      if (rect.width <= 0 || rect.height <= 0) return;
       setVb((box) => {
         const w = Math.min(initial.w * 1.5, Math.max(initial.w / 6, box.w * f));
         const k = w / box.w;
-        const p = toSvg(e.currentTarget, e.clientX, e.clientY, box);
-        return { x: p.x - (p.x - box.x) * k, y: p.y - (p.y - box.y) * k, w, h: box.h * k };
+        const p = toSvgAt(rect, clientX, clientY, box);
+        const next = { x: p.x - (p.x - box.x) * k, y: p.y - (p.y - box.y) * k, w, h: box.h * k };
+        return [next.x, next.y, next.w, next.h].every(Number.isFinite) ? next : box;
       });
     },
     [initial.w],

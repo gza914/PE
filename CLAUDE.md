@@ -31,6 +31,13 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Money moves only through `money.ts` (`deposit`, `spend`, `spendUpTo`, `moveCash`) so stash houses and the ledger stay consistent. Never touch `purse` or `stash` directly outside it (tests may, to set up state).
 - Attack decisions go through `wantsToAttack` with an enemy estimate: `reportedPower` when judging from reports, true power only at close range.
 
+## UI conventions
+
+- Read what you need off a React event (`currentTarget`, coordinates, rects) before calling `setState`; state updaters run later, when the event's `currentTarget` is already null. That bug once blanked the whole screen on the first wheel zoom.
+- Each area of the screen sits in an `ErrorBoundary`, so a crash shows a "Something broke" box with Try again instead of a blank page. Keep new top-level areas inside one.
+- The game autosaves to `localStorage` once per in-game day (best effort, wrapped in try/catch); the start screen offers Continue.
+- `tests/fuzz.test.ts` throws random commands at the sim; `FUZZ_SEEDS` and `FUZZ_DAYS` run a deeper sweep.
+
 ## AI conventions
 
 - The AI (`src/sim/ai`) acts only by returning `Command`s, the same ones the player issues. It never writes to state directly, except its own planning records (`warPlan`, `offensives`, `requests`).

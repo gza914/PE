@@ -15,7 +15,7 @@
  * lies wear down.
  */
 import type { MessageTemplate } from '../../data/schemas';
-import { newId, pushFeed, type SimContext } from '../context';
+import { newId, pushFeed, tellSide, type SimContext } from '../context';
 import { groupOf } from '../crews';
 import { spend } from '../money';
 import { crewNetwork, networkOf } from '../network';
@@ -283,7 +283,7 @@ export function runInfowarDaily(ctx: SimContext): void {
     const head = netHead(ctx, r.network);
     if (head) addOpinion(state, content, head, r.owner, 'planted_lies', t.rumor.targetOpinion, content.tuning.events.opinionDecayDays);
     pushFeed(state, 'important', `A rumor was traced back to ${charName(ctx, r.owner)}.`, null, r.network);
-    pushFeed(state, 'important', `Your rumor in ${networkName(ctx, r.network)}'s ranks was found out.`, null, networkOf(state, r.owner));
+    tellSide(state, r.owner, 'important', `Your rumor in ${networkName(ctx, r.network)}'s ranks was found out.`, (n) => `${n}'s rumor in ${networkName(ctx, r.network)}'s ranks was found out.`);
   }
   state.rumors = state.rumors.filter((r) => r.until > state.hour);
 

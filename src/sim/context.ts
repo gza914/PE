@@ -44,3 +44,13 @@ export function pushFeed(
   state.feed.push({ id: newId(state, 'feed'), hour: state.hour, tier, audience, battle, text, node });
   if (state.feed.length > FEED_LIMIT) state.feed.splice(0, state.feed.length - FEED_LIMIT);
 }
+
+/**
+ * A notice to the actor's side: "you" wording when the actor is the player,
+ * the actor's name otherwise (a teammate did it).
+ */
+export function tellSide(state: GameState, actor: Id, tier: FeedTier, mine: string, theirs: (name: string) => string, node: Id | null = null): void {
+  const ch = state.characters[actor];
+  const name = ch ? (ch.alias ?? ch.name) : actor;
+  pushFeed(state, tier, actor === state.playerId ? mine : theirs(name), node, networkOf(state, actor));
+}

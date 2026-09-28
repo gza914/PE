@@ -7,7 +7,7 @@ import { useGame, type Overlay } from './store';
 import { charLabel } from './util';
 
 export function TopBar() {
-  const { content, game, speed, setSpeed, view, set, overlay, revealAll, autoPause } = useGame();
+  const { content, game, speed, setSpeed, view, set, overlay, revealAll, autoPause, quit } = useGame();
   if (!game) return null;
   const player = game.characters[game.playerId]!;
   const faction = player.faction ? game.factions[player.faction] : null;
@@ -70,6 +70,9 @@ export function TopBar() {
       </label>
       <button onClick={() => set({ view: view === 'state' ? 'culiacan' : 'state', plan: null })}>{view === 'state' ? 'Culiacán' : 'State'}</button>
       {game.ended && <strong>War over: {game.ended.reason.replace('_', ' ')}</strong>}
+      <button className="small" title="Save and go back to the start screen" onClick={() => quit()}>
+        Menu
+      </button>
     </header>
   );
 }

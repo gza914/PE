@@ -20,7 +20,7 @@ const REASON = {
 } as const;
 
 export function EndScreen() {
-  const { content, game } = useGame();
+  const { content, game, quit } = useGame();
   if (!game?.ended) return null;
   const e = game.ended;
   const winner = content.factions.find((f) => f.id === e.winner);
@@ -68,7 +68,7 @@ export function EndScreen() {
             <p className="muted small">100 means you ended exactly where you started.</p>
           </>
         )}
-        <button onClick={() => window.location.reload()}>New game</button>
+        <button onClick={() => quit()}>New game</button>
       </div>
     </div>
   );
