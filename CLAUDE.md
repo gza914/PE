@@ -30,3 +30,11 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Culiacán is fought only colonia by colonia (`crew.colonia`); never start node-level battles there.
 - Money moves only through `money.ts` (`deposit`, `spend`, `spendUpTo`, `moveCash`) so stash houses and the ledger stay consistent. Never touch `purse` or `stash` directly outside it (tests may, to set up state).
 - Attack decisions go through `wantsToAttack` with an enemy estimate: `reportedPower` when judging from reports, true power only at close range.
+
+## AI conventions
+
+- The AI (`src/sim/ai`) acts only by returning `Command`s, the same ones the player issues. It never writes to state directly, except its own planning records (`warPlan`, `offensives`, `requests`).
+- AI plans from `Intel` (`ai/intel.ts`), which reads only the planning network's reports, plus typical-garrison priors where it has none. Never read `state.crews` of a rival network in AI code. `Intel` is a per-tick cache; never store it in state.
+- Each layer has a switch at `tuning.ai.layers`. Mechanics tests turn the AI off (`calm`, `certain`, `noAi`, `quiet()` in `tests/helpers.ts`); AI tests turn on only the layer under test.
+- `isAi(state, id)` decides who the AI commands; it includes the player when `state.autoplay` is on (the balance runner uses this).
+- After changing AI behavior or tuning, run `npm run balance` (use `RUNS=80` for a decision; 40 runs swing by ±10 points) and keep `checkInvariants` at 0 problems.

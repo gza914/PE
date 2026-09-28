@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Content } from '../src/data/content';
 import { Intel } from '../src/sim/ai/intel';
 import { runAi } from '../src/sim/ai';
+import { attackRatio, personalCrew, pickOffensive } from '../src/sim/ai/strategic';
 import { newContext } from '../src/sim/context';
 import { startBattle } from '../src/sim/systems/combat';
 import { checkInvariants } from '../src/sim/invariants';
@@ -118,16 +119,77 @@ describe('strategic: faction heads', () => {
     expect(s.offensives).toEqual([]);
   });
 
-  it('heads never send the crews they lead in person', () => {
+  it('heads never send the crew they ride with', () => {
     const c = only({ strategic: true });
     let s = newGame(c, { seed: 2, playerId: 'm_la_cruz' });
-    s = runTo(s, c, 20 * 24);
-    for (const o of s.offensives) {
-      for (const id of o.crews) {
-        const x = s.crews[id];
-        if (x) expect(x.leader === x.owner && s.factions[o.faction]!.head === x.owner).toBe(false);
+    const seen = new Set<string>();
+    while (s.hour < 20 * 24) {
+      s = tick(s, [], c).state;
+      for (const o of s.offensives) {
+        if (seen.has(o.id)) continue;
+        seen.add(o.id);
+        expect(o.crews).not.toContain(personalCrew(s, s.factions[o.faction]!.head!));
       }
     }
+    expect(seen.size).toBeGreaterThan(0);
+  });
+
+  it('a head rides with one crew; the other crews they raised can go to war', () => {
+    const c = tuned((t) => {
+      noAi(t);
+      t.ai.strategic.attackForceRatio = 1;
+      t.ai.strategic.lateAttackForceRatio = 1;
+    });
+    const s = cleared(c);
+    addCrew(s, 'big', 'mayos_head', 'eldorado', { men: 40 });
+    addCrew(s, 'extra', 'mayos_head', 'eldorado', { men: 30 });
+    addCrew(s, 'guard', 'm_los_mochis', 'eldorado', { men: 35 });
+    expect(personalCrew(s, 'mayos_head')).toBe('big');
+    const plan = pickOffensive(newContext(s, c), new Intel(s, c), s.factions.mayos!);
+    const sent = plan?.crews.map((x) => x.id) ?? [];
+    expect(sent).toContain('extra');
+    expect(sent).not.toContain('big');
+  });
+
+  it('the force margin eases as a long war drags on', () => {
+    const t = only({}).tuning.ai.strategic;
+    expect(attackRatio(t, 0)).toBe(t.attackForceRatio);
+    expect(attackRatio(t, (t.lateWarStartDay + t.lateWarFullDay) / 2)).toBeCloseTo((t.attackForceRatio + t.lateAttackForceRatio) / 2, 9);
+    expect(attackRatio(t, t.lateWarFullDay + 100)).toBe(t.lateAttackForceRatio);
+  });
+
+  describe('desperation lowers the margin', () => {
+    const c = tuned((t) => {
+      noAi(t);
+      t.ai.strategic.attackForceRatio = 10;
+      t.ai.strategic.lateAttackForceRatio = 1;
+      t.ai.strategic.lateWarStartDay = 1000;
+      t.ai.strategic.lateWarFullDay = 1100;
+    });
+    const setup = () => {
+      const s = cleared(c);
+      addCrew(s, 'big', 'mayos_head', 'eldorado', { men: 40 });
+      addCrew(s, 'extra', 'mayos_head', 'eldorado', { men: 30 });
+      addCrew(s, 'guard', 'm_los_mochis', 'eldorado', { men: 35 });
+      return s;
+    };
+    const pick = (s: GameState) => pickOffensive(newContext(s, c), new Intel(s, c), s.factions.mayos!);
+
+    it('a comfortable faction waits for overwhelming odds', () => {
+      expect(pick(setup())).toBeNull();
+    });
+
+    it('a plaza lost recently is worth retaking at worse odds', () => {
+      const s = setup();
+      s.factions.mayos!.warPlan.lost.push({ node: 'culiacancito', at: s.hour });
+      expect(pick(s)?.target).toBe('culiacancito');
+    });
+
+    it('a faction losing the map attacks at worse odds', () => {
+      const s = setup();
+      for (const n of Object.values(s.nodes)) if (n.owner && s.characters[n.owner]!.faction === 'mayos' && n.id !== 'eldorado') n.owner = 'chapitos_head';
+      expect(pick(s)).not.toBeNull();
+    });
   });
 
   it('an exhausted faction regroups and calls off its offensive', () => {
@@ -243,6 +305,14 @@ describe('operational: lieutenants', () => {
     s.hour = c.tuning.ai.operational.ambushMaxHours + 1;
     s = runTo(s, c, s.hour + 7);
     expect(s.crews.x!.order.type).not.toBe('ambush');
+  });
+
+  it('a scout whose hiding place falls to its own side takes up the garrison', () => {
+    const c = only({ operational: true });
+    let s = cleared(c);
+    addCrew(s, 'x', 'm_la_cruz', 'la_cruz', { order: { type: 'lie_low', since: 0 } });
+    s = runTo(s, c, s.hour + 7);
+    expect(s.crews.x!.order.type).toBe('garrison');
   });
 });
 

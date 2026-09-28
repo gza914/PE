@@ -156,6 +156,20 @@ export function StateMap() {
             </g>
           );
         })}
+        {game.offensives
+          .filter((o) => (o.status === 'gathering' || o.status === 'assault') && o.faction === game.characters[game.playerId]?.faction)
+          .map((o) => {
+            const n = w.node(o.target);
+            return (
+              <g key={o.id} className="offtarget" transform={`translate(${n.x} ${n.y})`} pointerEvents="none">
+                <circle r={22} />
+                <line x1={-28} x2={-14} y1={0} y2={0} />
+                <line x1={14} x2={28} y1={0} y2={0} />
+                <line y1={-28} y2={-14} x1={0} x2={0} />
+                <line y1={14} y2={28} x1={0} x2={0} />
+              </g>
+            );
+          })}
         {Object.values(game.battles)
           .filter((b) => b.endedAt === null && !b.colonia)
           .map((b) => {

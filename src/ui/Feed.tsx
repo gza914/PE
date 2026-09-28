@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { formatDateTime } from '../sim/clock';
 import { ledger } from '../sim/knowledge';
 import { EconomyPanel } from './panels/EconomyPanel';
+import { FactionPanel } from './panels/FactionPanel';
 import { useGame } from './store';
 import { charLabel, locationName, playerNetwork, vehicleSummary } from './util';
 
 export function Feed() {
-  const [tab, setTab] = useState<'feed' | 'intel' | 'money'>('feed');
+  const [tab, setTab] = useState<'feed' | 'intel' | 'money' | 'faction'>('feed');
+  const pendingCount = useGame((s) => (s.game ? s.game.requests.filter((r) => r.to === s.game!.playerId && r.status === 'pending').length : 0));
   return (
     <div className="feed">
       <div className="tabs">
@@ -19,8 +21,11 @@ export function Feed() {
         <button className={tab === 'money' ? 'on' : ''} onClick={() => setTab('money')}>
           Economy
         </button>
+        <button className={tab === 'faction' ? 'on' : ''} onClick={() => setTab('faction')}>
+          Faction{pendingCount > 0 && <span className="badge">{pendingCount}</span>}
+        </button>
       </div>
-      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : <EconomyPanel />}
+      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : tab === 'money' ? <EconomyPanel /> : <FactionPanel />}
     </div>
   );
 }

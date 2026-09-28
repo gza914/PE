@@ -119,7 +119,7 @@ export function runCampaign(content: Content, seed: number, opts: CampaignOption
             majors
               .map((f) => {
                 const fs = state.factions[f]!;
-                return `${f.slice(0, 4)} share ${Math.round((shares.get(f) ?? 0) * 100)}% men ${men(f)} exh ${Math.round(fs.exhaustion)} sup ${Math.round(fs.supply)} ${fs.warPlan.mode}`;
+                return `${f.slice(0, 4)} share ${Math.round((shares.get(f) ?? 0) * 100)}% men ${men(f)} exh ${Math.round(fs.exhaustion)} sup ${Math.round(fs.supply)} ${fs.warPlan.mode}/${fs.warPlan.reason}`;
               })
               .join(' | ') +
             `  battles ${periodBattles} offensives ${periodOffensives}`,

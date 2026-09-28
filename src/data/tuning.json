@@ -404,7 +404,11 @@
     "strategic": {
       "hourOfDay": 6,
       "offensiveMinSupply": 40,
-      "attackForceRatio": 1.6,
+      "attackForceRatio": 3.0,
+      "lateAttackForceRatio": 1.6,
+      "lateWarStartDay": 150,
+      "lateWarFullDay": 240,
+      "desperateShare": 0.3,
       "maxParticipantHours": 16,
       "responseHours": 6,
       "slackHours": 2,
@@ -433,7 +437,7 @@
       "levyShare": 0.1,
       "levyRichWeeks": 4,
       "firstOffensiveDay": 5,
-      "neutralTargetDay": 21,
+      "neutralTargetDay": 30,
       "neutralTargetBonus": 2,
       "cautionForceWeight": 0.3,
       "retakeBonus": 3,
@@ -442,7 +446,7 @@
     },
     "operational": {
       "actThreshold": 1.0,
-      "raidMinRatio": 1.5,
+      "raidMinRatio": 2.0,
       "raidMaxHours": 8,
       "raidValuePerPoint": 1500,
       "raidRiskPenalty": 2,
@@ -491,6 +495,11 @@
       "economy": true,
       "traffic": true
     },
-    "economyReserveWeeks": 0.5
+    "economyReserveWeeks": 0.5,
+    "forceGrowth": {
+      "startDay": 90,
+      "min": 0.85,
+      "max": 1.25
+    }
   }
 }

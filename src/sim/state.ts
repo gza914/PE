@@ -150,8 +150,10 @@ export interface CharacterState {
   lastAidAt: number | null;
   /** Hour the character last declared for a side (0 for their starting side). */
   declaredAt: number;
-  /** Men the character fielded at the start: the AI rebuilds toward this. */
+  /** Men the character fielded at the start: the AI rebuilds toward this, scaled by territory. */
   forceTarget: number;
+  /** Plaza value the character held at the start. */
+  baseTerritory: number;
   fear: number;
   respect: number;
   credibility: number;
@@ -167,6 +169,7 @@ export interface CharacterState {
 }
 
 export type WarPlanMode = 'attack' | 'defend' | 'regroup';
+export type WarPlanReason = 'opening' | 'exhausted' | 'threatened' | 'tired' | 'low_supply' | 'cooldown' | 'busy' | 'no_target' | 'attacking' | 'player';
 
 export interface FactionState {
   id: Id;
@@ -193,6 +196,8 @@ export interface WarPlan {
   lastOffensiveEndedAt: number | null;
   /** Plazas the faction lost, and when: counteroffensives aim to take them back. */
   lost: { node: Id; at: number }[];
+  /** Why the head chose this plan (shown to the player). */
+  reason: WarPlanReason;
 }
 
 export type RequestKind = 'join_offensive' | 'defend' | 'levy' | 'hold_colonia';

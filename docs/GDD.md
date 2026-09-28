@@ -746,3 +746,44 @@ Design decisions made during the build:
 
 Measured in 270-day headless campaigns: 4 of 24 lieutenants face a payroll shortfall (the target is "a typical lieutenant"). With supply runs avoiding rival plazas and no AI offensives yet, headless campaigns now have no battles at all, so nothing forces war spending. The utility AI's offensives should both restart the war and raise shortfalls toward the target.
 
+
+**Phase 4: utility AI, characters, and endings.** Built:
+
+- The three AI layers in `src/sim/ai`, all acting through the same commands the player uses and planning only from their own network's reports (a per-tick `Intel` cache that never goes into state):
+  - Strategic (faction heads, daily at 06:00): read Supply, Exhaustion, and threats; pick attack, defend, or regroup; launch coordinated offensives with one arrival hour (the head's own crews by order, everyone else by request); send defenders to threatened plazas; keep Culiacán contested; levy rich lieutenants and bail out broke ones; retake lost plazas. Neutral plazas become fair game after day 30.
+  - Operational (lieutenants, every 6 hours, staggered): answer requests, weighted by opinion and traits, then pick the best initiative by utility score: defend home, raid a weak neighbor, ambush a road with rival traffic, scout by lying low, commit crews in Culiacán. Neutrals may pick a side.
+  - Tactical (crew leaders, hourly in battle): withdraw when badly outgunned (never with help inbound or from a fortified plaza), push armored trucks, accept surrenders.
+  - Economy (daily): refill crews, rebuild lost ones, raise extortion and cut halcones when broke.
+- Utility scoring as specified: value × trait weight × goal weight − risk × caution. Trait weights are in `traits.json` (`aiWeights`); goal weights and all planning numbers are in `tuning.json` under `ai`. Each layer can be switched off (`ai.layers`), which the mechanics tests use.
+- Opinion: relationship bases (siblings, rivals, shared faction) plus decaying modifiers; Leal characters forget slowly, Vengativo ones never forget a slight.
+- Faction requests (join an offensive, defend, levy, hold a colonia). Delivering builds the head's opinion; refusing, ignoring, or failing costs it. The player answers them in the new Faction tab.
+- Presence intel: crews see rivals in the same plaza; a scout lying low in a rival plaza sees its whole garrison without being seen.
+- Endings: territorial defeat, faction collapse, negotiated truce (a player who heads a faction is offered it), and the time cap with a share-based winner. Score and title on an end screen.
+- Autoplay (`state.autoplay`) lets the AI play the player's character too; the balance runner uses it.
+- Invariant checks (`src/sim/invariants.ts`) run through full-AI campaigns in the tests and the balance runner.
+- UI: Faction tab (map share, war plan and its reason, offensive, opinion both ways with a breakdown, requests with Accept / Accept and send the crews / Refuse, a truce button), an offensive crosshair on the map, and the end screen.
+
+Design decisions made during the build:
+
+- **Intel is a floor, not the truth.** A halcón sighting of one crew in a plaza does not mean that is the whole garrison: estimates take the larger of what was seen and a typical garrison for the node type. Only a presence report (someone inside) counts as complete.
+- **A cautious head gathers a bigger margin instead of refusing to attack.** Scaling risk by caution made the cautious Mayos head never attack at all; caution now raises the force required.
+- **The force margin changes over the war.** Heads want 3× the target's estimated defense early, easing to 1.6× between days 150 and 240. They also accept 1.6× to retake a plaza lost in the last 14 days, when their faction holds under 30% of the map, and against lone neutrals, who have no faction to call for help. Without the desperation rule a losing faction sat on 200+ men and watched its map fall.
+- **A head rides with one crew.** A character may nominally lead several crews; the head stays home only with the largest crew they lead themselves. Before this fix, every crew a head raised was treated as the head's escort and never went to war, which caused most time-cap stalemates.
+- Force growth is late-war only: from day 90 each character's target force scales with their territory against the start (0.85–1.25×). Earlier growth snowballed the first winner.
+- Offensives and initiatives wait for day 5 and day 2, so the player gets their bearings.
+- Crews on an accepted request stay on the job until it is judged; heads wait 48 hours before asking again after a refusal.
+- Two lieutenants (El Chaparral at El Fuerte, El Pino at Concordia) moved to the Mayos so the start is even.
+
+Measured over 80 AI-vs-AI campaigns (`RUNS=80 npm run balance`; neutrals on odd seeds):
+
+| Target | Result | |
+| --- | --- | --- |
+| War length | median 139.5 days | pass |
+| Time cap | 5% of runs | pass |
+| Faction balance | Chapitos 47%, Mayos 53% of decided runs | pass |
+| Pulse | 9.0 quiet stretches per campaign | pass |
+| Neutral risk | 44% hold a plaza on day 60 | pass |
+| Money pressure | 20% of lieutenants miss a payroll | **miss** |
+| Invariants | 0 problems | pass |
+
+Money pressure is still a miss. AI lieutenants cut costs when broke and heads bail them out, so few ever miss a payday. It likely needs costlier wars (ammo, vehicle losses) or a smaller aid pot, and it is left for the balance pass.

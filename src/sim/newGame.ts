@@ -2,6 +2,7 @@
 import type { Content } from '../data/content';
 import type { VehicleType } from '../data/schemas';
 import { newId } from './context';
+import { characterTerritory } from './systems/economy';
 import { snapshot } from './systems/endings';
 import { seedRng } from './rng';
 import { SAVE_VERSION, type CharacterState, type CrewState, type CrewTransit, type GameState, type OpinionModifier } from './state';
@@ -100,7 +101,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       combatHoursToday: 0,
       lowShareDays: 0,
       headlessDays: 0,
-      warPlan: { mode: 'defend', focusRegion: null, target: null, since: 0, lastOffensiveEndedAt: null, lost: [] },
+      warPlan: { mode: 'defend', focusRegion: null, target: null, since: 0, lastOffensiveEndedAt: null, lost: [], reason: 'opening' },
     };
   }
 
@@ -131,6 +132,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       lastAidAt: null,
       declaredAt: 0,
       forceTarget: def.crews.reduce((n, c) => n + c.men, 0),
+      baseTerritory: 0,
       fear: 0,
       respect: 0,
       credibility: 50,
@@ -184,6 +186,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     if (ch && ch.rank !== 'head') ch.faction = null;
   }
 
+  for (const ch of Object.values(state.characters)) ch.baseTerritory = characterTerritory(state, content, ch.id);
   state.start = snapshot(state, content, opts.playerId);
 
   return state;

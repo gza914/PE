@@ -114,6 +114,9 @@ function housekeeping(ctx: SimContext, id: Id, mine: CrewState[]): Command[] {
       (o.type === 'patrol' && state.hour - (o.since ?? state.hour) > op.ambushMaxHours) ||
       (o.type === 'lie_low' && c.location.kind === 'node' && !ownedBy(state, c.location.node, crewNetwork(state, c)) && state.hour - (o.since ?? state.hour) > op.scoutHoldHours);
     if (stale) cmds.push({ type: 'order_crew', issuer: id, crew: c.id, order: { type: 'retreat' } });
+    // A scout whose hiding place has since fallen to its own side simply takes up the garrison.
+    else if (o.type === 'lie_low' && c.location.kind === 'node' && ownedBy(state, c.location.node, crewNetwork(state, c)))
+      cmds.push({ type: 'order_crew', issuer: id, crew: c.id, order: { type: 'garrison' } });
   }
   return cmds;
 }

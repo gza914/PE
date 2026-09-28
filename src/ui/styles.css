@@ -145,3 +145,20 @@ ul.plain { list-style: none; padding: 0; margin: 4px 0; }
 .movecash select { max-width: 120px; }
 .btns button.on { border-color: var(--accent); color: var(--accent); }
 .plazaecon { margin-top: 8px; }
+
+/* Phase 4: faction tab, end screen, offensive marker */
+.tabs { flex-wrap: wrap; }
+.badge { display: inline-block; min-width: 16px; margin-left: 4px; padding: 0 4px; border-radius: 8px; background: #c44; color: #fff; font-size: 11px; }
+.sharebar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); }
+.sharebar div { height: 100%; }
+.request { border: 1px solid var(--accent); border-radius: 6px; padding: 8px; margin: 6px 0; }
+.opinion { font-family: ui-monospace, Menlo, monospace; cursor: help; border-bottom: 1px dotted var(--muted); }
+.opinion.pos { color: #7fd18b; }
+.opinion.neg { color: #ff7b6b; }
+.offtarget circle { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; }
+.offtarget line { stroke: var(--accent); stroke-width: 2; }
+.endscreen { position: fixed; inset: 0; background: #000a; display: flex; align-items: center; justify-content: center; z-index: 10; }
+.endcard { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 24px 28px; max-width: 460px; width: calc(100% - 32px); }
+.endcard h1 { font-size: 32px; margin: 4px 0 8px; color: var(--accent); }
+.endcard table { width: 100%; margin: 8px 0; }
+.endcard td { padding: 2px 4px; }

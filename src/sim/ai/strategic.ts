@@ -19,15 +19,30 @@ import { charName } from '../orders';
 import { groupPower } from '../power';
 import { cancelOffensiveRequests, createRequest, mayAsk, onDuty, settleOffensiveRequests } from '../requests';
 import { travelHours } from '../routing';
-import type { CrewState, FactionState, Id, NetworkId, Offensive } from '../state';
-import { nodeValue, weeklyObligations } from '../systems/economy';
+import type { CrewState, FactionState, GameState, Id, NetworkId, Offensive } from '../state';
+import { nodeValue, territoryShares, weeklyObligations } from '../systems/economy';
 import { world } from '../world';
 import { withinHops, type Intel } from './intel';
 import { cautionOf, isAi, majorFactions } from './util';
 
 /** Crews that are not tied up and could be sent somewhere. */
+/**
+ * The crew a character rides with: the largest one they lead themselves. A
+ * character may nominally lead several crews, but is only in one place.
+ */
+export function personalCrew(state: GameState, id: Id): Id | null {
+  let best: CrewState | null = null;
+  for (const c of Object.values(state.crews)) {
+    if (c.leader !== id || c.owner !== id) continue;
+    if (!best || c.men > best.men || (c.men === best.men && c.id < best.id)) best = c;
+  }
+  return best?.id ?? null;
+}
+
 function freeCrews(ctx: SimContext, net: NetworkId): CrewState[] {
   const { state } = ctx;
+  const head = state.factions[net]?.head ?? null;
+  const personal = head === null ? null : personalCrew(state, head);
   const busy = new Set(state.offensives.filter((o) => o.status === 'gathering' || o.status === 'assault').flatMap((o) => o.crews));
   return Object.values(state.crews)
     .filter(
@@ -40,8 +55,8 @@ function freeCrews(ctx: SimContext, net: NetworkId): CrewState[] {
         (c.order.type === 'garrison' || c.order.type === 'idle') &&
         !busy.has(c.id) &&
         !onDuty(state, c.id) &&
-        // Faction heads direct the war; the crews they lead in person stay home.
-        !(c.leader === c.owner && state.factions[net]?.head === c.owner),
+        // Faction heads direct the war; the one crew they ride with stays home.
+        c.id !== personal,
     )
     .sort((a, b) => (a.id < b.id ? -1 : 1));
 }
@@ -112,8 +127,16 @@ export function runStrategic(ctx: SimContext, intel: Intel): Command[] {
   return cmds;
 }
 
-function setPlan(ctx: SimContext, fs: FactionState, mode: FactionState['warPlan']['mode'], focusRegion: Id | null, target: Id | null): void {
+function setPlan(
+  ctx: SimContext,
+  fs: FactionState,
+  mode: FactionState['warPlan']['mode'],
+  focusRegion: Id | null,
+  target: Id | null,
+  reason: FactionState['warPlan']['reason'],
+): void {
   const p = fs.warPlan;
+  p.reason = reason;
   if (p.mode !== mode || p.focusRegion !== focusRegion) p.since = ctx.state.hour;
   p.mode = mode;
   p.focusRegion = focusRegion;
@@ -131,7 +154,7 @@ function planFaction(ctx: SimContext, intel: Intel, fs: FactionState): Command[]
   if (fs.exhaustion >= content.tuning.pulse.allOffensivesHaltAtExhaustion) {
     const o = activeOffensive(ctx, fs.id);
     if (o) cmds.push(...endOffensive(ctx, o, 'cancelled'));
-    setPlan(ctx, fs, 'regroup', null, null);
+    setPlan(ctx, fs, 'regroup', null, null, 'exhausted');
     return cmds;
   }
 
@@ -145,7 +168,7 @@ function planFaction(ctx: SimContext, intel: Intel, fs: FactionState): Command[]
   const serious = threatened.filter((t) => t.enemy - t.garrison > freePower * s.minorThreatShare);
   if (serious.length || (threatened.length && freePower <= 0)) {
     const t = (serious[0] ?? threatened[0])!;
-    setPlan(ctx, fs, 'defend', w.node(t.node).region, t.node);
+    setPlan(ctx, fs, 'defend', w.node(t.node).region, t.node, 'threatened');
     cmds.push(...sendDefenders(ctx, fs, t));
     return cmds;
   }
@@ -154,16 +177,28 @@ function planFaction(ctx: SimContext, intel: Intel, fs: FactionState): Command[]
   const rested =
     fs.exhaustion < content.tuning.pulse.aiNoMajorOffensiveAboveExhaustion && fs.supply >= s.offensiveMinSupply && state.hour >= s.firstOffensiveDay * 24;
   const cooled = fs.warPlan.lastOffensiveEndedAt === null || state.hour - fs.warPlan.lastOffensiveEndedAt >= s.offensiveCooldownHours;
-  if (!rested || !cooled || activeOffensive(ctx, fs.id)) {
-    if (!activeOffensive(ctx, fs.id)) setPlan(ctx, fs, 'defend', null, null);
+  if (activeOffensive(ctx, fs.id)) {
+    fs.warPlan.reason = 'busy';
+    return cmds;
+  }
+  if (!rested || !cooled) {
+    const reason =
+      state.hour < s.firstOffensiveDay * 24
+        ? 'opening'
+        : fs.exhaustion >= content.tuning.pulse.aiNoMajorOffensiveAboveExhaustion
+          ? 'tired'
+          : fs.supply < s.offensiveMinSupply
+            ? 'low_supply'
+            : 'cooldown';
+    setPlan(ctx, fs, 'defend', null, null, reason);
     return cmds;
   }
   const plan = pickOffensive(ctx, intel, fs);
   if (!plan) {
-    setPlan(ctx, fs, 'defend', null, null);
+    setPlan(ctx, fs, 'defend', null, null, 'no_target');
     return cmds;
   }
-  setPlan(ctx, fs, 'attack', w.node(plan.target).region, plan.target);
+  setPlan(ctx, fs, 'attack', w.node(plan.target).region, plan.target, 'attacking');
   cmds.push(...launchOffensive(ctx, fs, head, plan));
   return cmds;
 }
@@ -176,6 +211,13 @@ interface OffensivePlan {
 }
 
 /** The best rival plaza the faction can gather enough force to take. */
+/** The force margin a head wants, easing from cagey to impatient as a long war drags on. */
+export function attackRatio(s: { attackForceRatio: number; lateAttackForceRatio: number; lateWarStartDay: number; lateWarFullDay: number }, day: number): number {
+  const span = Math.max(s.lateWarFullDay - s.lateWarStartDay, 1e-9);
+  const k = Math.max(0, Math.min(1, (day - s.lateWarStartDay) / span));
+  return s.attackForceRatio + (s.lateAttackForceRatio - s.attackForceRatio) * k;
+}
+
 export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): OffensivePlan | null {
   const { state, content } = ctx;
   const s = content.tuning.ai.strategic;
@@ -189,6 +231,10 @@ export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): 
     hours.set(c.id, travelHours(state, content, { crews: groupOf(state, c), from: c.location, preference: 'fastest', departHour: state.hour, viewer: fs.id, noPassThrough: rivalPlazaIds(state, fs.id) }));
   }
   const rivals = new Set(majorFactions(content).filter((f) => f !== fs.id));
+  const timeRatio = attackRatio(s, state.hour / 24);
+  // Losing badly, a head stops waiting for perfect odds.
+  const desperate = (territoryShares(state, content).get(fs.id) ?? 0) < s.desperateShare;
+  const baseRatio = desperate ? Math.min(timeRatio, s.lateAttackForceRatio) : timeRatio;
   const caution = cautionOf(state, content, fs.head!);
   const neutralsFair = state.hour >= s.neutralTargetDay * 24;
   let best: OffensivePlan | null = null;
@@ -199,8 +245,11 @@ export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): 
     const neutral = state.characters[owner]?.faction === null;
     if (!rivals.has(ownerNet) && !(neutral && neutralsFair)) continue;
     const est = intel.defense(fs.id, n.id);
+    const retake = fs.warPlan.lost.some((l) => l.node === n.id && state.hour - l.at <= s.retakeWindowDays * 24);
+    // Retakes and lone neutrals (no faction to answer the call for help) take a smaller margin.
+    const ratio = retake || neutral ? Math.min(baseRatio, s.lateAttackForceRatio) : baseRatio;
     // A cautious head gathers a bigger margin rather than refusing to attack.
-    const need = Math.max(est.power * s.attackForceRatio * (1 + (caution - 1) * s.cautionForceWeight), 1);
+    const need = Math.max(est.power * ratio * (1 + (caution - 1) * s.cautionForceWeight), 1);
     const reach = pool
       .map((c) => ({ c, h: hours.get(c.id)!.get(n.id) ?? Infinity }))
       .filter((x) => x.h <= s.maxParticipantHours)
@@ -218,7 +267,7 @@ export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): 
     let score = nodeValue(state, content, n.id) / s.valuePerScorePoint - maxH * s.hourPenalty - est.power * s.riskPenalty * caution;
     if (fs.warPlan.focusRegion === n.region) score += s.focusBonus;
     if (neutral) score += s.neutralTargetBonus;
-    if (fs.warPlan.lost.some((l) => l.node === n.id && state.hour - l.at <= s.retakeWindowDays * 24)) score += s.retakeBonus;
+    if (retake) score += s.retakeBonus;
     // Cutting a rival route near its source hurts twice.
     for (const r of content.routes) {
       const src = state.nodes[r.nodes[0]!]?.owner;

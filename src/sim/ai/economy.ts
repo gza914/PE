@@ -8,7 +8,7 @@ import type { Command } from '../commands';
 import type { SimContext } from '../context';
 import { cashOf } from '../money';
 import { seats } from '../signature';
-import { weeklyObligations } from '../systems/economy';
+import { characterTerritory, weeklyObligations } from '../systems/economy';
 import { aiManaged, stagger } from './util';
 
 const RATES: ExtortionRate[] = ['low', 'medium', 'high', 'brutal'];
@@ -57,7 +57,10 @@ export function runEconomy(ctx: SimContext): Command[] {
         .filter((c) => c.owner === id)
         .reduce((n, c) => n + c.men, 0);
       const { minMen, maxMen } = content.tuning.crews;
-      const shortfall = ch.forceTarget - fielded;
+      const g = content.tuning.ai.forceGrowth;
+      const growth =
+        ch.baseTerritory > 0 && state.hour >= g.startDay * 24 ? Math.max(g.min, Math.min(g.max, characterTerritory(state, content, id) / ch.baseTerritory)) : 1;
+      const shortfall = Math.round(ch.forceTarget * growth) - fielded;
       const base = [...plazas].sort((a, b) => b.recruits - a.recruits || (a.id < b.id ? -1 : 1))[0]!;
       const men = Math.min(maxMen, shortfall, Math.floor(base.recruits));
       const cost = men * e.recruitment.signingCostPerMan + Math.ceil(men / content.tuning.vehicles.pickup.seats) * content.tuning.vehicles.pickup.cost;

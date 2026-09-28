@@ -672,6 +672,11 @@ export const TuningSchema = z.object({
     trafficMaxTripHours: z.number().positive(),
     /** Only crews this small run supplies; big crews stay put. */
     trafficMaxMen: z.number().int().positive(),
+    /**
+     * Late-war escalation: from startDay, an AI's army target scales with its
+     * territory against the start, within these bounds (money becomes men).
+     */
+    forceGrowth: z.object({ startDay: z.number().nonnegative(), min: z.number().positive(), max: z.number().positive() }),
     /** Weeks of bills an AI keeps in reserve before spending on recruits. */
     economyReserveWeeks: z.number().nonnegative(),
     /** Switch AI layers off (tests, debugging). */
@@ -686,6 +691,13 @@ export const TuningSchema = z.object({
       offensiveMinSupply: meter,
       /** Power an offensive gathers, as a multiple of the target's estimated defense. */
       attackForceRatio: z.number().positive(),
+      /** Late in a long war heads grow impatient: the ratio eases to this... */
+      lateAttackForceRatio: z.number().positive(),
+      /** ...linearly between these days. */
+      lateWarStartDay: z.number().nonnegative(),
+      lateWarFullDay: z.number().nonnegative(),
+      /** A faction below this share of the map fights with the late-war margin (as do retakes and attacks on neutrals). */
+      desperateShare: z.number().min(0).max(1),
       maxParticipantHours: z.number().positive(),
       /** Hours lieutenants get to answer before the planned arrival time. */
       responseHours: z.number().nonnegative(),
