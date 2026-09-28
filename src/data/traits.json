@@ -13,7 +13,13 @@
         "trustOpinion": -10,
         "caution": 0.6
       },
-      "droneReaction": "ambush"
+      "droneReaction": "ambush",
+      "aiWeights": {
+        "raid": 1.3,
+        "ambush": 1.5,
+        "accept_request": 1.0,
+        "withdraw": 0.7
+      }
     },
     {
       "id": "calculador",
@@ -29,7 +35,14 @@
       "droneReaction": "feign",
       "opposites": [
         "impulsivo"
-      ]
+      ],
+      "aiWeights": {
+        "raid": 0.8,
+        "ambush": 1.1,
+        "scout": 1.5,
+        "accept_request": 1.1,
+        "defend": 1.1
+      }
     },
     {
       "id": "leal",
@@ -41,7 +54,12 @@
       },
       "opposites": [
         "ambicioso"
-      ]
+      ],
+      "aiWeights": {
+        "accept_request": 1.6,
+        "defend": 1.2,
+        "raid": 0.9
+      }
     },
     {
       "id": "ambicioso",
@@ -53,7 +71,12 @@
       },
       "opposites": [
         "leal"
-      ]
+      ],
+      "aiWeights": {
+        "raid": 1.4,
+        "accept_request": 1.2,
+        "commit_colonia": 1.2
+      }
     },
     {
       "id": "paranoico",
@@ -64,7 +87,13 @@
         "purgeChance": 0.05,
         "caution": 1.3
       },
-      "droneReaction": "relocate"
+      "droneReaction": "relocate",
+      "aiWeights": {
+        "defend": 1.5,
+        "scout": 1.3,
+        "raid": 0.8,
+        "lie_low": 1.3
+      }
     },
     {
       "id": "carismatico",
@@ -75,6 +104,10 @@
       },
       "modifiers": {
         "crewMoraleLossMultiplier": 0.75
+      },
+      "aiWeights": {
+        "accept_request": 1.1,
+        "commit_colonia": 1.1
       }
     },
     {
@@ -87,6 +120,11 @@
       "modifiers": {
         "bribeCostMultiplier": 0.6,
         "skimRate": 0.05
+      },
+      "aiWeights": {
+        "supply_run": 1.3,
+        "raid": 1.1,
+        "accept_request": 0.8
       }
     },
     {
@@ -100,7 +138,13 @@
       },
       "opposites": [
         "calculador"
-      ]
+      ],
+      "aiWeights": {
+        "raid": 1.5,
+        "ambush": 1.4,
+        "scout": 0.6,
+        "withdraw": 0.6
+      }
     },
     {
       "id": "discreto",
@@ -109,6 +153,11 @@
       "modifiers": {
         "profileGainMultiplier": 0.5,
         "signatureMultiplier": 0.8
+      },
+      "aiWeights": {
+        "scout": 1.4,
+        "ambush": 1.2,
+        "raid": 0.9
       }
     },
     {
@@ -118,6 +167,10 @@
       "modifiers": {
         "negativeOpinionDecayMultiplier": 0,
         "vendettaChance": 0.3
+      },
+      "aiWeights": {
+        "raid": 1.2,
+        "ambush": 1.2
       }
     },
     {
@@ -131,7 +184,13 @@
       },
       "opposites": [
         "cobarde"
-      ]
+      ],
+      "aiWeights": {
+        "raid": 1.2,
+        "defend": 1.2,
+        "withdraw": 0.6,
+        "commit_colonia": 1.2
+      }
     },
     {
       "id": "cobarde",
@@ -144,7 +203,15 @@
       },
       "opposites": [
         "valiente"
-      ]
+      ],
+      "aiWeights": {
+        "raid": 0.5,
+        "ambush": 0.7,
+        "defend": 1.3,
+        "lie_low": 1.6,
+        "withdraw": 1.6,
+        "commit_colonia": 0.7
+      }
     }
   ]
 }

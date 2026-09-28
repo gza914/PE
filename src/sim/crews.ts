@@ -11,8 +11,21 @@ export function escortsOf(state: GameState, crew: CrewState): CrewState[] {
 }
 
 /** A crew plus its escorts: they move, and are seen, as one group. */
-export function groupOf(state: GameState, crew: CrewState): CrewState[] {
-  return [crew, ...escortsOf(state, crew)];
+export function groupOf(state: GameState, crew: CrewState, index?: Map<Id, CrewState[]>): CrewState[] {
+  return [crew, ...(index ? (index.get(crew.id) ?? []) : escortsOf(state, crew))];
+}
+
+/** Escorts by the crew they escort, built once when many groups are needed. */
+export function escortIndex(state: GameState): Map<Id, CrewState[]> {
+  const index = new Map<Id, CrewState[]>();
+  for (const id of sortedCrewIds(state)) {
+    const c = state.crews[id]!;
+    if (c.order.type !== 'escort') continue;
+    const list = index.get(c.order.crew);
+    if (list) list.push(c);
+    else index.set(c.order.crew, [c]);
+  }
+  return index;
 }
 
 export function sortedCrewIds(state: GameState): Id[] {

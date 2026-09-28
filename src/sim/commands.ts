@@ -13,7 +13,9 @@ import { newTransit } from './newGame';
 import { nearestNode, planRoute } from './routing';
 import { allowedRoadTypes, seats, VEHICLE_TYPES } from './signature';
 import type { CrewOrder, CrewState, Id, RoutePreference } from './state';
+import { respondToRequest } from './requests';
 import { acceptSurrender, callForHelp, reinforceOrder, sideOf } from './systems/combat';
+import { endGame } from './systems/endings';
 import { world } from './world';
 
 interface Base {
@@ -22,7 +24,15 @@ interface Base {
 }
 
 export type OrderRequest =
-  | { type: 'move'; destination: Id; preference: RoutePreference; waypoints?: Id[]; arriveAt?: number | null; avoidRivalPlazas?: boolean }
+  | {
+      type: 'move';
+      destination: Id;
+      preference: RoutePreference;
+      waypoints?: Id[];
+      arriveAt?: number | null;
+      avoidRivalPlazas?: boolean;
+      onArrive?: 'lie_low';
+    }
   | { type: 'retreat' }
   | { type: 'garrison' }
   | { type: 'lie_low' }
@@ -30,7 +40,7 @@ export type OrderRequest =
   | { type: 'ambush'; road: Id }
   | { type: 'patrol'; road: Id }
   | { type: 'escort'; crew: Id }
-  | { type: 'raid'; target: Id; preference: RoutePreference };
+  | { type: 'raid'; target: Id; preference: RoutePreference; arriveAt?: number | null; avoidRivalPlazas?: boolean };
 
 export type Command =
   | (Base & { type: 'declare_alignment'; faction: Id | null })
@@ -45,6 +55,8 @@ export type Command =
   | (Base & { type: 'buy_vehicles'; crew: Id; vehicle: VehicleType; count: number })
   | (Base & { type: 'move_cash'; from: Id; to: Id; amount: number })
   | (Base & { type: 'request_aid' })
+  | (Base & { type: 'respond_request'; request: Id; accept: boolean })
+  | (Base & { type: 'accept_truce' })
   | (Base & { type: 'deploy_crew'; crew: Id; colonia: Id | null })
   | (Base & { type: 'battle_withdraw'; battle: Id })
   | (Base & { type: 'battle_armor_forward'; battle: Id })
@@ -70,6 +82,7 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       if (cmd.faction !== null && !content.factions.some((f) => f.id === cmd.faction && f.kind === 'major'))
         return `"${cmd.faction}" is not a major faction`;
       // TODO(diplomacy): side-switch penalties once day 0 has passed.
+      if (issuer.faction !== cmd.faction) issuer.declaredAt = state.hour;
       issuer.faction = cmd.faction;
       return null;
     }
@@ -114,6 +127,14 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
     case 'battle_commit':
     case 'battle_accept_surrender':
       return battleCommand(ctx, cmd);
+    case 'respond_request':
+      return respondToRequest(ctx, cmd.issuer, cmd.request, cmd.accept);
+    case 'accept_truce': {
+      if (!state.truceOffered) return 'no truce is on the table';
+      if (!content.factions.some((f) => state.factions[f.id]?.head === cmd.issuer)) return 'only a faction head can agree to a truce';
+      endGame(ctx, 'negotiated_truce', null, 'You agree to the truce. The war is over.');
+      return null;
+    }
     case 'recruit':
     case 'form_crew':
     case 'buy_vehicles':
@@ -166,15 +187,11 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
     case 'garrison':
     case 'lie_low':
       if (loc.kind !== 'node') return `a crew must be in a node to ${req.type === 'garrison' ? 'garrison' : 'lie low'}`;
-      return { type: req.type };
+      return req.type === 'lie_low' ? { type: 'lie_low', since: state.hour } : { type: 'garrison' };
     case 'move': {
       if (!content.nodes.some((n) => n.id === req.destination)) return `unknown node "${req.destination}"`;
       for (const wp of req.waypoints ?? []) if (!content.nodes.some((n) => n.id === wp)) return `unknown waypoint "${wp}"`;
-      const noPassThrough = req.avoidRivalPlazas
-        ? Object.values(state.nodes)
-            .filter((n) => n.owner !== null && networkOf(state, n.owner) !== network)
-            .map((n) => n.id)
-        : [];
+      const noPassThrough = req.avoidRivalPlazas ? rivalPlazaIds(state, network).filter((n) => n !== req.destination) : [];
       const base = { crews: group, from: loc, destination: req.destination, waypoints: req.waypoints ?? [], preference: req.preference, viewer: network, noPassThrough };
       let route = planRoute(state, content, { ...base, departHour: state.hour });
       if (!route) return `no route to ${w.node(req.destination).name} for these vehicles`;
@@ -190,7 +207,16 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
           route = planRoute(state, content, { ...base, departHour: departAt }) ?? route;
         }
       }
-      return { type: 'move', destination: req.destination, preference: req.preference, waypoints: [...(req.waypoints ?? [])], path: route.path, departAt, arriveAt };
+      return {
+        type: 'move',
+        destination: req.destination,
+        preference: req.preference,
+        waypoints: [...(req.waypoints ?? [])],
+        path: route.path,
+        departAt,
+        arriveAt,
+        ...(req.onArrive ? { onArrive: req.onArrive } : {}),
+      };
     }
     case 'retreat': {
       const here = loc.kind === 'node' ? loc.node : null;
@@ -208,16 +234,26 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
       if (!allowedRoadTypes(group, content.tuning).has(road.type)) return `these vehicles cannot use a ${road.type}`;
       const onIt = loc.kind === 'road' ? loc.road === road.id : loc.node === road.from || loc.node === road.to;
       if (!onIt) return 'the crew must be at one end of the road, or on it';
-      return { type: req.type, road: road.id, atKm: null };
+      return { type: req.type, road: road.id, atKm: null, since: state.hour };
     }
     case 'raid': {
       const target = content.nodes.find((n) => n.id === req.target);
       if (!target) return `unknown node "${req.target}"`;
       if (target.type === 'border_exit' || target.id === content.culiacan.parentNode) return `${target.name} cannot be raided; fight for Culiacán colonia by colonia`;
       if (ownedBy(state, target.id, network)) return `${target.name} is already yours`;
-      const route = planRoute(state, content, { crews: group, from: loc, destination: target.id, preference: req.preference, departHour: state.hour, viewer: network });
+      const noPassThrough = req.avoidRivalPlazas ? rivalPlazaIds(state, network).filter((n) => n !== target.id) : [];
+      const base = { crews: group, from: loc, destination: target.id, preference: req.preference, viewer: network, noPassThrough };
+      let route = planRoute(state, content, { ...base, departHour: state.hour });
       if (!route) return `no route to ${target.name} for these vehicles`;
-      return { type: 'raid', target: target.id, preference: req.preference, path: route.path };
+      // Sync arrival, as for moves: wait, then leave in time to hit together.
+      let departAt: number | null = null;
+      const arriveAt = req.arriveAt ?? null;
+      if (arriveAt !== null) {
+        departAt = Math.floor(arriveAt - route.hours);
+        if (departAt <= state.hour) departAt = null;
+        else route = planRoute(state, content, { ...base, departHour: departAt }) ?? route;
+      }
+      return { type: 'raid', target: target.id, preference: req.preference, path: route.path, departAt, arriveAt };
     }
     case 'escort': {
       const target = state.crews[req.crew];
@@ -331,7 +367,7 @@ function battleCommand(ctx: SimContext, cmd: BattleCommand): string | null {
       return null;
     }
     case 'battle_accept_surrender':
-      return acceptSurrender(ctx, b);
+      return acceptSurrender(ctx, b, cmd.issuer);
   }
 }
 
@@ -430,4 +466,12 @@ function economyCommand(ctx: SimContext, cmd: EconomyCommand): string | null {
       return null;
     }
   }
+}
+
+/** Plazas held by networks other than `network`, sorted. */
+export function rivalPlazaIds(state: import('./state').GameState, network: Id): Id[] {
+  return Object.values(state.nodes)
+    .filter((n) => n.owner !== null && networkOf(state, n.owner) !== network)
+    .map((n) => n.id)
+    .sort();
 }

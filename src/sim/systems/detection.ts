@@ -14,6 +14,7 @@ import { world } from '../world';
 import { leaderName, notifyOwner, relocateOffRoad } from '../orders';
 
 export function runDetection(ctx: SimContext): void {
+  observePresence(ctx);
   rollStationary(ctx);
   runPatrols(ctx);
   runDrones(ctx);
@@ -48,6 +49,38 @@ export function rollNode(ctx: SimContext, group: CrewState[], node: Id, visibili
     }
   }
   return seen;
+}
+
+/**
+ * Crews in the same node see each other: every network with someone there
+ * (even lying low) sees rival crews that are not lying low. This is how a
+ * scout inside a rival town learns its garrison.
+ */
+function observePresence(ctx: SimContext): void {
+  const { state, content } = ctx;
+  const every = content.tuning.detection.presenceReportIntervalHours;
+  const byNode = new Map<Id, CrewState[]>();
+  for (const id of sortedCrewIds(state)) {
+    const c = state.crews[id]!;
+    if (c.location.kind !== 'node') continue;
+    // Culiacán is too big to see across; contact there is by colonia.
+    const key = c.location.node === content.culiacan.parentNode ? `${c.location.node}#${c.colonia ?? '-'}` : c.location.node;
+    byNode.set(key, [...(byNode.get(key) ?? []), c]);
+  }
+  for (const key of [...byNode.keys()].sort()) {
+    const here = byNode.get(key)!;
+    if (key.endsWith('#-')) continue;
+    const nets = [...new Set(here.map((c) => crewNetwork(state, c)))].sort();
+    if (nets.length < 2) continue;
+    for (const net of nets) {
+      for (const c of here) {
+        if (crewNetwork(state, c) === net || c.order.type === 'lie_low' || c.order.type === 'escort') continue;
+        const recent = state.reports.some((r) => r.network === net && r.crew === c.id && state.hour - r.hour < every);
+        if (recent) continue;
+        report(ctx, net, groupOf(state, c), 'presence', 'confirmed', null);
+      }
+    }
+  }
 }
 
 /** Crews sitting in (or near) a hostile-watched node are rolled for periodically. */
@@ -189,7 +222,7 @@ function report(ctx: SimContext, network: NetworkId, group: CrewState[], source:
     loc.kind === 'node'
       ? `in ${w.node(loc.node).name}`
       : `on ${roadLabel(ctx, loc.road)}, heading for ${w.node(loc.to).name}`;
-  const by = { halcon: `Halcones${node ? ` at ${w.node(node).name}` : ''}`, patrol: 'Patrol', drone: 'Drone', rumor: 'Rumor' }[source];
+  const by = { halcon: `Halcones${node ? ` at ${w.node(node).name}` : ''}`, patrol: 'Patrol', drone: 'Drone', presence: 'Our people in town', rumor: 'Rumor' }[source];
   const approx = confidence === 'estimated' ? '~' : '';
   pushFeed(state, 'critical', `${by}: ${approx}${men} men in ${vehicles} vehicles, ${whose}, ${where}.`, loc.kind === 'node' ? loc.node : loc.to, network);
 }

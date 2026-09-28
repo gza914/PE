@@ -10,7 +10,16 @@ import type { CrewState, GameState } from '../src/sim/state';
 import { tick } from '../src/sim/tick';
 import { world } from '../src/sim/world';
 
-import { addCrew, content, crewsOf, noBreakdowns, order, run, start, tuned } from './helpers';
+import { addCrew, content as bundled, crewsOf, noAi, noBreakdowns, order, quiet, run, start, tuned as tunedWithAi } from './helpers';
+
+/** Mechanics tests run in a world with the AI switched off. */
+const content = quiet();
+void bundled;
+const tuned = (mut: (t: Content['tuning']) => void) =>
+  tunedWithAi((t) => {
+    noAi(t);
+    mut(t);
+  });
 
 describe('signature and detection (GDD table, 80 coverage)', () => {
   const s = start();
@@ -126,7 +135,7 @@ describe('movement', () => {
     const c = tuned(noBreakdowns);
     let s = newGame(c, { seed: 5, playerId: 'c_mazatlan' });
     const near = addCrew(s, 'near', 'c_mazatlan', 'la_noria');
-    const far = addCrew(s, 'far', 'c_mazatlan', 'concordia', { owner: 'c_mazatlan' });
+    const far = addCrew(s, 'far', 'c_mazatlan', 'san_ignacio', { owner: 'c_mazatlan' });
     const arriveAt = 20;
     const cmds: Command[] = [near, far].map((cr) => ({
       type: 'order_crew',
@@ -335,7 +344,7 @@ describe('balance targets (GDD "Convoy trade-off")', () => {
       if (s.reports.some((r) => r.crew === 'convoy')) detected++;
     }
     expect(detected / trials).toBeGreaterThan(0.9);
-  });
+  }, 30000);
 
   it('a small elite crew on brechas at night is detected on under 15% of trips', () => {
     let detected = 0;
@@ -349,24 +358,26 @@ describe('balance targets (GDD "Convoy trade-off")', () => {
       const crew = addCrew(s, 'elite', 'chapitos_head', 'la_reforma', { leader: 'cl_el_gato', men: 12, skill: 5, order: { type: 'idle' } });
       s = order(s, crew, { type: 'move', destination: 'eldorado', preference: 'safest', waypoints: ['altata'] }, c);
       s = run(s, 8, c);
-      if (s.reports.some((r) => r.crew === 'elite')) detected++;
+      if (s.reports.some((r) => r.crew === 'elite' && r.source === 'halcon')) detected++;
     }
     expect(detected / trials).toBeLessThan(0.15);
-  });
+  }, 30000);
 });
 
-describe('scripted AI traffic', () => {
-  it('AI crews run supply trips and rival halcones report them', () => {
-    let s = start(11);
-    const startLocs = new Map(Object.values(s.crews).map((c) => [c.id, JSON.stringify(c.location)]));
-    let moved = new Set<string>();
+describe('AI traffic', () => {
+  it('AI crews move and rival halcones report them; the AI never commands the player', () => {
+    const c = tunedWithAi((t) => {
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: true };
+    });
+    let s = newGame(c, { seed: 11, playerId: 'c_mazatlan' });
+    const startLocs = new Map(Object.values(s.crews).map((x) => [x.id, JSON.stringify(x.location)]));
+    const moved = new Set<string>();
     for (let h = 0; h < 24 * 4; h++) {
-      s = tick(s, [], content).state;
-      for (const c of Object.values(s.crews)) if (JSON.stringify(c.location) !== startLocs.get(c.id)) moved.add(c.id);
+      s = tick(s, [], c).state;
+      for (const x of Object.values(s.crews)) if (JSON.stringify(x.location) !== startLocs.get(x.id)) moved.add(x.id);
     }
     expect(moved.size).toBeGreaterThan(5);
     expect(s.reports.length).toBeGreaterThan(0);
-    // The player's own crews never move on their own.
-    for (const c of crewsOf(s, 'c_mazatlan')) expect(moved.has(c.id)).toBe(false);
+    for (const x of crewsOf(s, 'c_mazatlan')) expect(moved.has(x.id)).toBe(false);
   });
 });

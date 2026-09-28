@@ -123,7 +123,7 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
   // AI sides that are outgunned ask their faction for help at once.
   for (const k of SIDES) {
     const mine = crews(ctx, battle[k].crews);
-    if (mine.some((c) => c.owner === state.playerId)) continue;
+    if (!state.autoplay && mine.some((c) => c.owner === state.playerId)) continue;
     if (groupPower(state, content, mine) < groupPower(state, content, crews(ctx, battle[other(k)].crews))) callForHelp(ctx, battle, k);
   }
   return battle;
@@ -326,7 +326,7 @@ function resolveHour(ctx: SimContext, b: Battle): void {
     if (!f) continue;
     f.combatHoursToday += 1;
     f.supply = Math.max(0, f.supply - t.supplyPerCombatHour);
-    f.exhaustion = Math.min(100, f.exhaustion + lost[k] * t.exhaustionPerCasualty);
+    f.exhaustion = Math.min(100, f.exhaustion + lost[k] * t.exhaustionPerCasualty + t.exhaustionPerCombatHour);
   }
   b.log.push(
     `H${b.hours}: ${Math.round(power.attackers)} vs ${Math.round(power.defenders)} power; attackers lost ${lost.attackers}, defenders lost ${lost.defenders}` +
@@ -573,6 +573,10 @@ export function capturePlaza(ctx: SimContext, node: Id, winners: CrewState[]): v
   const lead = [...winners].sort((a, b) => b.men - a.men || (a.id < b.id ? -1 : 1))[0]!;
   const prev = plaza.owner;
   if (prev && networkOf(state, prev) === crewNetwork(state, lead)) return;
+  if (prev) {
+    const f = state.factions[networkOf(state, prev)];
+    if (f) f.warPlan.lost = [...f.warPlan.lost.filter((l) => l.node !== node && state.hour - l.at < 30 * 24), { node, at: state.hour }];
+  }
   plaza.owner = lead.owner;
   plaza.halconCoverage = t.capturedPlazaHalcones;
   plaza.support = Math.max(0, plaza.support - t.capturedPlazaSupportLoss);
@@ -617,7 +621,7 @@ export function callForHelp(ctx: SimContext, b: Battle, k: SideKey): number {
     .filter(
       (c) =>
         crewNetwork(state, c) === side.network &&
-        c.owner !== state.playerId &&
+        (c.owner !== state.playerId || state.autoplay) &&
         c.battle === null &&
         c.colonia === null &&
         (c.order.type === 'garrison' || c.order.type === 'idle') &&
@@ -640,13 +644,13 @@ export function callForHelp(ctx: SimContext, b: Battle, k: SideKey): number {
   return sent.length;
 }
 
-/** The player accepts the enemy's surrender: men and leaders taken, trucks seized. */
-export function acceptSurrender(ctx: SimContext, b: Battle): string | null {
+/** A side accepts the enemy's surrender: men and leaders taken, trucks seized. */
+export function acceptSurrender(ctx: SimContext, b: Battle, issuer: Id = ctx.state.playerId): string | null {
   const { state, content } = ctx;
-  const net = networkOf(state, state.playerId);
+  const net = networkOf(state, issuer);
   const k = SIDES.find((s) => b[s].network === net);
   if (!k || b.endedAt !== null) return 'you are not in this battle';
-  const mine = crews(ctx, b[k].crews).filter((c) => c.owner === state.playerId);
+  const mine = crews(ctx, b[k].crews).filter((c) => c.owner === issuer);
   const theirs = crews(ctx, b[other(k)].crews);
   if (!mine.length) return 'none of your crews are in this battle';
   if (avgMorale(theirs) >= content.tuning.combat.surrenderMorale) return 'they are not ready to surrender';
@@ -655,7 +659,7 @@ export function acceptSurrender(ctx: SimContext, b: Battle): string | null {
   for (const c of theirs) {
     men += c.men;
     for (const v of ['pickup', 'suv', 'motorcycle', 'armored'] as const) taker.vehicles[v] += c.vehicles[v];
-    if (state.characters[c.leader]?.status === 'free') captureCharacter(ctx, c.leader, state.playerId);
+    if (state.characters[c.leader]?.status === 'free') captureCharacter(ctx, c.leader, issuer);
     b.log.push(`H${b.hours}: ${leaderName(ctx, c)}'s crew surrendered.`);
     removeCrew(ctx, b, other(k), c);
   }

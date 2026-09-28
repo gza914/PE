@@ -117,7 +117,8 @@
     "stationaryVisibility": 0.5,
     "assumedUnknownCoverage": 50,
     "halconMenEstimateError": 0.25,
-    "reportRetentionHours": 168
+    "reportRetentionHours": 168,
+    "presenceReportIntervalHours": 6
   },
   "movement": {
     "fatiguePerTravelHour": 2,
@@ -194,7 +195,7 @@
     "calenturaPerCombatHour": 1,
     "calenturaPerCasualty": 0.3,
     "supplyPerCombatHour": 0.3,
-    "exhaustionPerCasualty": 0.15,
+    "exhaustionPerCasualty": 1.0,
     "respectPerVictory": 5,
     "skillUpEveryBattles": 3,
     "capturedPlazaHalcones": 20,
@@ -214,7 +215,8 @@
       "moraleMultiplier": 0.5,
       "controlShiftPerHour": 4,
       "uncontestedShiftPerHour": 0.2
-    }
+    },
+    "exhaustionPerCombatHour": 0.5
   },
   "economy": {
     "extortionRates": {
@@ -295,7 +297,17 @@
     "heirSuccessionOpinionLoss": 20,
     "extraditionDays": 30,
     "prisonerHoldDays": 7,
-    "ransomAmount": 100000
+    "ransomAmount": 100000,
+    "relationOpinion": {
+      "parent": 40,
+      "child": 40,
+      "sibling": 40,
+      "spouse": 40,
+      "compadre": 30,
+      "rival": -30,
+      "vendetta": -60
+    },
+    "sharedFactionOpinion": 10
   },
   "diplomacy": {
     "neutralOpinionLossPerDay": 1,
@@ -345,7 +357,14 @@
       "free": 1.0,
       "jailed": 0.5,
       "deadOrExtradited": 0.25
-    }
+    },
+    "successionChancePerDay": 0.25,
+    "truceAcceptMaxShare": 0.65,
+    "timeCapWinnerMinShare": 0.55,
+    "kingmakerDeclareAfterDays": 60,
+    "patronMinScore": 150,
+    "corridoMinRespect": 50,
+    "scoreRatioCap": 3
   },
   "ai": {
     "strategicIntervalHours": 24,
@@ -353,6 +372,125 @@
     "trafficChancePerCheck": 0.12,
     "returnHomeChancePerCheck": 0.6,
     "trafficMaxTripHours": 8,
-    "trafficMaxMen": 20
+    "trafficMaxMen": 20,
+    "goalWeights": {
+      "take_plaza": {
+        "raid": 1.5,
+        "ambush": 1.1,
+        "commit_colonia": 1.2
+      },
+      "rise_in_faction": {
+        "accept_request": 1.5,
+        "raid": 1.1,
+        "commit_colonia": 1.2
+      },
+      "get_rich": {
+        "supply_run": 1.4,
+        "raid": 1.1,
+        "accept_request": 0.9
+      },
+      "stay_alive": {
+        "defend": 1.4,
+        "raid": 0.6,
+        "lie_low": 1.3,
+        "accept_request": 0.9,
+        "withdraw": 1.3
+      },
+      "avenge": {
+        "raid": 1.3,
+        "ambush": 1.3
+      }
+    },
+    "strategic": {
+      "hourOfDay": 6,
+      "offensiveMinSupply": 40,
+      "attackForceRatio": 1.6,
+      "maxParticipantHours": 16,
+      "responseHours": 6,
+      "slackHours": 2,
+      "offensiveCooldownHours": 24,
+      "offensiveTimeoutHours": 18,
+      "valuePerScorePoint": 2000,
+      "hourPenalty": 0.4,
+      "riskPenalty": 0.015,
+      "focusBonus": 2,
+      "routeCutBonus": 1.5,
+      "priorGarrisonMenByType": {
+        "city": 30,
+        "town": 14,
+        "rancheria": 10,
+        "sierra_hub": 20,
+        "port": 12,
+        "border_exit": 0
+      },
+      "intelStaleHours": 96,
+      "threatHops": 2,
+      "threatRecentHours": 12,
+      "defendRatio": 1.0,
+      "maxDefendRequests": 2,
+      "coloniaCrewsTarget": 2,
+      "levyCashWeeks": 2,
+      "levyShare": 0.1,
+      "levyRichWeeks": 4,
+      "firstOffensiveDay": 5,
+      "neutralTargetDay": 21,
+      "neutralTargetBonus": 2,
+      "cautionForceWeight": 0.3,
+      "retakeBonus": 3,
+      "retakeWindowDays": 14,
+      "minorThreatShare": 0.5
+    },
+    "operational": {
+      "actThreshold": 1.0,
+      "raidMinRatio": 1.5,
+      "raidMaxHours": 8,
+      "raidValuePerPoint": 1500,
+      "raidRiskPenalty": 2,
+      "relationTargetBonus": 1.5,
+      "focusRegionBonus": 1.3,
+      "ambushRecentHours": 24,
+      "ambushTrafficValue": 1.5,
+      "ambushMaxHours": 48,
+      "scoutStaleHours": 48,
+      "scoutValue": 1.5,
+      "scoutMaxMen": 8,
+      "scoutHoldHours": 24,
+      "colonia": {
+        "value": 2,
+        "maxCrews": 2
+      },
+      "neutralDeclareMinLean": 15,
+      "neutralDeclareChancePerCheck": 0.02,
+      "firstInitiativeDay": 2
+    },
+    "tactical": {
+      "withdrawRatio": 0.45,
+      "fortifiedHoldRatio": 0.3,
+      "armorPushMinRatio": 0.7,
+      "armorPushMaxRatio": 1.6,
+      "maxWithdrawRatio": 0.8,
+      "reinforcementWindowHours": 3
+    },
+    "requests": {
+      "acceptBase": 0.4,
+      "opinionWeight": 0.01,
+      "playerResponseHours": 12,
+      "fulfilledOpinion": 15,
+      "declinedOpinion": -10,
+      "failedOpinion": -15,
+      "ignoredOpinion": -10,
+      "rewardOpinion": 10,
+      "opinionDecayDays": 60,
+      "keepHours": 72,
+      "repeatCooldownHours": 48
+    },
+    "layers": {
+      "strategic": true,
+      "operational": true,
+      "tactical": true,
+      "economy": true,
+      "traffic": true
+    },
+    "economyReserveWeeks": 0.5
   }
 }

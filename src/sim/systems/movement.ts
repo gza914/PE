@@ -8,7 +8,7 @@
  */
 import { isNight } from '../clock';
 import type { Engagement, SimContext } from '../context';
-import { groupOf, kmFromRoadStart, sortedCrewIds } from '../crews';
+import { escortIndex, groupOf, kmFromRoadStart, sortedCrewIds } from '../crews';
 import { crewNetwork, ownedBy } from '../network';
 import { leaderName, notifyOwner, relocateOffRoad } from '../orders';
 import { groupPower, reportedPower, wantsToAttack } from '../power';
@@ -46,12 +46,14 @@ export function runMovement(ctx: SimContext): void {
   const { state } = ctx;
   const run: MoveRun = { ctx, sweeps: new Map(), orderBefore: new Map(), stopped: new Set() };
   const moved = new Set<string>();
+  const escorts = escortIndex(state);
   for (const id of sortedCrewIds(state)) {
     const crew = state.crews[id];
     if (!crew || crew.order.type === 'escort' || crew.battle !== null) continue;
-    const group = groupOf(state, crew);
+    const group = groupOf(state, crew, escorts);
     applyShift(ctx, crew, group);
-    run.orderBefore.set(crew.id, structuredClone(crew.order));
+    // Only moving orders can be rewound by a road contact.
+    if ('path' in crew.order || crew.order.type === 'ambush' || crew.order.type === 'patrol') run.orderBefore.set(crew.id, structuredClone(crew.order));
     const didMove = stepCrew(run, crew, group);
     for (const c of group) {
       if (didMove) {
@@ -112,7 +114,7 @@ function stepCrew(run: MoveRun, crew: CrewState, group: CrewState[]): boolean {
     case 'move':
     case 'retreat':
     case 'raid':
-      if (order.type === 'move' && order.departAt !== null && ctx.state.hour < order.departAt) return false;
+      if ((order.type === 'move' || order.type === 'raid') && order.departAt != null && ctx.state.hour < order.departAt) return false;
       return followPath(run, crew, group, order.path);
     case 'reinforce': {
       const battle = ctx.state.battles[order.battle];
@@ -294,7 +296,12 @@ function arrive(run: MoveRun, crew: CrewState, group: CrewState[]): void {
     crew.order = { type: 'idle' };
     return;
   }
-  crew.order = ownedBy(state, loc.node, network) ? { type: 'garrison' } : { type: 'idle' };
+  crew.order =
+    order.type === 'move' && order.onArrive === 'lie_low'
+      ? { type: 'lie_low', since: state.hour }
+      : ownedBy(state, loc.node, network)
+        ? { type: 'garrison' }
+        : { type: 'idle' };
   notifyOwner(ctx, crew, 'routine', `${leaderName(ctx, crew)}'s crew reached ${world(content).node(loc.node).name}.`, loc.node);
 }
 

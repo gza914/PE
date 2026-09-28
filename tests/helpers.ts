@@ -20,8 +20,13 @@ export const noBreakdowns = (t: Content['tuning']) => {
   t.roads.brecha.breakdownChancePerSegment = 0;
 };
 
+/** Every AI layer off: the world only moves when a test moves it. */
+export const noAi = (t: Content['tuning']) => {
+  t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: false };
+};
+
 export function start(seed = 1, playerId = 'c_mazatlan'): GameState {
-  return newGame(content, { seed, playerId });
+  return newGame(quiet(), { seed, playerId });
 }
 
 export function crewsOf(state: GameState, owner: string): CrewState[] {
@@ -58,14 +63,14 @@ export function addCrew(state: GameState, id: string, owner: string, node: strin
   return crew;
 }
 
-export function order(state: GameState, crew: CrewState, req: OrderRequest, c = content) {
+export function order(state: GameState, crew: CrewState, req: OrderRequest, c = quiet()) {
   const cmd: Command = { type: 'order_crew', issuer: crew.owner, crew: crew.id, order: req };
   const r = tick(state, [cmd], c);
   expect(r.rejected).toEqual([]);
   return r.state;
 }
 
-export function run(state: GameState, hours: number, c = content): GameState {
+export function run(state: GameState, hours: number, c = quiet()): GameState {
   for (let i = 0; i < hours; i++) state = tick(state, [], c).state;
   return state;
 }
@@ -73,6 +78,7 @@ export function run(state: GameState, hours: number, c = content): GameState {
 /** No AI traffic or breakdowns, so each test controls every crew on the map. */
 export const calm = tuned((t) => {
   noBreakdowns(t);
+  noAi(t);
   t.ai.trafficChancePerCheck = 0;
   t.ai.returnHomeChancePerCheck = 0;
 });
@@ -80,6 +86,7 @@ export const calm = tuned((t) => {
 /** Detection always succeeds. */
 export const certain = (t: Content['tuning']) => {
   noBreakdowns(t);
+  noAi(t);
   t.ai.trafficChancePerCheck = 0;
   t.ai.returnHomeChancePerCheck = 0;
   t.detection.maxChance = 1;
@@ -90,4 +97,10 @@ export function empty(playerId = 'c_mazatlan', c: Content = calm, seed = 1): Gam
   const s = newGame(c, { seed, playerId });
   for (const id of Object.keys(s.crews)) delete s.crews[id];
   return s;
+}
+
+let quietContent: Content | null = null;
+/** Bundled content with every AI layer off (built once). */
+export function quiet(): Content {
+  return (quietContent ??= tuned(noAi));
 }

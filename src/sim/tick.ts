@@ -7,6 +7,8 @@ import { isIncomeHour, isPayrollHour } from './clock';
 import { applyCommand, type Command, type Rejection } from './commands';
 import { newContext } from './context';
 import type { GameState } from './state';
+import { pruneOpinions } from './opinion';
+import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
 import { runCombat } from './systems/combat';
@@ -56,6 +58,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
   runDetection(ctx);
   runCombat(ctx);
   runScheduledEvents(ctx);
+  updateRequests(ctx);
 
   if (isIncomeHour(state.hour, tuning)) {
     settleDailyIncome(ctx);
@@ -65,6 +68,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runSchemesDaily(ctx);
     runInfowarDaily(ctx);
     runEventsDaily(ctx);
+    pruneOpinions(state);
   }
   if (isPayrollHour(state.hour, tuning)) payWeeklyPayroll(ctx);
 

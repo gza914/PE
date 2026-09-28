@@ -25,6 +25,8 @@ export const Goal = z.enum(['take_plaza', 'rise_in_faction', 'get_rich', 'stay_a
 export const RelationType = z.enum(['parent', 'child', 'sibling', 'spouse', 'compadre', 'rival', 'vendetta']);
 export const EventScope = z.enum(['character', 'plaza', 'faction', 'region']);
 export const MessageKind = z.enum(['narcomanta', 'video', 'social_claim', 'corrido', 'rumor']);
+/** Actions the utility AI scores; traits and goals weight them. */
+export const AiAction = z.enum(['accept_request', 'raid', 'defend', 'ambush', 'scout', 'commit_colonia', 'lie_low', 'supply_run', 'withdraw']);
 
 export type NodeType = z.infer<typeof NodeType>;
 export type RoadType = z.infer<typeof RoadType>;
@@ -35,6 +37,7 @@ export type Skill = z.infer<typeof Skill>;
 export type Rank = z.infer<typeof Rank>;
 export type Goal = z.infer<typeof Goal>;
 export type RelationType = z.infer<typeof RelationType>;
+export type AiAction = z.infer<typeof AiAction>;
 
 // ---------------------------------------------------------------------------
 // map.json
@@ -159,6 +162,8 @@ export const TraitSchema = z.object({
    * systems can add hooks without schema churn.
    */
   modifiers: z.record(z.string(), z.number()).default({}),
+  /** Multipliers on AI action scores (GDD "AI": trait weight). */
+  aiWeights: z.partialRecord(AiAction, z.number().nonnegative()).default({}),
   /** Reaction to a spotted drone (GDD "Drones"). */
   droneReaction: z.enum(['relocate', 'ambush', 'feign', 'hold']).optional(),
   opposites: z.array(id).default([]),
@@ -439,6 +444,8 @@ export const TuningSchema = z.object({
     /** Halcón sightings report men within ± this fraction. */
     halconMenEstimateError: pct,
     reportRetentionHours: z.number().positive(),
+    /** Crews in the same node see each other; a sighting is refiled at most this often. */
+    presenceReportIntervalHours: z.number().int().positive(),
   }),
   movement: z.object({
     fatiguePerTravelHour: z.number().nonnegative(),
@@ -518,6 +525,8 @@ export const TuningSchema = z.object({
     calenturaPerCasualty: z.number().nonnegative(),
     supplyPerCombatHour: z.number().nonnegative(),
     exhaustionPerCasualty: z.number().nonnegative(),
+    /** Each side's exhaustion rises this much per hour of fighting. */
+    exhaustionPerCombatHour: z.number().nonnegative(),
     respectPerVictory: z.number().nonnegative(),
     skillUpEveryBattles: z.number().int().positive(),
     capturedPlazaHalcones: meter,
@@ -599,6 +608,10 @@ export const TuningSchema = z.object({
     /** Placeholder until prisoner events: captives are ransomed after this long. */
     prisonerHoldDays: z.number().positive(),
     ransomAmount: z.number().nonnegative(),
+    /** Permanent opinion from a relationship, by type. */
+    relationOpinion: z.record(RelationType, z.number()),
+    /** Opinion bonus between members of the same faction. */
+    sharedFactionOpinion: z.number(),
   }),
   diplomacy: z.object({
     neutralOpinionLossPerDay: z.number(),
@@ -638,6 +651,17 @@ export const TuningSchema = z.object({
       force: pct,
     }),
     fateMultipliers: z.object({ free: z.number(), jailed: z.number(), deadOrExtradited: z.number() }),
+    /** Daily chance a headless faction finds a successor before it collapses. */
+    successionChancePerDay: pct,
+    /** An AI head refuses a truce while its faction holds more than this share. */
+    truceAcceptMaxShare: pct,
+    /** At the time cap, a faction with at least this share is the winner. */
+    timeCapWinnerMinShare: pct,
+    kingmakerDeclareAfterDays: z.number().nonnegative(),
+    patronMinScore: z.number(),
+    corridoMinRespect: z.number(),
+    /** Each score category's end/start ratio is capped here. */
+    scoreRatioCap: z.number().positive(),
   }),
   ai: z.object({
     strategicIntervalHours: z.number().int().positive(),
@@ -648,6 +672,107 @@ export const TuningSchema = z.object({
     trafficMaxTripHours: z.number().positive(),
     /** Only crews this small run supplies; big crews stay put. */
     trafficMaxMen: z.number().int().positive(),
+    /** Weeks of bills an AI keeps in reserve before spending on recruits. */
+    economyReserveWeeks: z.number().nonnegative(),
+    /** Switch AI layers off (tests, debugging). */
+    layers: z.object({ strategic: z.boolean(), operational: z.boolean(), tactical: z.boolean(), economy: z.boolean(), traffic: z.boolean() }),
+    /** Multipliers on AI action scores by goal (GDD "AI": goal weight). */
+    goalWeights: z.record(Goal, z.partialRecord(AiAction, z.number().nonnegative())),
+    /** Faction heads: war plans and offensives. */
+    strategic: z.object({
+      hourOfDay: z.number().int().min(0).max(23),
+      /** No faction offensive before this day, so the player can get their bearings. */
+      firstOffensiveDay: z.number().nonnegative(),
+      offensiveMinSupply: meter,
+      /** Power an offensive gathers, as a multiple of the target's estimated defense. */
+      attackForceRatio: z.number().positive(),
+      maxParticipantHours: z.number().positive(),
+      /** Hours lieutenants get to answer before the planned arrival time. */
+      responseHours: z.number().nonnegative(),
+      slackHours: z.number().nonnegative(),
+      offensiveCooldownHours: z.number().nonnegative(),
+      /** An offensive with no fighting this long after its arrival time is called off. */
+      offensiveTimeoutHours: z.number().positive(),
+      /** Dollars of daily plaza value per point of target score. */
+      valuePerScorePoint: z.number().positive(),
+      hourPenalty: z.number().nonnegative(),
+      riskPenalty: z.number().nonnegative(),
+      focusBonus: z.number().nonnegative(),
+      /** From this day, neutral plazas are fair game for offensives (neutrality turns dangerous). */
+      neutralTargetDay: z.number().nonnegative(),
+      neutralTargetBonus: z.number(),
+      /** How much a head's caution raises the force it gathers: ratio × (1 + (caution − 1) × this). */
+      cautionForceWeight: z.number().nonnegative(),
+      /** Bonus for retaking a plaza the faction lost recently. */
+      retakeBonus: z.number().nonnegative(),
+      retakeWindowDays: z.number().nonnegative(),
+      /** A threat this small next to the faction's free strength doesn't stop an attack. */
+      minorThreatShare: pct,
+      routeCutBonus: z.number().nonnegative(),
+      /** Garrison assumed at rival plazas with no fresh intel. */
+      priorGarrisonMenByType: z.record(NodeType, z.number().nonnegative()),
+      intelStaleHours: z.number().positive(),
+      threatHops: z.number().int().nonnegative(),
+      threatRecentHours: z.number().positive(),
+      /** A plaza is threatened when nearby enemy strength exceeds its garrison × this. */
+      defendRatio: z.number().positive(),
+      maxDefendRequests: z.number().int().nonnegative(),
+      /** Crews a faction tries to keep committed in Culiacán's contested colonias. */
+      coloniaCrewsTarget: z.number().int().nonnegative(),
+      /** A head with less than this many weeks of bills asks rich lieutenants for a levy. */
+      levyCashWeeks: z.number().nonnegative(),
+      levyShare: pct,
+      levyRichWeeks: z.number().nonnegative(),
+    }),
+    /** Lieutenants: requests and their own initiative. */
+    operational: z.object({
+      /** An initiative runs only if its score reaches this. */
+      actThreshold: z.number(),
+      /** No private raids, ambushes, or scouting before this day. */
+      firstInitiativeDay: z.number().nonnegative(),
+      raidMinRatio: z.number().positive(),
+      raidMaxHours: z.number().positive(),
+      raidValuePerPoint: z.number().positive(),
+      raidRiskPenalty: z.number().nonnegative(),
+      relationTargetBonus: z.number().positive(),
+      focusRegionBonus: z.number().positive(),
+      ambushRecentHours: z.number().positive(),
+      ambushTrafficValue: z.number().nonnegative(),
+      ambushMaxHours: z.number().positive(),
+      scoutStaleHours: z.number().positive(),
+      scoutValue: z.number().nonnegative(),
+      scoutMaxMen: z.number().int().positive(),
+      scoutHoldHours: z.number().positive(),
+      colonia: z.object({ value: z.number().nonnegative(), maxCrews: z.number().int().nonnegative() }),
+      neutralDeclareMinLean: z.number(),
+      neutralDeclareChancePerCheck: pct,
+    }),
+    /** Crew leaders in battle. */
+    tactical: z.object({
+      withdrawRatio: z.number().nonnegative(),
+      /** However cautious the leader, never withdraw at better odds than this. */
+      maxWithdrawRatio: z.number().nonnegative(),
+      /** Do not withdraw while friendly crews will arrive within this many hours. */
+      reinforcementWindowHours: z.number().nonnegative(),
+      fortifiedHoldRatio: z.number().nonnegative(),
+      armorPushMinRatio: z.number().nonnegative(),
+      armorPushMaxRatio: z.number().nonnegative(),
+    }),
+    /** Faction requests and the opinion they move. */
+    requests: z.object({
+      acceptBase: z.number(),
+      opinionWeight: z.number(),
+      playerResponseHours: z.number().positive(),
+      fulfilledOpinion: z.number(),
+      declinedOpinion: z.number(),
+      failedOpinion: z.number(),
+      ignoredOpinion: z.number(),
+      rewardOpinion: z.number(),
+      opinionDecayDays: z.number().positive(),
+      keepHours: z.number().nonnegative(),
+      /** After a refused or ignored request, the head waits this long before asking that person again. */
+      repeatCooldownHours: z.number().nonnegative(),
+    }),
   }),
 });
 

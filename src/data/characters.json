@@ -519,11 +519,11 @@
       ]
     },
     {
-      "id": "c_el_fuerte",
+      "id": "m_el_fuerte",
       "name": "Ramiro Valenzuela",
       "alias": "El Chaparral",
       "age": 44,
-      "faction": "chapitos",
+      "faction": "mayos",
       "rank": "lieutenant",
       "homePlaza": "el_fuerte",
       "skills": {
@@ -542,7 +542,7 @@
       "relations": [],
       "heir": null,
       "lean": {
-        "faction": "chapitos",
+        "faction": "mayos",
         "amount": 20
       },
       "startTier": "town_jefe",
@@ -690,11 +690,11 @@
       ]
     },
     {
-      "id": "c_concordia",
+      "id": "m_concordia",
       "name": "Felipe Rendón",
       "alias": "El Pino",
       "age": 40,
-      "faction": "chapitos",
+      "faction": "mayos",
       "rank": "lieutenant",
       "homePlaza": "concordia",
       "skills": {
@@ -718,8 +718,8 @@
       ],
       "heir": null,
       "lean": {
-        "faction": "chapitos",
-        "amount": 30
+        "faction": "mayos",
+        "amount": 20
       },
       "startTier": "town_jefe",
       "cash": 100000,
@@ -1355,7 +1355,7 @@
       "relations": [
         {
           "type": "rival",
-          "target": "c_concordia"
+          "target": "m_concordia"
         }
       ],
       "heir": null,

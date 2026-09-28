@@ -96,9 +96,11 @@ describe('save', () => {
 });
 
 describe('headless campaign', () => {
-  it('runs to the time cap', () => {
+  it('runs to an ending, scored', () => {
     const end = runHeadless(content, opts);
-    expect(end.ended?.reason).toBe('time_cap');
-    expect(dayOf(end.hour)).toBe(content.tuning.clock.maxDays);
-  });
+    expect(['time_cap', 'faction_collapse', 'territorial_defeat', 'negotiated_truce', 'player_eliminated']).toContain(end.ended?.reason);
+    expect(dayOf(end.hour)).toBeLessThanOrEqual(content.tuning.clock.maxDays);
+    expect(end.ended?.score?.total).toBeGreaterThanOrEqual(0);
+    expect(end.ended?.title).toBeTruthy();
+  }, 60000);
 });

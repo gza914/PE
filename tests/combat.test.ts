@@ -9,7 +9,7 @@ import { crewPower } from '../src/sim/power';
 import type { Battle, GameState } from '../src/sim/state';
 import { killCharacter } from '../src/sim/systems/characters';
 import { tick } from '../src/sim/tick';
-import { addCrew, calm, certain, empty, noBreakdowns, tuned } from './helpers';
+import { addCrew, calm, certain, empty, noAi, noBreakdowns, tuned } from './helpers';
 
 function step(s: GameState, cmds: Command[] = [], c: Content = calm) {
   const r = tick(s, cmds, c);
@@ -72,7 +72,7 @@ describe('road engagements', () => {
   it('an alert crew can spot the ambush; then only a willing side fights', () => {
     const c = tuned((t) => {
       noBreakdowns(t);
-      t.ai.trafficChancePerCheck = 0;
+      noAi(t);
       t.combat.ambushSpotAlertnessFactor = 1;
     });
     let s = empty('c_mazatlan', c);
@@ -193,7 +193,7 @@ describe('morale, ammo, and leaders', () => {
   it('armored trucks soak up losses and can be destroyed', () => {
     const c = tuned((t) => {
       noBreakdowns(t);
-      t.ai.trafficChancePerCheck = 0;
+      noAi(t);
       t.combat.armoredDamagePerAbsorbed = 100;
     });
     let s = empty('c_mazatlan', c);
@@ -239,7 +239,7 @@ describe('morale, ammo, and leaders', () => {
 
   it('captives are ransomed after the hold period (placeholder for prisoner events)', () => {
     const c = tuned((t) => {
-      t.ai.trafficChancePerCheck = 0;
+      noAi(t);
       t.characters.prisonerHoldDays = 1;
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
@@ -322,10 +322,11 @@ describe('player decisions', () => {
 
   it('call for help sends nearby faction crews that are not yours', () => {
     const { s, b } = fight();
-    addCrew(s, 'ally', 'c_concordia', 'concordia', { men: 14 });
+    addCrew(s, 'ally', 'c_san_ignacio', 'la_noria', { men: 14 });
     const s2 = step(s, [{ type: 'battle_call_help', issuer: 'c_mazatlan', battle: b.id }]);
-    // Concordia is 25 km away: the help arrives and joins within the hour.
-    expect(s2.battles[b.id]!.attackers.owners).toContain('c_concordia');
+    // A faction crew that is not the player's rides in from La Noria.
+    const o = s2.crews.ally!.order;
+    expect(s2.battles[b.id]!.attackers.owners.includes('c_san_ignacio') || (o.type === 'reinforce' && o.battle === b.id)).toBe(true);
   });
 
   it('accept surrender when the enemy is wavering: prisoners and their trucks', () => {

@@ -51,10 +51,10 @@ describe('income', () => {
     const route = calm.routes.find((r) => r.id === 'route_espinazo')!;
     const share = route.dailyValue / route.nodes.length;
     const from = (who: string) => dailyIncome(s, calm).filter((l) => l.recipient === who && l.source === route.id);
-    // Source is Mazatlán port (Chapitos): Concordia (Chapitos) traffics, Villa Unión (Mayos) takes tolls.
-    expect(from('c_concordia')).toEqual([expect.objectContaining({ stream: 'trafficking', amount: share })]);
+    // Source is Mazatlán port (Chapitos): El del Puerto traffics; Mayos-held Villa Unión and Concordia take tolls.
+    expect(sum(from('c_mazatlan').filter((l) => l.stream === 'trafficking'))).toBeCloseTo(share * 2);
     expect(from('m_villa_union')).toEqual([expect.objectContaining({ stream: 'tolls', amount: share })]);
-    expect(sum(from('c_mazatlan'))).toBeCloseTo(share * 2);
+    expect(from('m_concordia')).toEqual([expect.objectContaining({ stream: 'tolls', amount: share })]);
   });
 
   it('each contested node cuts the whole route by 20%', () => {
@@ -62,7 +62,7 @@ describe('income', () => {
     const route = calm.routes.find((r) => r.id === 'route_espinazo')!;
     s.regions.sur!.combatHoursToday = 1; // every node of this route is in the south
     const share = (route.dailyValue * 0.8 ** route.nodes.length) / route.nodes.length;
-    const l = dailyIncome(s, calm).find((x) => x.recipient === 'c_concordia' && x.source === route.id)!;
+    const l = dailyIncome(s, calm).find((x) => x.recipient === 'm_concordia' && x.source === route.id)!;
     expect(l.amount).toBeCloseTo(share);
   });
 
@@ -134,12 +134,12 @@ describe('weekly bills', () => {
   it('halcones nobody can pay walk away', () => {
     let s = empty();
     for (const n of Object.values(s.nodes)) n.stash = 0;
-    s.nodes.villa_union!.halconCoverage = 50;
-    s.nodes.villa_union!.businesses = 0;
-    for (const r of calm.routes) for (const n of r.nodes) if (s.nodes[n]!.owner === 'm_villa_union') s.nodes[n]!.owner = null;
-    s.nodes.villa_union!.owner = 'm_villa_union';
+    // Angostura and La Reforma are on no route: with no businesses they earn nothing.
+    s.nodes.angostura!.halconCoverage = 50;
+    s.nodes.angostura!.businesses = 0;
+    s.nodes.la_reforma!.businesses = 0;
     s = runTo(s, FIRST_PAYDAY);
-    expect(s.nodes.villa_union!.halconCoverage).toBeLessThan(50);
+    expect(s.nodes.angostura!.halconCoverage).toBeLessThan(50);
   });
 
   it('extortion moves support and closes businesses each week', () => {
@@ -255,8 +255,7 @@ describe('spending', () => {
 describe('AI economy', () => {
   it('an AI lieutenant with money recruits a depleted crew back to strength', () => {
     const c = tuned((t) => {
-      t.ai.trafficChancePerCheck = 0;
-      t.ai.returnHomeChancePerCheck = 0;
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false };
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
     const crew = Object.values(s.crews).find((x) => x.owner === 'm_guasave')!;
@@ -269,8 +268,7 @@ describe('AI economy', () => {
 
   it('a broke AI squeezes harder and cuts its halcones', () => {
     const c = tuned((t) => {
-      t.ai.trafficChancePerCheck = 0;
-      t.ai.returnHomeChancePerCheck = 0;
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false };
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
     s.characters.m_guasave!.missedPayrollWeeks = 1;

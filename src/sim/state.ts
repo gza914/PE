@@ -17,6 +17,8 @@ export interface GameState {
   /** Absolute in-game hours since campaign start. One tick = one hour. */
   hour: number;
   playerId: Id;
+  /** The AI plays the player's character too (AI-vs-AI runs, or "play for me"). */
+  autoplay: boolean;
   nodes: Record<Id, PlazaState>;
   colonias: Record<Id, ColoniaState>;
   characters: Record<Id, CharacterState>;
@@ -29,12 +31,22 @@ export interface GameState {
   drones: Drone[];
   market: Market;
   battles: Record<Id, Battle>;
+  /** Faction requests from heads to their people (the player included). */
+  requests: FactionRequest[];
+  /** Coordinated attacks planned by faction heads. */
+  offensives: Offensive[];
   /** Events waiting for a decision. */
   pendingEvents: PendingEvent[];
   /** Events scheduled by other events' effects. */
   scheduledEvents: ScheduledEvent[];
   feed: FeedEntry[];
   ended: EndState | null;
+  /** Consecutive days both factions have been above the truce exhaustion threshold. */
+  truceDays: number;
+  /** Set when truce terms are on the table and the player (a faction head) must answer. */
+  truceOffered: boolean;
+  /** The player's position at the start, for scoring. */
+  start: StartSnapshot;
   /** Counter for deterministic id generation. */
   nextId: number;
 }
@@ -136,6 +148,10 @@ export interface CharacterState {
   ledger: LedgerDay[];
   /** Last time the faction head granted this character aid. */
   lastAidAt: number | null;
+  /** Hour the character last declared for a side (0 for their starting side). */
+  declaredAt: number;
+  /** Men the character fielded at the start: the AI rebuilds toward this. */
+  forceTarget: number;
   fear: number;
   respect: number;
   credibility: number;
@@ -159,7 +175,65 @@ export interface FactionState {
   exhaustion: number;
   quietDays: number;
   combatHoursToday: number;
-  warPlan: { mode: WarPlanMode; focusRegion: Id | null };
+  /** Consecutive days under the territorial-defeat share. */
+  lowShareDays: number;
+  /** Consecutive days with no free head. */
+  headlessDays: number;
+  warPlan: WarPlan;
+}
+
+export interface WarPlan {
+  mode: WarPlanMode;
+  focusRegion: Id | null;
+  /** Plaza the current or last offensive aims at. */
+  target: Id | null;
+  /** Hour the head last changed the plan. */
+  since: number;
+  /** Hour the last offensive ended, for the cooldown. */
+  lastOffensiveEndedAt: number | null;
+  /** Plazas the faction lost, and when: counteroffensives aim to take them back. */
+  lost: { node: Id; at: number }[];
+}
+
+export type RequestKind = 'join_offensive' | 'defend' | 'levy' | 'hold_colonia';
+export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'fulfilled' | 'failed' | 'cancelled';
+
+export interface FactionRequest {
+  id: Id;
+  faction: NetworkId;
+  from: Id;
+  to: Id;
+  kind: RequestKind;
+  /** Plaza (or colonia, for hold_colonia) the request is about. */
+  target: Id | null;
+  /** Crews the head asks for (join_offensive, defend). */
+  crews: Id[];
+  /** Cash asked for (levy). */
+  amount: number;
+  /** When the crews must be at the target. */
+  arriveBy: number | null;
+  offensive: Id | null;
+  createdAt: number;
+  /** Answer by this hour or it counts as ignored. */
+  respondBy: number;
+  status: RequestStatus;
+  resolvedAt: number | null;
+}
+
+export type OffensiveStatus = 'gathering' | 'assault' | 'won' | 'lost' | 'cancelled';
+
+export interface Offensive {
+  id: Id;
+  faction: NetworkId;
+  target: Id;
+  region: Id;
+  arriveAt: number;
+  createdAt: number;
+  status: OffensiveStatus;
+  battle: Id | null;
+  /** Crews planned to take part, by owner. */
+  crews: Id[];
+  endedAt: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +255,7 @@ export interface PathStep {
 export type CrewOrder =
   | { type: 'idle' }
   | { type: 'garrison' }
-  | { type: 'lie_low' }
+  | { type: 'lie_low'; since?: number }
   | {
       type: 'move';
       destination: Id;
@@ -191,11 +265,13 @@ export type CrewOrder =
       /** Sync arrival: the crew waits at its start until this hour. */
       departAt: number | null;
       arriveAt: number | null;
+      /** What to do on arrival (scouts lie low). */
+      onArrive?: 'lie_low';
     }
   /** Hold a point on a road; `atKm` is measured from the road's `from` node (null = midpoint). */
-  | { type: 'ambush'; road: Id; atKm: number | null }
-  | { type: 'patrol'; road: Id; atKm: number | null }
-  | { type: 'raid'; target: Id; preference: RoutePreference; path: PathStep[] }
+  | { type: 'ambush'; road: Id; atKm: number | null; since?: number }
+  | { type: 'patrol'; road: Id; atKm: number | null; since?: number }
+  | { type: 'raid'; target: Id; preference: RoutePreference; path: PathStep[]; departAt?: number | null; arriveAt?: number | null }
   | { type: 'reinforce'; battle: Id; path: PathStep[] }
   | { type: 'retreat'; destination: Id; path: PathStep[] }
   | { type: 'escort'; crew: Id };
@@ -270,7 +346,7 @@ export interface Market {
 // ---------------------------------------------------------------------------
 
 export type Confidence = 'confirmed' | 'estimated' | 'rumor';
-export type ReportSource = 'halcon' | 'patrol' | 'drone' | 'rumor';
+export type ReportSource = 'halcon' | 'patrol' | 'drone' | 'presence' | 'rumor';
 
 /**
  * A network is a faction id, or a neutral character's own id. Everyone in a
@@ -408,8 +484,31 @@ export interface FeedEntry {
 
 export type EndReason = 'faction_collapse' | 'territorial_defeat' | 'negotiated_truce' | 'time_cap' | 'player_eliminated';
 
+export interface StartSnapshot {
+  playerId: Id;
+  territory: number;
+  wealth: number;
+  respect: number;
+  force: number;
+  rank: number;
+}
+
+export interface ScoreBreakdown {
+  territory: number;
+  wealth: number;
+  standing: number;
+  reputation: number;
+  force: number;
+  fate: number;
+  total: number;
+}
+
+export type EndTitle = 'el_patron' | 'kingmaker' | 'survivor' | 'pawn' | 'corrido' | 'extradited';
+
 export interface EndState {
   reason: EndReason;
   hour: number;
   winner: Id | null;
+  score: ScoreBreakdown | null;
+  title: EndTitle | null;
 }

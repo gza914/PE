@@ -2,12 +2,17 @@
 import type { Content } from '../data/content';
 import type { VehicleType } from '../data/schemas';
 import { newId } from './context';
+import { snapshot } from './systems/endings';
 import { seedRng } from './rng';
 import { SAVE_VERSION, type CharacterState, type CrewState, type CrewTransit, type GameState, type OpinionModifier } from './state';
 
 export interface NewGameOptions {
   seed: number;
   playerId: string;
+  /** Characters who start the war neutral (the player picks on day 0 instead). */
+  neutrals?: string[];
+  /** The AI plays the player's character too. */
+  autoplay?: boolean;
 }
 
 export function newTransit(): CrewTransit {
@@ -28,6 +33,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     rng: seedRng(opts.seed),
     hour: 0,
     playerId: opts.playerId,
+    autoplay: opts.autoplay ?? false,
     nodes: {},
     colonias: {},
     characters: {},
@@ -40,10 +46,15 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     drones: [],
     market: { armored: content.tuning.economy.armoredStartStock, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
     battles: {},
+    requests: [],
+    offensives: [],
     pendingEvents: [],
     scheduledEvents: [],
     feed: [],
     ended: null,
+    truceDays: 0,
+    truceOffered: false,
+    start: { playerId: opts.playerId, territory: 0, wealth: 0, respect: 0, force: 0, rank: 1 },
     nextId: 1,
   };
 
@@ -87,7 +98,9 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       exhaustion: tuning.pulse.startingExhaustion,
       quietDays: 0,
       combatHoursToday: 0,
-      warPlan: { mode: 'defend', focusRegion: null },
+      lowShareDays: 0,
+      headlessDays: 0,
+      warPlan: { mode: 'defend', focusRegion: null, target: null, since: 0, lastOffensiveEndedAt: null, lost: [] },
     };
   }
 
@@ -116,6 +129,8 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       purse: 0,
       ledger: [],
       lastAidAt: null,
+      declaredAt: 0,
+      forceTarget: def.crews.reduce((n, c) => n + c.men, 0),
       fear: 0,
       respect: 0,
       credibility: 50,
@@ -163,6 +178,13 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     if (node) state.nodes[node]!.stash += def.cash;
     else state.characters[def.id]!.purse += def.cash;
   }
+
+  for (const id of opts.neutrals ?? []) {
+    const ch = state.characters[id];
+    if (ch && ch.rank !== 'head') ch.faction = null;
+  }
+
+  state.start = snapshot(state, content, opts.playerId);
 
   return state;
 }

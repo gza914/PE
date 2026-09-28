@@ -313,3 +313,69 @@ function fightingHurtsBusiness(ctx: SimContext): void {
     plaza.combatHoursToday = 0;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Plaza value and territorial share
+// ---------------------------------------------------------------------------
+
+/**
+ * A plaza's steady daily worth: extortion at a medium rate, rackets, labs,
+ * and its base share of every route through it. Used for targeting and for
+ * the territorial-defeat share, so it ignores today's fighting.
+ */
+export function nodeValue(state: GameState, content: Content, node: Id): number {
+  const e = content.tuning.economy;
+  const plaza = state.nodes[node];
+  if (!plaza || world(content).node(node).type === 'border_exit') return 0;
+  const typical = e.compliance.base + plaza.support * e.compliance.perSupport;
+  let v = 0;
+  if (node !== content.culiacan.parentNode) {
+    v += plaza.businesses * (e.extortionRates.medium.incomePerBusinessPerDay * typical + e.racketPerBusinessPerDay * (plaza.support / 100));
+    v += plaza.labs * e.labOutputPerDay;
+  }
+  for (const r of content.routes) if (r.nodes.includes(node)) v += r.dailyValue / r.nodes.length;
+  return v;
+}
+
+export function coloniaValue(state: GameState, content: Content, colonia: Id): number {
+  const e = content.tuning.economy;
+  const col = content.culiacan.colonias.find((c) => c.id === colonia);
+  const city = state.nodes[content.culiacan.parentNode]!;
+  if (!col) return 0;
+  return col.businesses * (e.extortionRates.medium.incomePerBusinessPerDay * (e.compliance.base + city.support * e.compliance.perSupport) + e.racketPerBusinessPerDay * (city.support / 100));
+}
+
+/**
+ * Each network's share of all plaza value. Culiacán counts colonia by colonia
+ * (plus its route shares to whoever holds more colonias).
+ */
+export function territoryShares(state: GameState, content: Content): Map<NetworkId, number> {
+  const value = new Map<NetworkId, number>();
+  let total = 0;
+  const add = (net: NetworkId | null, v: number) => {
+    total += v;
+    if (net) value.set(net, (value.get(net) ?? 0) + v);
+  };
+  const city = content.culiacan.parentNode;
+  for (const n of content.nodes) {
+    const v = nodeValue(state, content, n.id);
+    if (n.id === city) {
+      const who = nodeRecipient(state, content, city);
+      add(who ? networkOf(state, who) : null, v);
+      continue;
+    }
+    const owner = state.nodes[n.id]!.owner;
+    add(owner ? networkOf(state, owner) : null, v);
+  }
+  for (const col of content.culiacan.colonias) add(coloniaHolder(state, content, col.id), coloniaValue(state, content, col.id));
+  const shares = new Map<NetworkId, number>();
+  for (const [k, v] of value) shares.set(k, total > 0 ? v / total : 0);
+  return shares;
+}
+
+/** Plaza value held by one character (their plazas only). */
+export function characterTerritory(state: GameState, content: Content, id: Id): number {
+  return Object.values(state.nodes)
+    .filter((n) => n.owner === id)
+    .reduce((sum, n) => sum + nodeValue(state, content, n.id), 0);
+}

@@ -7,6 +7,7 @@ import { dayOf } from '../clock';
 import { pushFeed, type SimContext } from '../context';
 import { deposit, spendUpTo } from '../money';
 import { charName } from '../orders';
+import { endGame } from './endings';
 import type { Id } from '../state';
 
 export function runCharactersDaily(ctx: SimContext): void {
@@ -50,14 +51,13 @@ export function killCharacter(ctx: SimContext, id: Id): void {
   pushFeed(state, 'critical', `${charName(ctx, id)} is dead.`, ch.homePlaza, null);
 
   const heir = successorOf(ctx, id);
-  if (id === state.playerId) {
-    if (!heir) {
-      state.ended = { reason: 'player_eliminated', hour: state.hour, winner: null };
-      pushFeed(state, 'critical', `With no heir to take over, your organization falls apart on day ${dayOf(state.hour)}.`, null, null);
-      return;
-    }
+  if (id === state.playerId && !heir) {
+    dissolve(ctx, id);
+    endGame(ctx, 'player_eliminated', null, `With no heir to take over, your organization falls apart on day ${dayOf(state.hour)}.`);
+    return;
   }
   if (heir) inherit(ctx, id, heir);
+  else dissolve(ctx, id);
   for (const f of Object.values(state.factions)) if (f.head === id) f.head = heir;
   if (id === state.playerId && heir) {
     state.playerId = heir;
@@ -65,14 +65,37 @@ export function killCharacter(ctx: SimContext, id: Id): void {
   }
 }
 
-/** Designated heir if free, else (for non-player characters) their faction head. */
+/**
+ * Who takes over: the designated heir if free; for AI characters, else the
+ * faction head (even a captured one), else the highest-ranked free member.
+ * With no one at all, the organization dissolves.
+ */
 function successorOf(ctx: SimContext, id: Id): Id | null {
   const { state } = ctx;
   const ch = state.characters[id]!;
   if (ch.heir && state.characters[ch.heir]?.status === 'free') return ch.heir;
-  if (id === state.playerId) return null;
+  // A human player only continues through their designated heir; on autoplay, anyone may take over.
+  if (id === state.playerId && !state.autoplay) return null;
   const head = ch.faction ? state.factions[ch.faction]?.head : null;
-  return head && head !== id && state.characters[head]?.status === 'free' ? head : null;
+  const hs = head ? state.characters[head]?.status : undefined;
+  if (head && head !== id && (hs === 'free' || hs === 'captured')) return head;
+  const RANK = { head: 5, inner_circle: 4, senior_lieutenant: 3, lieutenant: 2, associate: 1, crew_leader: 1 } as const;
+  const member = Object.values(state.characters)
+    .filter((c) => c.id !== id && c.status === 'free' && ch.faction !== null && c.faction === ch.faction)
+    .sort((a, b) => RANK[b.rank] - RANK[a.rank] || (a.id < b.id ? -1 : 1))[0];
+  return member?.id ?? null;
+}
+
+/** No successor: plazas go unowned and crews scatter. */
+function dissolve(ctx: SimContext, id: Id): void {
+  const { state } = ctx;
+  for (const n of Object.values(state.nodes)) if (n.owner === id) n.owner = null;
+  for (const c of Object.values(state.crews)) {
+    if (c.owner !== id) continue;
+    // Battles drop missing crews on their next hour.
+    for (const e of Object.values(state.crews)) if (e.order.type === 'escort' && e.order.crew === c.id) e.order = { type: 'idle' };
+    delete state.crews[c.id];
+  }
 }
 
 function inherit(ctx: SimContext, from: Id, to: Id): void {
