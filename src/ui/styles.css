@@ -124,3 +124,24 @@ ul.links { list-style: none; padding: 0; }
 .ov-war.tense { fill: #e0b64a; opacity: 0.12; }
 .ov-war.skirmishing { fill: #e07a3a; opacity: 0.22; }
 .ov-war.offensive { fill: #e0503a; opacity: 0.32; }
+
+/* Phase 3: economy UI. Chart series use validated dark-mode categorical slots 1–2. */
+.economy { --series-income: #3987e5; --series-costs: #d95926; }
+.bigcash { font-size: 22px; margin: 0; }
+ul.plain { list-style: none; padding: 0; margin: 4px 0; }
+.error { color: #ff7b6b; }
+.ledgerchart .legend { display: flex; gap: 12px; align-items: center; color: var(--muted); }
+.ledgerchart .legend .linkish { margin: 0 0 0 auto; }
+.ledgerchart .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.ledgerchart .sw.income, .ledgerchart .income { background: var(--series-income); fill: var(--series-income); }
+.ledgerchart .sw.costs, .ledgerchart .costs { background: var(--series-costs); fill: var(--series-costs); }
+.ledgerchart .readout { margin: 4px 0; color: var(--text); }
+.ledgerchart .chart { width: 100%; height: auto; display: block; }
+.ledgerchart .axis { stroke: var(--line); stroke-width: 1; }
+.ledgerchart .tick { fill: var(--muted); font-size: 8px; }
+.ledgerchart .hit { fill: transparent; }
+.ledgerchart table { width: 100%; border-collapse: collapse; }
+.ledgerchart td, .ledgerchart th { text-align: right; padding: 1px 4px; }
+.movecash select { max-width: 120px; }
+.btns button.on { border-color: var(--accent); color: var(--accent); }
+.plazaecon { margin-top: 8px; }

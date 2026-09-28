@@ -240,7 +240,7 @@
       }
     },
     "contestedRouteThroughputPenalty": 0.2,
-    "payrollPerManPerWeek": 150,
+    "payrollPerManPerWeek": 600,
     "halconCostPer10CoveragePerWeek": 2000,
     "ammoResupplyPerMan": 30,
     "factionTributeRate": 0.2,
@@ -249,7 +249,44 @@
       "leaderOpinionLoss": 10,
       "consecutiveWeeksForDesertion": 2,
       "desertionRatePerDay": 0.1
-    }
+    },
+    "compliance": {
+      "base": 0.5,
+      "perSupport": 0.003,
+      "perFear": 0.002,
+      "perMilitaryPresence": 0.05,
+      "min": 0.1,
+      "max": 1
+    },
+    "racketPerBusinessPerDay": 8,
+    "labOutputPerDay": 1500,
+    "supplyPerIncome": 200000,
+    "businessLossPerCombatHour": 0.01,
+    "supportLossPerCombatHour": 1,
+    "businessRecoveryPerWeek": 0.02,
+    "recruitment": {
+      "signingCostPerMan": 3000,
+      "recruitSkill": 1,
+      "poolPerDayByType": {
+        "city": 4,
+        "town": 2,
+        "rancheria": 0.5,
+        "sierra_hub": 1,
+        "port": 1.5,
+        "border_exit": 0
+      },
+      "poolPerBusinessPerDay": 0.005,
+      "poolCapDays": 7,
+      "recruitGear": 2
+    },
+    "armoredStartStock": 2,
+    "armoredRestockDays": 30,
+    "aid": {
+      "cooldownDays": 14,
+      "maxCash": 100000,
+      "headCashShare": 0.1
+    },
+    "ledgerDays": 14
   },
   "characters": {
     "skillMax": 20,

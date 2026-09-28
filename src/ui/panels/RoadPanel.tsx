@@ -1,4 +1,5 @@
 import { lastSeen } from '../../sim/knowledge';
+import { cashOf } from '../../sim/money';
 import { world } from '../../sim/world';
 import { useGame } from '../store';
 import { charLabel, playerNetwork } from '../util';
@@ -12,7 +13,7 @@ export function RoadPanel({ id }: { id: string }) {
   const net = playerNetwork(game);
   const drone = game.drones.find((d) => d.road === id && d.network === net && game.hour < d.until);
   const queued = queue.some((q) => q.type === 'launch_drone' && q.road === id);
-  const cash = game.characters[game.playerId]!.cash;
+  const cash = cashOf(game, game.playerId);
   const seen = lastSeen(game, content, net).filter((s) => s.where.kind === 'road' && s.where.road === id);
 
   return (

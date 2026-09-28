@@ -51,6 +51,7 @@ export function addCrew(state: GameState, id: string, owner: string, node: strin
     battle: null,
     colonia: null,
     battles: 0,
+    establishment: extra.men ?? 12,
     ...extra,
   };
   state.crews[id] = crew;
@@ -67,4 +68,26 @@ export function order(state: GameState, crew: CrewState, req: OrderRequest, c = 
 export function run(state: GameState, hours: number, c = content): GameState {
   for (let i = 0; i < hours; i++) state = tick(state, [], c).state;
   return state;
+}
+
+/** No AI traffic or breakdowns, so each test controls every crew on the map. */
+export const calm = tuned((t) => {
+  noBreakdowns(t);
+  t.ai.trafficChancePerCheck = 0;
+  t.ai.returnHomeChancePerCheck = 0;
+});
+
+/** Detection always succeeds. */
+export const certain = (t: Content['tuning']) => {
+  noBreakdowns(t);
+  t.ai.trafficChancePerCheck = 0;
+  t.ai.returnHomeChancePerCheck = 0;
+  t.detection.maxChance = 1;
+  t.detection.coefficient = 10;
+};
+
+export function empty(playerId = 'c_mazatlan', c: Content = calm, seed = 1): GameState {
+  const s = newGame(c, { seed, playerId });
+  for (const id of Object.keys(s.crews)) delete s.crews[id];
+  return s;
 }

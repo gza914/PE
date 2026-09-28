@@ -27,6 +27,7 @@ export interface GameState {
   schemes: Scheme[];
   reports: Report[];
   drones: Drone[];
+  market: Market;
   battles: Record<Id, Battle>;
   /** Events waiting for a decision. */
   pendingEvents: PendingEvent[];
@@ -59,8 +60,12 @@ export interface PlazaState {
   militaryPresence: number;
   extortionRate: ExtortionRate;
   claims: Claim[];
-  /** Cash held in stash houses here. */
+  /** Cash held in stash houses here; whoever holds the plaza holds it. */
   stash: number;
+  /** Men available to recruit here. */
+  recruits: number;
+  /** Hours of fighting at this plaza today (closes businesses, angers locals). */
+  combatHoursToday: number;
 }
 
 export interface ColoniaState {
@@ -122,7 +127,15 @@ export interface CharacterState {
   status: CharacterStatus;
   /** Hour the current status began (for extradition timers etc.). */
   statusSince: number;
-  cash: number;
+  /**
+   * Cash carried outside any stash house. A character's money is this plus the
+   * stashes in the plazas they hold (see money.ts).
+   */
+  purse: number;
+  /** Daily income and costs, newest last. */
+  ledger: LedgerDay[];
+  /** Last time the faction head granted this character aid. */
+  lastAidAt: number | null;
   fear: number;
   respect: number;
   credibility: number;
@@ -233,6 +246,23 @@ export interface CrewState {
   colonia: Id | null;
   /** Battles survived; skill grows with them. */
   battles: number;
+  /** Full strength: the AI recruits back up to this. */
+  establishment: number;
+}
+
+export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom';
+export type CostStream = 'payroll' | 'halcones' | 'tribute' | 'aid' | 'ammo' | 'vehicles' | 'recruits' | 'drones' | 'ransom';
+
+export interface LedgerDay {
+  day: number;
+  income: Partial<Record<IncomeStream, number>>;
+  costs: Partial<Record<CostStream, number>>;
+}
+
+export interface Market {
+  /** Armored trucks for sale statewide. */
+  armored: number;
+  nextRestockAt: number;
 }
 
 // ---------------------------------------------------------------------------

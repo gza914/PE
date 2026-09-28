@@ -5,6 +5,7 @@
  */
 import { dayOf } from '../clock';
 import { pushFeed, type SimContext } from '../context';
+import { deposit, spendUpTo } from '../money';
 import { charName } from '../orders';
 import type { Id } from '../state';
 
@@ -14,10 +15,8 @@ export function runCharactersDaily(ctx: SimContext): void {
   for (const id of Object.keys(state.characters).sort()) {
     const ch = state.characters[id]!;
     if (ch.status !== 'captured' || state.hour - ch.statusSince < hold) continue;
-    const captor = ch.captor ? state.characters[ch.captor] : undefined;
-    const ransom = Math.min(ch.cash, content.tuning.characters.ransomAmount);
-    ch.cash -= ransom;
-    if (captor) captor.cash += ransom;
+    const ransom = spendUpTo(state, content, id, content.tuning.characters.ransomAmount, 'ransom');
+    if (ch.captor) deposit(state, content, ch.captor, ransom, 'ransom');
     ch.status = 'free';
     ch.statusSince = state.hour;
     ch.captor = null;
@@ -83,7 +82,7 @@ function inherit(ctx: SimContext, from: Id, to: Id): void {
     if (c.owner === from) c.owner = to;
     if (c.leader === from) c.leader = to;
   }
-  const heir = state.characters[to]!;
-  heir.cash += state.characters[from]!.cash;
-  state.characters[from]!.cash = 0;
+  // Stashes follow the plazas; the purse goes to the heir.
+  state.characters[to]!.purse += state.characters[from]!.purse;
+  state.characters[from]!.purse = 0;
 }

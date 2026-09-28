@@ -22,6 +22,8 @@ export interface RouteRequest {
   /** Network whose knowledge drives the risk estimate. */
   viewer: NetworkId;
   avoidRoads?: readonly Id[];
+  /** Nodes the route may end at but not pass through (e.g. rival garrisons). */
+  noPassThrough?: readonly Id[];
   /** Use true coverage instead of the viewer's estimate (tests, debug). */
   omniscient?: boolean;
 }
@@ -93,6 +95,8 @@ function search(ctx: LegContext, from: CrewLocation, startHour: number, tripStar
   const w = world(content);
   const allowed = allowedRoadTypes(req.crews, tuning);
   const avoid = new Set(req.avoidRoads ?? []);
+  const blocked = new Set(req.noPassThrough ?? []);
+  const startNode = from.kind === 'node' ? from.node : null;
   const labels = new Map<Id, Label>();
   const open = new Map<Id, Label>();
 
@@ -136,6 +140,7 @@ function search(ctx: LegContext, from: CrewLocation, startHour: number, tripStar
     }
     open.delete(bestId!);
     labels.set(bestId!, best!);
+    if (blocked.has(bestId!) && bestId !== startNode) continue;
     for (const nb of w.neighbors(bestId!)) {
       if (labels.has(nb.other) || avoid.has(nb.road.id) || !allowed.has(nb.road.type)) continue;
       edge(bestId!, best!, nb.road.id, nb.other, nb.road.lengthKm);

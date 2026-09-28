@@ -5,6 +5,7 @@ import { crewNetwork } from '../../sim/network';
 import { seats, VEHICLE_TYPES } from '../../sim/signature';
 import type { CrewState } from '../../sim/state';
 import { world } from '../../sim/world';
+import type { VehicleType } from '../../data/schemas';
 import { useGame } from '../store';
 import { charLabel, crewLabel, fmtHours, locationName, playerNetwork, vehicleSummary } from '../util';
 import { RoutePlanner } from './RoutePlanner';
@@ -40,6 +41,9 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
   const [splitMen, setSplitMen] = useState(4);
   const [splitVeh, setSplitVeh] = useState<Record<string, number>>({ pickup: 1 });
   const [showSplit, setShowSplit] = useState(false);
+  const [recruitN, setRecruitN] = useState(4);
+  const [buyN, setBuyN] = useState(1);
+  const [buyType, setBuyType] = useState<VehicleType>('pickup');
   if (!game) return null;
   const mine = crewNetwork(game, crew) === playerNetwork(game) && crew.owner === game.playerId;
   const order = (o: OrderRequest) => enqueue({ type: 'order_crew', issuer: crew.owner, crew: crew.id, order: o });
@@ -48,6 +52,9 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
   const escorts = escortsOf(game, crew);
   const pending = queue.filter((q) => ('crew' in q && q.crew === crew.id) || (q.type === 'merge_crews' && q.into === crew.id));
   const inCity = crew.location.kind === 'node' && crew.location.node === content.culiacan.parentNode;
+  const ownPlaza = crew.location.kind === 'node' ? game.nodes[crew.location.node] : undefined;
+  const atOwnPlaza = !!ownPlaza && ownPlaza.owner === crew.owner && crew.battle === null;
+  const pool = ownPlaza?.recruits ?? 0;
   const roads = crew.location.kind === 'node' ? w.neighbors(crew.location.node).map((n) => n.road) : [w.road(crew.location.road)];
 
   return (
@@ -155,6 +162,38 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
                   </div>
                 ))}
               </div>
+            </>
+          )}
+          {atOwnPlaza && (
+            <>
+              <h3>Reinforce</h3>
+              <div className="row small">
+                Sign
+                <input type="number" min={1} max={Math.max(1, Math.floor(pool))} value={recruitN} onChange={(e) => setRecruitN(Number(e.target.value))} />
+                men
+                <button className="small" disabled={Math.floor(pool) < 1} onClick={() => enqueue({ type: 'recruit', issuer: crew.owner, crew: crew.id, men: recruitN })}>
+                  Recruit (${(recruitN * content.tuning.economy.recruitment.signingCostPerMan).toLocaleString()})
+                </button>
+              </div>
+              <p className="muted small">
+                {Math.floor(pool)} available here · {seats(crew, content.tuning) - crew.men} free seats
+                {crew.men < crew.establishment && ` · ${crew.establishment - crew.men} under strength`}
+              </p>
+              <div className="row small">
+                Buy
+                <input type="number" min={1} value={buyN} onChange={(e) => setBuyN(Number(e.target.value))} />
+                <select value={buyType} onChange={(e) => setBuyType(e.target.value as VehicleType)}>
+                  {VEHICLE_TYPES.map((v) => (
+                    <option key={v} value={v}>
+                      {v} (${content.tuning.vehicles[v].cost.toLocaleString()})
+                    </option>
+                  ))}
+                </select>
+                <button className="small" onClick={() => enqueue({ type: 'buy_vehicles', issuer: crew.owner, crew: crew.id, vehicle: buyType, count: buyN })}>
+                  Buy
+                </button>
+              </div>
+              {buyType === 'armored' && <p className="muted small">{game.market.armored} armored trucks for sale statewide.</p>}
             </>
           )}
           {crew.location.kind === 'node' && (

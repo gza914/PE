@@ -4,33 +4,12 @@ import type { Command } from '../src/sim/commands';
 import { newContext } from '../src/sim/context';
 import { kmFromRoadStart } from '../src/sim/crews';
 import { newGame } from '../src/sim/newGame';
+import { cashOf } from '../src/sim/money';
 import { crewPower } from '../src/sim/power';
 import type { Battle, GameState } from '../src/sim/state';
 import { killCharacter } from '../src/sim/systems/characters';
 import { tick } from '../src/sim/tick';
-import { addCrew, noBreakdowns, tuned } from './helpers';
-
-/** No AI traffic or breakdowns, so each test controls every crew on the map. */
-const calm = tuned((t) => {
-  noBreakdowns(t);
-  t.ai.trafficChancePerCheck = 0;
-  t.ai.returnHomeChancePerCheck = 0;
-});
-
-/** Detection always succeeds. */
-const certain = (t: Content['tuning']) => {
-  noBreakdowns(t);
-  t.ai.trafficChancePerCheck = 0;
-  t.ai.returnHomeChancePerCheck = 0;
-  t.detection.maxChance = 1;
-  t.detection.coefficient = 10;
-};
-
-function empty(playerId = 'c_mazatlan', c: Content = calm, seed = 1): GameState {
-  const s = newGame(c, { seed, playerId });
-  for (const id of Object.keys(s.crews)) delete s.crews[id];
-  return s;
-}
+import { addCrew, calm, certain, empty, noBreakdowns, tuned } from './helpers';
 
 function step(s: GameState, cmds: Command[] = [], c: Content = calm) {
   const r = tick(s, cmds, c);
@@ -267,10 +246,10 @@ describe('morale, ammo, and leaders', () => {
     const ch = s.characters.m_villa_union!;
     ch.status = 'captured';
     ch.captor = 'c_mazatlan';
-    const before = s.characters.c_mazatlan!.cash;
+    const before = cashOf(s, 'c_mazatlan');
     for (let i = 0; i < 49; i++) s = tick(s, [], c).state;
     expect(s.characters.m_villa_union!.status).toBe('free');
-    expect(s.characters.c_mazatlan!.cash).toBeGreaterThan(before);
+    expect(cashOf(s, 'c_mazatlan')).toBeGreaterThan(before);
   });
 });
 
@@ -408,10 +387,10 @@ describe('supply and the pulse', () => {
   it('crews reload at a friendly plaza, and the owner pays', () => {
     let s = empty();
     addCrew(s, 'x', 'c_mazatlan', 'mazatlan', { ammo: 50, men: 10 });
-    const cash = s.characters.c_mazatlan!.cash;
+    const cash = cashOf(s, 'c_mazatlan');
     s = step(s);
     expect(s.crews.x!.ammo).toBeCloseTo(75);
-    expect(s.characters.c_mazatlan!.cash).toBeCloseTo(cash - 30 * 10 * 0.25);
+    expect(cashOf(s, 'c_mazatlan')).toBeCloseTo(cash - 30 * 10 * 0.25);
   });
 
   it('fighting raises calentura and exhaustion; a quiet day lets them decay', () => {

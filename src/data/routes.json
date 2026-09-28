@@ -1,0 +1,129 @@
+{
+  "_comment": "Trafficking routes. Each route's daily value is split across its nodes; holders of a node take that share (trafficking if their side owns the route's source, tolls otherwise). Contested nodes cut throughput.",
+  "routes": [
+    {
+      "id": "route_sierra_chihuahua",
+      "name": "Sierra to Chihuahua",
+      "nodes": [
+        "la_tuna",
+        "santiago_de_los_caballeros",
+        "chihuahua_exit"
+      ],
+      "dailyValue": 10000
+    },
+    {
+      "id": "route_badiraguato_choix",
+      "name": "Badiraguato over the sierra to Chihuahua",
+      "nodes": [
+        "badiraguato",
+        "surutato",
+        "choix",
+        "chihuahua_exit"
+      ],
+      "dailyValue": 9000
+    },
+    {
+      "id": "route_tamazula",
+      "name": "Tamazula line to Durango",
+      "nodes": [
+        "tameapa",
+        "tamazula_approach",
+        "durango_north_exit"
+      ],
+      "dailyValue": 9000
+    },
+    {
+      "id": "route_evora_sonora",
+      "name": "Évora valley north to Sonora",
+      "nodes": [
+        "badiraguato",
+        "mocorito",
+        "guamuchil",
+        "guasave",
+        "los_mochis",
+        "sonora_exit"
+      ],
+      "dailyValue": 16000
+    },
+    {
+      "id": "route_topolobampo",
+      "name": "Topolobampo precursors to Chihuahua",
+      "nodes": [
+        "topolobampo",
+        "los_mochis",
+        "el_fuerte",
+        "choix",
+        "chihuahua_exit"
+      ],
+      "dailyValue": 12000
+    },
+    {
+      "id": "route_valley_north",
+      "name": "Culiacán valley labs to Sonora",
+      "nodes": [
+        "eldorado",
+        "costa_rica",
+        "culiacan",
+        "culiacancito",
+        "guamuchil",
+        "guasave",
+        "los_mochis",
+        "sonora_exit"
+      ],
+      "dailyValue": 21000
+    },
+    {
+      "id": "route_pacific_north",
+      "name": "Mazatlán port north on Highway 15",
+      "nodes": [
+        "mazatlan_port",
+        "mazatlan",
+        "la_cruz",
+        "culiacan",
+        "culiacancito",
+        "guamuchil",
+        "guasave",
+        "los_mochis",
+        "sonora_exit"
+      ],
+      "dailyValue": 24000
+    },
+    {
+      "id": "route_espinazo",
+      "name": "Mazatlán port to Durango over the Espinazo",
+      "nodes": [
+        "mazatlan_port",
+        "mazatlan",
+        "villa_union",
+        "concordia",
+        "durango_exit"
+      ],
+      "dailyValue": 14000
+    },
+    {
+      "id": "route_south_coast",
+      "name": "South coast to Nayarit",
+      "nodes": [
+        "mazatlan_port",
+        "mazatlan",
+        "villa_union",
+        "el_rosario",
+        "escuinapa",
+        "nayarit_exit"
+      ],
+      "dailyValue": 12000
+    },
+    {
+      "id": "route_cosala_south",
+      "name": "Cosalá mines to Mazatlán and Durango",
+      "nodes": [
+        "cosala",
+        "san_ignacio",
+        "la_noria",
+        "concordia",
+        "durango_exit"
+      ],
+      "dailyValue": 7000
+    }
+  ]
+}

@@ -409,10 +409,13 @@ function resolveContact(run: MoveRun, g: CrewState, s: Sweep, c: Contact): boole
   const { state, content } = ctx;
   const gGroup = groupOf(state, g);
   const hGroup = groupOf(state, c.other);
+  const ambush = c.other.order.type === 'ambush' && c.other.order.atKm !== null;
+  // A group that has broken off and is falling back is not chased down the road.
+  if (!ambush && (g.order.type === 'retreat' || c.other.order.type === 'retreat')) return false;
   let engagement: Engagement['type'] | null = null;
   let attackers = hGroup;
   let defenders = gGroup;
-  if (c.other.order.type === 'ambush' && c.other.order.atKm !== null) {
+  if (ambush) {
     const alert = Math.max(...gGroup.map((x) => x.alertness)) / 100;
     engagement = chance(state.rng, alert * content.tuning.combat.ambushSpotAlertnessFactor) ? null : 'ambush';
   }

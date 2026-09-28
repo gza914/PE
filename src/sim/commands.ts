@@ -8,6 +8,7 @@ import type { ExtortionRate, VehicleType } from '../data/schemas';
 import { newId, pushFeed, type SimContext } from './context';
 import { escortsOf, groupOf, sameLocation } from './crews';
 import { crewNetwork, networkOf, ownedBy } from './network';
+import { cashOf, deposit, moveCash, spend } from './money';
 import { newTransit } from './newGame';
 import { nearestNode, planRoute } from './routing';
 import { allowedRoadTypes, seats, VEHICLE_TYPES } from './signature';
@@ -21,7 +22,7 @@ interface Base {
 }
 
 export type OrderRequest =
-  | { type: 'move'; destination: Id; preference: RoutePreference; waypoints?: Id[]; arriveAt?: number | null }
+  | { type: 'move'; destination: Id; preference: RoutePreference; waypoints?: Id[]; arriveAt?: number | null; avoidRivalPlazas?: boolean }
   | { type: 'retreat' }
   | { type: 'garrison' }
   | { type: 'lie_low' }
@@ -39,6 +40,11 @@ export type Command =
   | (Base & { type: 'split_crew'; crew: Id; men: number; vehicles: Partial<Record<VehicleType, number>>; leader?: Id })
   | (Base & { type: 'merge_crews'; crew: Id; into: Id })
   | (Base & { type: 'launch_drone'; road: Id })
+  | (Base & { type: 'recruit'; crew: Id; men: number })
+  | (Base & { type: 'form_crew'; node: Id; men: number; leader?: Id })
+  | (Base & { type: 'buy_vehicles'; crew: Id; vehicle: VehicleType; count: number })
+  | (Base & { type: 'move_cash'; from: Id; to: Id; amount: number })
+  | (Base & { type: 'request_aid' })
   | (Base & { type: 'deploy_crew'; crew: Id; colonia: Id | null })
   | (Base & { type: 'battle_withdraw'; battle: Id })
   | (Base & { type: 'battle_armor_forward'; battle: Id })
@@ -78,8 +84,7 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       const node = state.nodes[cmd.node];
       if (!node) return `unknown node "${cmd.node}"`;
       if (node.owner !== cmd.issuer) return `${issuer.name} does not own ${cmd.node}`;
-      if (!Number.isInteger(cmd.coverage) || cmd.coverage < 0 || cmd.coverage > 100 || cmd.coverage % 10 !== 0)
-        return 'coverage must be 0–100 in steps of 10';
+      if (!Number.isInteger(cmd.coverage) || cmd.coverage < 0 || cmd.coverage > 100) return 'coverage must be a whole number from 0 to 100';
       node.halconCoverage = cmd.coverage;
       return null;
     }
@@ -109,6 +114,12 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
     case 'battle_commit':
     case 'battle_accept_surrender':
       return battleCommand(ctx, cmd);
+    case 'recruit':
+    case 'form_crew':
+    case 'buy_vehicles':
+    case 'move_cash':
+    case 'request_aid':
+      return economyCommand(ctx, cmd);
     case 'split_crew':
       return split(ctx, cmd);
     case 'merge_crews':
@@ -117,8 +128,7 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       const road = content.roads.find((r) => r.id === cmd.road);
       if (!road) return `unknown road "${cmd.road}"`;
       const cost = content.tuning.detection.droneCost;
-      if (issuer.cash < cost) return `a drone costs $${cost.toLocaleString()}`;
-      issuer.cash -= cost;
+      if (!spend(state, content, issuer.id, cost, 'drones')) return `a drone costs $${cost.toLocaleString()}`;
       state.drones.push({
         id: newId(state, 'drone'),
         network: networkOf(state, issuer.id),
@@ -160,7 +170,12 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
     case 'move': {
       if (!content.nodes.some((n) => n.id === req.destination)) return `unknown node "${req.destination}"`;
       for (const wp of req.waypoints ?? []) if (!content.nodes.some((n) => n.id === wp)) return `unknown waypoint "${wp}"`;
-      const base = { crews: group, from: loc, destination: req.destination, waypoints: req.waypoints ?? [], preference: req.preference, viewer: network };
+      const noPassThrough = req.avoidRivalPlazas
+        ? Object.values(state.nodes)
+            .filter((n) => n.owner !== null && networkOf(state, n.owner) !== network)
+            .map((n) => n.id)
+        : [];
+      const base = { crews: group, from: loc, destination: req.destination, waypoints: req.waypoints ?? [], preference: req.preference, viewer: network, noPassThrough };
       let route = planRoute(state, content, { ...base, departHour: state.hour });
       if (!route) return `no route to ${w.node(req.destination).name} for these vehicles`;
       let departAt: number | null = null;
@@ -317,5 +332,102 @@ function battleCommand(ctx: SimContext, cmd: BattleCommand): string | null {
     }
     case 'battle_accept_surrender':
       return acceptSurrender(ctx, b);
+  }
+}
+
+type EconomyCommand = Extract<Command, { type: 'recruit' | 'form_crew' | 'buy_vehicles' | 'move_cash' | 'request_aid' }>;
+
+/** Spending and moving money (GDD "Economy"). */
+function economyCommand(ctx: SimContext, cmd: EconomyCommand): string | null {
+  const { state, content } = ctx;
+  const e = content.tuning.economy;
+  const r = e.recruitment;
+  const w = world(content);
+  const ownPlaza = (node: Id | null) => (node && state.nodes[node]?.owner === cmd.issuer ? state.nodes[node]! : null);
+  switch (cmd.type) {
+    case 'recruit': {
+      const crew = state.crews[cmd.crew];
+      if (!crew || crew.owner !== cmd.issuer) return 'not your crew';
+      if (crew.battle !== null) return 'that crew is in a battle';
+      const plaza = ownPlaza(crew.location.kind === 'node' ? crew.location.node : null);
+      if (!plaza) return 'crews recruit only in a plaza you hold';
+      if (!Number.isInteger(cmd.men) || cmd.men < 1) return 'recruit at least one man';
+      if (cmd.men > Math.floor(plaza.recruits)) return `only ${Math.floor(plaza.recruits)} men are ready to sign up in ${w.node(plaza.id).name}`;
+      if (crew.men + cmd.men > content.tuning.crews.maxMen) return `a crew holds at most ${content.tuning.crews.maxMen} men`;
+      if (seats(crew, content.tuning) < crew.men + cmd.men) return 'not enough seats: buy vehicles first';
+      if (!spend(state, content, cmd.issuer, cmd.men * r.signingCostPerMan, 'recruits')) return `signing ${cmd.men} men costs $${(cmd.men * r.signingCostPerMan).toLocaleString()}`;
+      plaza.recruits -= cmd.men;
+      crew.skill = Math.max(1, Math.round((crew.skill * crew.men + r.recruitSkill * cmd.men) / (crew.men + cmd.men)));
+      crew.men += cmd.men;
+      crew.establishment = Math.max(crew.establishment, crew.men);
+      return null;
+    }
+    case 'form_crew': {
+      const plaza = ownPlaza(cmd.node);
+      if (!plaza) return 'crews are raised only in a plaza you hold';
+      const { minMen, maxMen } = content.tuning.crews;
+      if (!Number.isInteger(cmd.men) || cmd.men < minMen || cmd.men > maxMen) return `a crew has ${minMen}–${maxMen} men`;
+      if (cmd.men > Math.floor(plaza.recruits)) return `only ${Math.floor(plaza.recruits)} men are ready to sign up in ${w.node(plaza.id).name}`;
+      const leader = cmd.leader ?? cmd.issuer;
+      const lc = state.characters[leader];
+      if (!lc || lc.status !== 'free' || networkOf(state, leader) !== networkOf(state, cmd.issuer)) return 'invalid leader';
+      const pickups = Math.ceil(cmd.men / content.tuning.vehicles.pickup.seats);
+      const cost = cmd.men * r.signingCostPerMan + pickups * content.tuning.vehicles.pickup.cost;
+      if (cashOf(state, cmd.issuer) < cost) return `raising this crew costs $${cost.toLocaleString()}`;
+      spend(state, content, cmd.issuer, cmd.men * r.signingCostPerMan, 'recruits');
+      spend(state, content, cmd.issuer, pickups * content.tuning.vehicles.pickup.cost, 'vehicles');
+      plaza.recruits -= cmd.men;
+      const id = newId(state, 'crew');
+      state.crews[id] = {
+        id,
+        owner: cmd.issuer,
+        leader,
+        men: cmd.men,
+        skill: r.recruitSkill,
+        gear: r.recruitGear,
+        morale: content.tuning.crews.startingMorale,
+        alertness: content.tuning.crews.startingAlertness,
+        ammo: 100,
+        fatigue: 0,
+        vehicles: { pickup: pickups, suv: 0, motorcycle: 0, armored: 0 },
+        armorDamage: 0,
+        location: { kind: 'node', node: plaza.id },
+        order: { type: 'garrison' },
+        transit: newTransit(),
+        battle: null,
+        colonia: null,
+        battles: 0,
+        establishment: cmd.men,
+      };
+      return null;
+    }
+    case 'buy_vehicles': {
+      const crew = state.crews[cmd.crew];
+      if (!crew || crew.owner !== cmd.issuer) return 'not your crew';
+      if (!ownPlaza(crew.location.kind === 'node' ? crew.location.node : null)) return 'vehicles are bought in a plaza you hold';
+      if (!Number.isInteger(cmd.count) || cmd.count < 1) return 'buy at least one';
+      if (cmd.vehicle === 'armored' && cmd.count > state.market.armored) return `only ${state.market.armored} armored trucks are for sale right now`;
+      const cost = cmd.count * content.tuning.vehicles[cmd.vehicle].cost;
+      if (!spend(state, content, cmd.issuer, cost, 'vehicles')) return `that costs $${cost.toLocaleString()}`;
+      if (cmd.vehicle === 'armored') state.market.armored -= cmd.count;
+      crew.vehicles[cmd.vehicle] += cmd.count;
+      return null;
+    }
+    case 'move_cash':
+      return moveCash(state, cmd.issuer, cmd.from, cmd.to, cmd.amount);
+    case 'request_aid': {
+      const me = state.characters[cmd.issuer]!;
+      if (!me.faction) return 'neutrals have no faction to ask';
+      const head = state.factions[me.faction]?.head;
+      if (!head || head === cmd.issuer || state.characters[head]?.status !== 'free') return 'there is no one to ask';
+      const cooldown = e.aid.cooldownDays * 24;
+      if (me.lastAidAt !== null && state.hour - me.lastAidAt < cooldown) return `the faction helped you ${Math.floor((state.hour - me.lastAidAt) / 24)} days ago; ask again in ${Math.ceil((cooldown - (state.hour - me.lastAidAt)) / 24)} days`;
+      const amount = Math.floor(Math.min(e.aid.maxCash, cashOf(state, head) * e.aid.headCashShare));
+      if (amount <= 0 || !spend(state, content, head, amount, 'aid')) return `${state.characters[head]!.alias ?? state.characters[head]!.name} has nothing to spare`;
+      deposit(state, content, cmd.issuer, amount, 'aid');
+      me.lastAidAt = state.hour;
+      pushFeed(state, 'important', `The faction sent you $${amount.toLocaleString()}.`, null, networkOf(state, cmd.issuer));
+      return null;
+    }
   }
 }

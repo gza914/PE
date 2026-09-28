@@ -1,6 +1,7 @@
 import { lastSeen } from '../../sim/knowledge';
 import { crewNetwork, networkOf } from '../../sim/network';
 import { useGame } from '../store';
+import { PlazaEconomy } from './PlazaEconomy';
 import { charLabel, crewLabel, playerNetwork } from '../util';
 
 export function NodePanel({ id }: { id: string }) {
@@ -48,15 +49,16 @@ export function NodePanel({ id }: { id: string }) {
       {mine && (
         <div className="row small">
           Halcones
-          <button className="small" disabled={p.halconCoverage <= 0} onClick={() => enqueue({ type: 'set_halcon_coverage', issuer: game.playerId, node: id, coverage: p.halconCoverage - 10 })}>
+          <button className="small" disabled={p.halconCoverage <= 0} onClick={() => enqueue({ type: 'set_halcon_coverage', issuer: game.playerId, node: id, coverage: Math.max(0, p.halconCoverage - 10) })}>
             −10
           </button>
-          <button className="small" disabled={p.halconCoverage >= 100} onClick={() => enqueue({ type: 'set_halcon_coverage', issuer: game.playerId, node: id, coverage: p.halconCoverage + 10 })}>
+          <button className="small" disabled={p.halconCoverage >= 100} onClick={() => enqueue({ type: 'set_halcon_coverage', issuer: game.playerId, node: id, coverage: Math.min(100, p.halconCoverage + 10) })}>
             +10
           </button>
           <span className="muted">${(content.tuning.economy.halconCostPer10CoveragePerWeek).toLocaleString()} / 10 per week</span>
         </div>
       )}
+      {mine && <PlazaEconomy id={id} />}
       {crews.length > 0 && (
         <>
           <h3>Crews here</h3>

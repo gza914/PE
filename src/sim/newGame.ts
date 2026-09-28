@@ -38,6 +38,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     schemes: [],
     reports: [],
     drones: [],
+    market: { armored: content.tuning.economy.armoredStartStock, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
     battles: {},
     pendingEvents: [],
     scheduledEvents: [],
@@ -59,6 +60,8 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       extortionRate: n.extortionRate,
       claims: [],
       stash: 0,
+      recruits: 0,
+      combatHoursToday: 0,
     };
   }
 
@@ -110,7 +113,9 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       heir: def.heir,
       status: 'free',
       statusSince: 0,
-      cash: def.cash,
+      purse: 0,
+      ledger: [],
+      lastAidAt: null,
       fear: 0,
       respect: 0,
       credibility: 50,
@@ -143,9 +148,20 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
         battle: null,
         colonia: c.colonia ?? null,
         battles: 0,
+        establishment: c.men,
       };
       state.crews[id] = crew;
     }
+  }
+
+  // Starting cash sits in the home plaza's stash house, else the first plaza
+  // held, else the purse.
+  for (const def of content.characters) {
+    const home = def.homePlaza && state.nodes[def.homePlaza]?.owner === def.id ? def.homePlaza : null;
+    const first = Object.keys(state.nodes).sort().find((n) => state.nodes[n]!.owner === def.id) ?? null;
+    const node = home ?? first;
+    if (node) state.nodes[node]!.stash += def.cash;
+    else state.characters[def.id]!.purse += def.cash;
   }
 
   return state;

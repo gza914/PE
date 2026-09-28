@@ -89,6 +89,20 @@ export const RoadSchema = z.object({
 export const RoadsFileSchema = z.object({ roads: z.array(RoadSchema).min(1) });
 
 // ---------------------------------------------------------------------------
+// routes.json (trafficking)
+// ---------------------------------------------------------------------------
+
+export const RouteSchema = z.object({
+  id,
+  name: z.string(),
+  /** Consecutive nodes joined by roads, from source to border exit. */
+  nodes: z.array(id).min(2),
+  dailyValue: z.number().nonnegative(),
+});
+
+export const RoutesFileSchema = z.object({ routes: z.array(RouteSchema) });
+
+// ---------------------------------------------------------------------------
 // colonias.json (Culiacán sub-map)
 // ---------------------------------------------------------------------------
 
@@ -534,6 +548,41 @@ export const TuningSchema = z.object({
     halconCostPer10CoveragePerWeek: z.number().nonnegative(),
     ammoResupplyPerMan: z.number().nonnegative(),
     factionTributeRate: pct,
+    /** Extortion compliance = base + support × perSupport + owner fear × perFear − military × perMilitaryPresence. */
+    compliance: z.object({
+      base: z.number(),
+      perSupport: z.number(),
+      perFear: z.number(),
+      perMilitaryPresence: z.number(),
+      min: pct,
+      max: pct,
+    }),
+    racketPerBusinessPerDay: z.number().nonnegative(),
+    labOutputPerDay: z.number().nonnegative(),
+    /** Dollars of faction income per +1 faction Supply. */
+    supplyPerIncome: z.number().positive(),
+    businessLossPerCombatHour: pct,
+    supportLossPerCombatHour: z.number().nonnegative(),
+    /** Share of a plaza's original businesses that reopen per quiet week. */
+    businessRecoveryPerWeek: pct,
+    recruitment: z.object({
+      signingCostPerMan: z.number().nonnegative(),
+      recruitSkill: z.number().int().min(1).max(5),
+      recruitGear: z.number().int().min(1).max(5),
+      poolPerDayByType: z.record(NodeType, z.number().nonnegative()),
+      poolPerBusinessPerDay: z.number().nonnegative(),
+      /** The recruit pool holds at most this many days of growth. */
+      poolCapDays: z.number().positive(),
+    }),
+    armoredStartStock: z.number().int().nonnegative(),
+    armoredRestockDays: z.number().positive(),
+    aid: z.object({
+      cooldownDays: z.number().nonnegative(),
+      maxCash: z.number().nonnegative(),
+      headCashShare: pct,
+    }),
+    /** Days of income and costs kept for the economy ledger. */
+    ledgerDays: z.number().int().positive(),
     missedPayroll: z.object({
       moraleLoss: z.number(),
       leaderOpinionLoss: z.number(),
@@ -609,6 +658,7 @@ export const TuningSchema = z.object({
 export type Region = z.infer<typeof RegionSchema>;
 export type MapNode = z.infer<typeof MapNodeSchema>;
 export type Road = z.infer<typeof RoadSchema>;
+export type TradeRoute = z.infer<typeof RouteSchema>;
 export type Colonia = z.infer<typeof ColoniaSchema>;
 export type Street = z.infer<typeof StreetSchema>;
 export type Faction = z.infer<typeof FactionSchema>;

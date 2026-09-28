@@ -1,6 +1,7 @@
 /** The content shipped with the game, bundled by Vite (and Vitest). */
 import map from './map.json';
 import roads from './roads.json';
+import routes from './routes.json';
 import colonias from './colonias.json';
 import factions from './factions.json';
 import traits from './traits.json';
@@ -14,7 +15,7 @@ const eventModules = import.meta.glob<unknown>('./events/*.json', { eager: true,
 export function bundledRawContent(): RawContent {
   const events: Record<string, unknown> = {};
   for (const [path, data] of Object.entries(eventModules)) events[path.replace('./', '')] = data;
-  return { map, roads, colonias, factions, traits, characters, messages, events, tuning };
+  return { map, roads, routes, colonias, factions, traits, characters, messages, events, tuning };
 }
 
 export function bundledContent(): Content {

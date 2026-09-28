@@ -1,4 +1,6 @@
 import { formatDateTime } from '../sim/clock';
+import { cashOf } from '../sim/money';
+import { payrollDue } from '../sim/systems/economy';
 import { useGame, type Overlay } from './store';
 import { charLabel } from './util';
 
@@ -22,7 +24,12 @@ export function TopBar() {
         ))}
       </span>
       <span>{charLabel(game, player.id)}</span>
-      <span className="mono">${Math.round(player.cash).toLocaleString()}</span>
+      <span
+        className={`mono${cashOf(game, player.id) < payrollDue(game, content, player.id) || player.missedPayrollWeeks > 0 ? ' error' : ''}`}
+        title={`Payroll due Sunday: $${Math.round(payrollDue(game, content, player.id)).toLocaleString()}`}
+      >
+        ${Math.round(cashOf(game, player.id)).toLocaleString()}
+      </span>
       {faction ? (
         <span className="mono" title={factionName}>
           Supply {Math.round(faction.supply)} · Exh. {Math.round(faction.exhaustion)}

@@ -8,6 +8,7 @@ import { pushFeed, newId, type Engagement, type SimContext } from '../context';
 import { groupOf, kmFromRoadStart, sameLocation, sortedCrewIds } from '../crews';
 import { crewNetwork, networkOf, ownedBy } from '../network';
 import { charName, leaderName, notifyOwner, sendToRetreat } from '../orders';
+import { spendUpTo } from '../money';
 import { crewPower, groupPower, leaderModifier, reportedPower, wantsToAttack } from '../power';
 import { chance, randRange } from '../rng';
 import { planRoute, travelHours } from '../routing';
@@ -311,6 +312,10 @@ function resolveHour(ctx: SimContext, b: Battle): void {
   }
 
   // The wider war feels every hour of fighting.
+  if (b.where.kind === 'node') {
+    const plaza = state.nodes[b.where.node];
+    if (plaza) plaza.combatHoursToday += 1;
+  }
   const region = state.regions[b.region];
   if (region) {
     region.combatHoursToday += 1;
@@ -572,9 +577,7 @@ export function capturePlaza(ctx: SimContext, node: Id, winners: CrewState[]): v
   plaza.halconCoverage = t.capturedPlazaHalcones;
   plaza.support = Math.max(0, plaza.support - t.capturedPlazaSupportLoss);
   plaza.claims = [];
-  const owner = state.characters[lead.owner];
-  if (owner) owner.cash += plaza.stash;
-  plaza.stash = 0;
+  // The stash house stays with the plaza, so its cash now belongs to the new owner.
   for (const c of winners) c.order = { type: 'garrison' };
   const name = world(content).node(node).name;
   pushFeed(state, 'critical', `${charName(ctx, lead.owner)} took ${name}${prev ? ` from ${charName(ctx, prev)}` : ''}.`, node, null);
@@ -683,14 +686,10 @@ function resupplyAndRecover(ctx: SimContext): void {
     }
     if (!friendly) continue;
     if (c.ammo < 100) {
-      const owner = state.characters[c.owner];
       const want = Math.min(100 - c.ammo, ct.ammoResupplyPerHour);
       const costPerPct = (economy.ammoResupplyPerMan * c.men) / 100;
-      const afford = owner ? (costPerPct > 0 ? Math.min(want, owner.cash / costPerPct) : want) : 0;
-      if (afford > 0 && owner) {
-        c.ammo += afford;
-        owner.cash -= afford * costPerPct;
-      }
+      const paid = costPerPct > 0 ? spendUpTo(state, content, c.owner, want * costPerPct, 'ammo') : 0;
+      c.ammo += costPerPct > 0 ? paid / costPerPct : want;
     }
     if (c.order.type === 'garrison' || c.order.type === 'idle' || c.order.type === 'lie_low') {
       const d = ct.moraleBaseline - c.morale;

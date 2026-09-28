@@ -4,10 +4,11 @@ A single-player, real-time-with-pause grand strategy game set in a Sinaloa
 cartel civil war, built as a browser game in TypeScript. The full design is in
 [docs/GDD.md](docs/GDD.md).
 
-**Status:** phases 1 (logistics and detection) and 2 (combat) of the roadmap
-are playable. Crews move, get spotted, ambush, clash, raid, and besiege;
-battles resolve hour by hour with player decisions; Culiacán is fought colonia
-by colonia. Scripted AI supply traffic keeps the roads busy. The economy,
+**Status:** phases 1 (logistics and detection), 2 (combat), and 3 (economy)
+of the roadmap are playable. Crews move, get spotted, ambush, clash, raid, and
+besiege; battles resolve hour by hour with player decisions; Culiacán is
+fought colonia by colonia; money flows daily from routes, extortion, labs, and
+rackets into stash houses and out weekly to payroll and halcones. The
 character systems, the State, info war, events, and the utility AI come in
 later phases. See the build log at the end of the GDD.
 
@@ -43,9 +44,10 @@ src/sim/             pure, deterministic simulation core (no DOM)
   signature.ts       signature and detection math
   knowledge.ts       what a network knows (UI and AI read through this)
   power.ts           combat strength and attack decisions
+  money.ts           cash, stash houses, and the ledger
   orders.ts          shared order and notification helpers
-  systems/           movement, detection, combat, characters, pulse, ai (live);
-                     economy, schemes, infowar, stateForces, events (stubs)
+  systems/           movement, detection, combat, economy, characters, pulse,
+                     ai (live); schemes, infowar, stateForces, events (stubs)
 src/ui/              React + Zustand shell, SVG maps
 tests/               Vitest unit tests and headless campaign runs
 ```
@@ -53,7 +55,7 @@ tests/               Vitest unit tests and headless campaign runs
 ## Content
 
 All content is first-draft data written for the game, ready for review:
-48 map nodes and 74 roads, 16 Culiacán colonias, 31 fictional characters
+48 map nodes and 74 roads, 10 trafficking routes, 16 Culiacán colonias, 31 fictional characters
 (2 heads, 24 lieutenants, 5 crew leaders), 40 message templates, and 44
 events. Characters are invented composites; their names deliberately avoid
 real people. The scripts that generated the drafts are not needed to edit

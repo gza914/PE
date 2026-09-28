@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Content } from '../src/data/content';
 import type { Command } from '../src/sim/commands';
 import { lastSeen } from '../src/sim/knowledge';
+import { cashOf } from '../src/sim/money';
 import { newGame } from '../src/sim/newGame';
 import { planRoute } from '../src/sim/routing';
 import { allowedRoadTypes, detectionChance, groupSpeedKmh, signature } from '../src/sim/signature';
@@ -300,7 +301,7 @@ describe('detection', () => {
     expect(seen?.men).toBe(12);
     const o = s.crews.x!.order;
     expect(o.type === 'move' && o.destination).toBe('mazatlan');
-    expect(s.characters.m_la_cruz!.cash).toBe(content.characters.find((ch) => ch.id === 'm_la_cruz')!.cash - c.tuning.detection.droneCost);
+    expect(cashOf(s, 'm_la_cruz')).toBe(content.characters.find((ch) => ch.id === 'm_la_cruz')!.cash - c.tuning.detection.droneCost);
   });
 
   it('a Sanguinario leader who spots a drone digs in to ambush', () => {

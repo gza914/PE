@@ -724,3 +724,25 @@ Design decisions made during the build:
 - Until prisoner events land, captives are ransomed automatically after 7 days.
 - Known gaps for later phases: Supply only drains (it regenerates from income in the economy phase), and nobody recruits, so a 270-day headless campaign loses about 40% of all men and roughly 10 characters, mostly small AI supply crews wiped out on the roads. The economy and utility-AI phases should change both.
 
+**Phase 3: economy.** Built:
+
+- Daily income from five streams: trafficking and tolls from 10 routes in `routes.json` (each route's value split across its nodes; trafficking if your side holds the route's source, tolls otherwise; each contested node cuts the route by 20%), extortion (businesses × rate × compliance), labs, and local rackets. Culiacán pays colonia by colonia to whoever holds each one.
+- Weekly payroll and halcones every Sunday. A missed payday costs 20 morale and a "paid late" opinion hit with every crew leader; a second in a row starts 10%-a-day desertion. Halcones nobody can pay walk away.
+- Stash houses: cash lives in the plazas you hold (plus a purse for cash outside any plaza). Income lands in the plaza that earned it, spending draws from the biggest stash, cash can be moved between your plazas, and whoever takes a plaza takes its stash.
+- Tribute: aligned characters pay 20% of daily income to their faction head; neutrals keep everything. Aligned characters can ask the head for cash once every 14 days.
+- Recruitment from a per-plaza pool that grows with size, support, and the owner's respect; recruits dilute crew skill. New crews can be raised with the pickups they need; vehicles can be bought; armored trucks are scarce (2 on the market, one more every 30 days).
+- Extortion rates move support and close businesses weekly; fighting in a plaza closes businesses and angers locals; quiet plazas slowly reopen.
+- Faction Supply now regenerates from faction income.
+- AI economy: AI lieutenants recruit depleted crews back to full strength when they can afford it, raise extortion and cut halcones when broke, and ease off where support collapses. AI supply runs now route around rival plazas.
+- Economy ledger (right panel): cash and stash houses, payroll countdown, weekly net, income by stream, a 14-day income-vs-costs chart with a table view, cash transfers, and faction aid. Plaza and crew panels gained extortion, recruiting, raising crews, and buying vehicles.
+
+Design decisions made during the build:
+
+- **Payroll is $600 per man per week, not $150.** At the GDD's starting values nearly every lieutenant earned several times their costs, so the "money pressure" target could never be met. With $600, 10 of 25 plaza holders start in the red (the poor rancho and town jefes, as the start tiers intend) while cities and faction heads run comfortable surpluses. Route values were cut to 35% and lab output to $1,500 a day for the same reason, and map business counts were divided by five.
+- Halcones are expensive relative to income, so watching every plaza is a real cost that broke characters cut first.
+- Colonia income goes to the owner of the largest crew holding the colonia, else the faction head, so holding Culiacán ground pays.
+- Retreating groups break contact on the road (only ambushes can still catch them). Found by campaign probes: beaten crews were being re-fought by the same enemy up to seven times in a row.
+- Halcón coverage can be set to any whole number, not just steps of 10; the map's 45s and 55s could not be adjusted before.
+
+Measured in 270-day headless campaigns: 4 of 24 lieutenants face a payroll shortfall (the target is "a typical lieutenant"). With supply runs avoiding rival plazas and no AI offensives yet, headless campaigns now have no battles at all, so nothing forces war spending. The utility AI's offensives should both restart the war and raise shortfalls toward the target.
+

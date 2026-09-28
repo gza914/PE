@@ -12,6 +12,7 @@ import {
   MapFileSchema,
   MessagesFileSchema,
   RoadsFileSchema,
+  RoutesFileSchema,
   TraitsFileSchema,
   TuningSchema,
   type CharacterDef,
@@ -22,6 +23,7 @@ import {
   type MessageTemplate,
   type Region,
   type Road,
+  type TradeRoute,
   type Street,
   type Trait,
   type Tuning,
@@ -31,6 +33,7 @@ export interface Content {
   regions: Region[];
   nodes: MapNode[];
   roads: Road[];
+  routes: TradeRoute[];
   culiacan: { parentNode: string; positiveFaction: string; colonias: Colonia[]; streets: Street[] };
   factions: Faction[];
   traits: Trait[];
@@ -44,6 +47,7 @@ export interface Content {
 export interface RawContent {
   map: unknown;
   roads: unknown;
+  routes: unknown;
   colonias: unknown;
   factions: unknown;
   traits: unknown;
@@ -75,6 +79,7 @@ export function loadContent(raw: RawContent): Content {
 
   const map = parse(MapFileSchema, raw.map, 'map.json', problems);
   const roads = parse(RoadsFileSchema, raw.roads, 'roads.json', problems);
+  const routes = parse(RoutesFileSchema, raw.routes, 'routes.json', problems);
   const colonias = parse(ColoniasFileSchema, raw.colonias, 'colonias.json', problems);
   const factions = parse(FactionsFileSchema, raw.factions, 'factions.json', problems);
   const traits = parse(TraitsFileSchema, raw.traits, 'traits.json', problems);
@@ -87,7 +92,7 @@ export function loadContent(raw: RawContent): Content {
     if (ev) events.push(ev);
   }
 
-  if (!map || !roads || !colonias || !factions || !traits || !characters || !messages || !tuning || problems.length) {
+  if (!map || !roads || !routes || !colonias || !factions || !traits || !characters || !messages || !tuning || problems.length) {
     throw new ContentError(problems);
   }
 
@@ -95,6 +100,7 @@ export function loadContent(raw: RawContent): Content {
     regions: map.regions,
     nodes: map.nodes,
     roads: roads.roads,
+    routes: routes.routes,
     culiacan: colonias,
     factions: factions.factions,
     traits: traits.traits,
@@ -131,6 +137,7 @@ export function crossReferenceProblems(c: Content): string[] {
     ['region', c.regions.map((r) => r.id)],
     ['node', c.nodes.map((n) => n.id)],
     ['road', c.roads.map((r) => r.id)],
+    ['route', c.routes.map((r) => r.id)],
     ['colonia', c.culiacan.colonias.map((col) => col.id)],
     ['faction', c.factions.map((f) => f.id)],
     ['trait', c.traits.map((t) => t.id)],
@@ -176,6 +183,19 @@ export function crossReferenceProblems(c: Content): string[] {
       }
     }
     for (const n of c.nodes) if (!seen.has(n.id)) p.push(`roads.json: node "${n.id}" is unreachable`);
+  }
+
+  for (const route of c.routes) {
+    const where = `routes.json: route "${route.id}"`;
+    for (const n of route.nodes) if (!nodeIds.has(n)) p.push(`${where} has unknown node "${n}"`);
+    for (const d of duplicates(route.nodes)) p.push(`${where} visits "${d}" twice`);
+    for (let i = 1; i < route.nodes.length; i++) {
+      const a = route.nodes[i - 1]!;
+      const b = route.nodes[i]!;
+      if (!c.roads.some((r) => (r.from === a && r.to === b) || (r.from === b && r.to === a))) p.push(`${where} has no road between "${a}" and "${b}"`);
+    }
+    const last = c.nodes.find((n) => n.id === route.nodes[route.nodes.length - 1]);
+    if (last && last.type !== 'border_exit') p.push(`${where} must end at a border exit, not "${last.id}"`);
   }
 
   const cul = c.culiacan;

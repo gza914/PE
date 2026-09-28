@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { formatDateTime } from '../sim/clock';
 import { ledger } from '../sim/knowledge';
+import { EconomyPanel } from './panels/EconomyPanel';
 import { useGame } from './store';
 import { charLabel, locationName, playerNetwork, vehicleSummary } from './util';
 
 export function Feed() {
-  const [tab, setTab] = useState<'feed' | 'intel'>('feed');
+  const [tab, setTab] = useState<'feed' | 'intel' | 'money'>('feed');
   return (
     <div className="feed">
       <div className="tabs">
@@ -13,10 +14,13 @@ export function Feed() {
           Reports
         </button>
         <button className={tab === 'intel' ? 'on' : ''} onClick={() => setTab('intel')}>
-          Intel ledger
+          Intel
+        </button>
+        <button className={tab === 'money' ? 'on' : ''} onClick={() => setTab('money')}>
+          Economy
         </button>
       </div>
-      {tab === 'feed' ? <ReportFeed /> : <IntelLedger />}
+      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : <EconomyPanel />}
     </div>
   );
 }

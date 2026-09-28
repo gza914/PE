@@ -9,7 +9,7 @@
       "x": 470,
       "y": 60,
       "control": 80,
-      "businesses": 120
+      "businesses": 24
     },
     {
       "id": "col_humaya",
@@ -17,7 +17,7 @@
       "x": 600,
       "y": 90,
       "control": 72,
-      "businesses": 300
+      "businesses": 60
     },
     {
       "id": "col_infonavit_humaya",
@@ -25,7 +25,7 @@
       "x": 720,
       "y": 150,
       "control": 62,
-      "businesses": 260
+      "businesses": 52
     },
     {
       "id": "col_tierra_blanca",
@@ -33,7 +33,7 @@
       "x": 380,
       "y": 190,
       "control": 45,
-      "businesses": 280
+      "businesses": 56
     },
     {
       "id": "col_tres_rios",
@@ -41,7 +41,7 @@
       "x": 620,
       "y": 230,
       "control": 35,
-      "businesses": 450
+      "businesses": 90
     },
     {
       "id": "col_aguaruto",
@@ -49,7 +49,7 @@
       "x": 120,
       "y": 250,
       "control": 30,
-      "businesses": 150
+      "businesses": 30
     },
     {
       "id": "col_bachigualato",
@@ -57,7 +57,7 @@
       "x": 240,
       "y": 320,
       "control": 15,
-      "businesses": 200
+      "businesses": 40
     },
     {
       "id": "col_centro",
@@ -65,7 +65,7 @@
       "x": 470,
       "y": 330,
       "control": 0,
-      "businesses": 800
+      "businesses": 160
     },
     {
       "id": "col_guadalupe",
@@ -73,7 +73,7 @@
       "x": 360,
       "y": 410,
       "control": 10,
-      "businesses": 300
+      "businesses": 60
     },
     {
       "id": "col_las_quintas",
@@ -81,7 +81,7 @@
       "x": 620,
       "y": 360,
       "control": -10,
-      "businesses": 350
+      "businesses": 70
     },
     {
       "id": "col_chapultepec",
@@ -89,7 +89,7 @@
       "x": 500,
       "y": 440,
       "control": -20,
-      "businesses": 300
+      "businesses": 60
     },
     {
       "id": "col_colinas_de_san_miguel",
@@ -97,7 +97,7 @@
       "x": 790,
       "y": 380,
       "control": -40,
-      "businesses": 220
+      "businesses": 44
     },
     {
       "id": "col_valle_alto",
@@ -105,7 +105,7 @@
       "x": 230,
       "y": 500,
       "control": -45,
-      "businesses": 250
+      "businesses": 50
     },
     {
       "id": "col_infonavit_barrancos",
@@ -113,7 +113,7 @@
       "x": 640,
       "y": 520,
       "control": -62,
-      "businesses": 260
+      "businesses": 52
     },
     {
       "id": "col_barrancos",
@@ -121,7 +121,7 @@
       "x": 500,
       "y": 580,
       "control": -70,
-      "businesses": 240
+      "businesses": 48
     },
     {
       "id": "col_el_diez",
@@ -129,7 +129,7 @@
       "x": 330,
       "y": 640,
       "control": -78,
-      "businesses": 180
+      "businesses": 36
     }
   ],
   "streets": [
