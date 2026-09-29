@@ -12,7 +12,7 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
-body { margin: 0; overflow: hidden; background: var(--bg); color-scheme: dark; }
+body { margin: 0; background: var(--bg); color-scheme: dark; }
 button { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; cursor: pointer; }
 button:hover { border-color: var(--muted); }
 .mono { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; }
@@ -24,6 +24,7 @@ h3 { font-size: 14px; margin-top: 16px; }
 
 .app { display: grid; grid-template: auto minmax(0, 1fr) / 280px minmax(0, 1fr) 320px; height: 100%; }
 .app > * { min-width: 0; min-height: 0; }
+.app { overflow: hidden; }
 .topbar { flex-wrap: wrap; row-gap: 4px; padding-block: 6px; min-height: 44px; }
 .map { overscroll-behavior: contain; }
 .crash { margin: 12px; padding: 12px; border: 1px solid #ff7b6b; border-radius: 6px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
