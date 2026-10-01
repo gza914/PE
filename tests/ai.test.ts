@@ -19,6 +19,8 @@ const only = (on: Partial<Layers>) =>
     noWorld(t);
     t.roads.brecha.breakdownChancePerSegment = 0;
     t.ai.layers = { ...t.ai.layers, ...on };
+    // Mechanics tests need offensives to happen; campaign pacing is the balance runner's job.
+    t.ai.strategic.attackForceRatio = 3;
   });
 
 function cleared(c: Content, playerId = 'c_mazatlan', seed = 1): GameState {

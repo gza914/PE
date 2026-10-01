@@ -363,7 +363,7 @@
       }
     },
     "contestedRouteThroughputPenalty": 0.2,
-    "payrollPerManPerWeek": 600,
+    "payrollPerManPerWeek": 750,
     "halconCostPer10CoveragePerWeek": 2000,
     "ammoResupplyPerMan": 30,
     "factionTributeRate": 0.2,
@@ -722,7 +722,7 @@
       "threshold": 1,
       "maxCounterCash": 150000,
       "defendBase": 1.2,
-      "proposeDailyChance": 0.12,
+      "proposeDailyChance": 0.03,
       "defendProposeDailyChance": 0.4,
       "commitOvershoot": 1.2,
       "defendCrews": 2,
@@ -770,7 +770,7 @@
   "endings": {
     "factionCollapseSuccessionDays": 7,
     "territorialDefeatShare": 0.2,
-    "territorialDefeatDays": 14,
+    "territorialDefeatDays": 28,
     "scoreWeights": {
       "territory": 0.3,
       "wealth": 0.2,
@@ -829,7 +829,7 @@
     "strategic": {
       "hourOfDay": 6,
       "offensiveMinSupply": 40,
-      "attackForceRatio": 3.0,
+      "attackForceRatio": 4.25,
       "lateAttackForceRatio": 1.6,
       "lateWarStartDay": 150,
       "lateWarFullDay": 240,
@@ -928,15 +928,15 @@
     },
     "economyReserveWeeks": 0.5,
     "forces": {
-      "trainReserveWeeks": 4,
+      "trainReserveWeeks": 12,
       "trainBudgetDays": 7,
       "weaponsTargetGear": 3,
-      "weaponsReserveWeeks": 4,
-      "veteransReserveWeeks": 6,
-      "mercReserveWeeks": 8,
+      "weaponsReserveWeeks": 12,
+      "veteransReserveWeeks": 18,
+      "mercReserveWeeks": 24,
       "mercAfterBattleDays": 3,
       "mercMen": 15,
-      "payCover": 1.5
+      "payCover": 3
     },
     "forceGrowth": {
       "startDay": 90,
@@ -1193,8 +1193,8 @@
     "campGainPerManPerDay": 0.25,
     "holderGainPerDay": 2,
     "garrisonGainPerManPerDay": 0.03,
-    "decayPerDay": 2,
-    "shareWeight": 0.3,
+    "decayPerDay": 0.6,
+    "shareWeight": 0.35,
     "campVisibility": {
       "sierra_hub": 0.25,
       "rancheria": 0.3,

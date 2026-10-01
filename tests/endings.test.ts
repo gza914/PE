@@ -52,13 +52,15 @@ describe('endings', () => {
     expect(Math.abs((shares.get('chapitos') ?? 0) - (shares.get('mayos') ?? 0))).toBeLessThan(0.1);
   });
 
-  it('territorial defeat: under 20% of the map for 14 days', () => {
+  it('territorial defeat: under the defeat share of the map, towns and hills, for long enough', () => {
+    const days = calm.tuning.endings.territorialDefeatDays;
     let s = newGame(calm, { seed: 1, playerId: 'c_mazatlan' });
     for (const n of Object.values(s.nodes)) if (n.owner && s.characters[n.owner]!.faction === 'mayos' && n.id !== 'eldorado') n.owner = 'chapitos_head';
+    for (const [id, z] of Object.entries(s.countryside)) if (id !== 'eldorado') s.countryside[id] = z.mayos ? { chapitos: 60 } : z;
     for (const c of Object.values(s.colonias)) c.control = 100;
-    s = runTo(s, 13 * 24);
+    s = runTo(s, (days - 1) * 24);
     expect(s.ended).toBeNull();
-    s = runTo(s, 15 * 24);
+    s = runTo(s, (days + 1) * 24);
     expect(s.ended?.reason).toBe('territorial_defeat');
     expect(s.ended?.winner).toBe('chapitos');
   });
