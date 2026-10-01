@@ -102,7 +102,7 @@ function forces(ctx: SimContext, id: Id, plazas: PlazaState[], weekly: number, c
   const days = Math.min(7, ch.ledger.length);
   const income = days > 0 ? (ledgerTotals(state, id, days).income * 7) / days : 0;
   let surplus = income - weekly;
-  const affords = (extraPay: number) => surplus >= extraPay * a.payCover;
+  const affords = (extraPay: number) => a.payCover === 0 || days === 0 || surplus >= extraPay * a.payCover;
   const mine = Object.values(state.crews)
     .filter((c) => c.owner === id && c.battle === null && c.location.kind === 'node' && state.nodes[c.location.node]?.owner === id && c.order.type === 'garrison' && !onDuty(state, c.id) && !onOperation(state, c.id))
     .sort((x, y) => (x.id < y.id ? -1 : 1));

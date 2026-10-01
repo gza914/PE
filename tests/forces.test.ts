@@ -146,6 +146,8 @@ describe('AI forces', () => {
       noWorld(x);
       noBreakdowns(x);
       x.ai.layers.economy = true;
+      // A new game has no income history to judge new pay by.
+      x.ai.forces.payCover = 0;
     });
     let s = empty('c_mazatlan', c);
     addCrew(s, 'g', 'c_san_ignacio', 'san_ignacio', { men: 10, gear: 1, skill: 1 });

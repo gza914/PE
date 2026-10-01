@@ -1078,7 +1078,7 @@ export const TuningSchema = z.object({
       /** Hire mercenaries when a plaza of theirs saw fighting this recently. */
       mercAfterBattleDays: z.number().nonnegative(),
       mercMen: z.number().int().positive(),
-      /** New weekly pay is taken on only if last week's income covers bills plus this multiple of it. */
+      /** New weekly pay is taken on only if last week's income covers bills plus this multiple of it (0: no check). */
       payCover: z.number().nonnegative(),
     }),
     /** Switch AI layers off (tests, debugging). */
