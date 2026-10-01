@@ -348,20 +348,22 @@ Every faction head, lieutenant, crew leader, and key figure is a character with 
 
 Your first decision is whose side you are on, or whether you take a side at all. Every option pays and every option costs.
 
+**A faction is a coalition, not a chain of command.** Its members fight for the same thing under a central leader, but the head is not a supreme commander with the final say. He leads by weight: the largest force, the faction's money, and the offensives with the most men behind them. His opinion governs aid, how many of the faction's crews answer when you call for help, and whether he backs you in a dispute. Lieutenants keep what they take and run their own operations alongside his plan, or against his priorities. See "Coalition warfare" below for the next phase built on this.
+
 **Opening choice.** On day 0, the player declares for the Chapitos, declares for the Mayos, or stays neutral. Each starting character begins with a lean: an opinion bonus toward one faction based on history and family.
 
 **Faction rank.** Aligned characters hold a rank: associate, lieutenant, senior lieutenant, or inner circle. Rank unlocks faction resources, a voice in faction war plans, and grants of captured plazas. Rank rises with faction opinion, battles won for the faction, and tribute paid.
 
-**Faction requests.** Faction heads send duties: send crews to a battle, hit a target, pay a special levy, or hand over a suspected traitor. Accepting builds opinion. Refusing costs it, and repeated refusals mark you as unreliable.
+**Faction requests.** Faction heads send duties: send crews to a battle, hit a target, pay a special levy, or hand over a suspected traitor. Accepting and delivering builds opinion. Because the faction is a coalition, refusing costs only a little; what the head remembers is being needed and not showing up (accepting and failing to deliver, or refusing to help defend a plaza that then falls). Levies are a negotiation: pay part, or ask for something back.
 
 **Staying neutral.**
 
 - Both factions' opinion of you falls by 1 per day, down to −50.
-- Neighbors build claims on your plaza over time. When a neighbor has a strong claim, a military edge, and their faction's blessing, they attack.
+- Neighbors may move on your plaza when they have a military edge. There are no formal claims: whoever takes a plaza keeps it.
 - Around days 14 and 30, faction heads send ultimatums: choose a side now, with better terms than you would get later.
 - Late in the war, a desperate faction may offer kingmaker terms: large rewards for a neutral who joins at the right moment.
 
-**Switching sides.** Your old faction marks you as a traitor (−100 opinion, permanent). Leaders under you who were loyal to that faction may defect. Your new faction starts suspicious (−20), but you negotiate terms: keep your plazas, and claim an enemy plaza or two.
+**Switching sides.** Leaving a coalition is politics, not a crime, but it is costly: the old head and members who liked you remember it, leaders under you who were loyal to that faction may defect, and your new faction starts suspicious (−20). You negotiate terms: keep your plazas, and take an enemy plaza or two. Coming back later is possible, at a price.
 
 **Pacts between characters.**
 
@@ -370,21 +372,199 @@ Your first decision is whose side you are on, or whether you take a side at all.
 | Non-aggression | Neither attacks the other's plazas | Yes, secretly; discovery angers your faction |
 | Safe passage | Crews move through the other's territory unhindered | Yes, secretly |
 | Mutual defense | Each is asked to reinforce the other when attacked | No |
-| Joint attack | Take a plaza together and split it | No |
+| Joint attack | Take a plaza together; spoils by contribution (see "Coalition warfare") | No |
 | Route share | Split trafficking income on a shared route | Yes |
 | Local truce | Stop fighting in one area for a set time | Yes; common during lulls |
 
-**Foreign alliances.** Outside cartels, modeled on groups like CJNG, can be approached by any character, including AI faction heads. That means an AI faction can bring in outsiders and reshape the war.
+**Foreign alliances.** Two outside cartels take part: CJNG and the Gulf cartel (CdG). Faction heads and the player can deal with them (AI lieutenants cannot), neutrals included. Hiring them is the hirer's own business: no faction head objects, because outsiders are just muscle, and an outsider holding a plaza becomes, indirectly, part of the coalition. The full design is in "Coalition warfare" below.
 
-| They offer | They take |
-| --- | --- |
-| Crews, often high Skill | A 25–40% cut of routes through your territory |
-| Weapons (gear upgrades) and armored trucks | Their people inside your plaza, with their own halcones: they see everything you do |
-| Cash advances | Loyalist backlash: a "sold out" opinion penalty from Sinaloa characters |
-
-Every foreign ally has an ambition meter on your plaza. It grows while they are strong and you are weak. When it peaks, they stop being your ally and start being your next war.
+Every foreign ally has an ambition meter. It grows while they are strong and the coalition is weak. When it peaks, they stop being an associate and start being your next war.
 
 **Ending the war by negotiation.** When both factions stay above 70 Exhaustion for 14 days, faction heads can open truce talks. Aligned players of high rank get a say in the terms.
+
+## Coalition warfare (next phase)
+
+Agreed in design discussion after the five-phase build, for the next phase of work. It covers faction dynamics, joint warfare, alliances and truces, outside cartels, capturing bosses, the countryside around each plaza, recruitment, intelligence, and battles. Numbers here are starting proposals for tuning.
+
+### Joint operations between bosses
+
+A peer-to-peer proposal, separate from faction requests. A head can ask you for things; with peers you can only ask.
+
+- **Proposing.** Select an enemy plaza and choose Propose joint attack. Invitees are lieutenants on your side with crews within about 12 hours' travel, and the owners of other crews garrisoned in your own town. You set a strike time and an offer: who gets the plaza (you, them, or by contribution), cash up front, or a share of the plaza's income for some weeks.
+- **How invitees decide.** In rough order: can they spare the men (rivals near their own plaza is an automatic no); do they think it will work (judged from their own side's reports); what is in it for them (the offer and their goal); then traits and their opinion of you.
+- **Answers.** Yes (naming which crews and how many men), a counter-offer ("only if I get the plaza", "only for $50,000", "not before Thursday"), or no with the reason shown ("needs his men home: rival crews near Altata").
+- **No consequences for refusing.** A joint operation is just a plan. Asking, refusing, and asking again cost nothing, with no cooldown.
+- **Spoils by contribution.** Unless the plan said otherwise, the plaza goes to the highest contribution score: each man who fought counts 1, each man lost counts 2, and crews that arrived after the fight was decided count nothing. Ties go to the proposer.
+- **Command.** You command only your own crews in the battle. Allies fight by their own AI and personality: a cautious ally may hold while you assault, an impulsive one may charge. Choosing partners matters.
+- **Shared intel.** Participants pool what they know about the target into the operation's estimate, so partners with informants are worth more.
+- **Leaks.** Each operation has a small daily chance of leaking to the defenders, higher with more participants and lower when participants have high Astucia. A leak gives the defending side a report, and its AI may reinforce.
+- **Joint defense.** The same menu pointed at your own plaza: "Help me hold Altata until Sunday." Free to refuse, same contribution rules if fighting happens.
+- **Both directions.** AI lieutenants propose joint operations to the player and to each other under the same rules.
+- **Built on** the coordinated arrival time that faction offensives already use.
+
+### Formations
+
+| Level | Size | What it is |
+| --- | --- | --- |
+| Crew | up to 50 men (40 today) | One leader, one marker |
+| Column | up to 100 men, two crews | Moves, is ordered, and fights as one unit; easier to spot than a small crew, and limited to roads both crews can use. The existing escort mechanic made official. |
+| Operation | any number of crews and columns, from several owners | A shared target and strike time; each part travels its own route and arrives together |
+| Campaign (later, optional) | several operations | A chain of objectives with a shared supply and exhaustion budget |
+
+The column is the largest unit on the map. Anything bigger is a plan, not a unit.
+
+### Coalition politics
+
+- **No claims.** Whoever takes a plaza keeps it, whether through the head's offensive, a joint operation, or a lieutenant's own raid. The head has no veto.
+- **No open infighting for now.** Members of the same coalition cannot attack each other's plazas. Rivalry inside a coalition plays out through schemes, rumors, and refusals.
+- **The head's role** follows the coalition model in "Factions and diplomacy": influence through force, money, aid, and backing, not orders.
+
+### Pacts and the Diplomacy screen
+
+One Diplomacy screen shows every relationship and every deal on the table. Every pact is proposed through the same offer menu (terms, plus what you put in). Breaking a pact is always possible, never free, and always visible to the person you broke it with.
+
+| Pact | With whom | Effect | Breaking it |
+| --- | --- | --- | --- |
+| Joint operation | Your own side | One coordinated attack or defense | Not showing up after agreeing is what people remember |
+| Mutual defense | Your own side | When either is attacked, the other is called and expected to come | Ignoring a call is a betrayal |
+| Non-aggression | Anyone, secretly across faction lines | Neither attacks the other's plazas | Discovery angers your own head |
+| Safe passage | Anyone | Each other's crews pass without interception | Ambushing someone you gave passage is a betrayal |
+| Route share | Anyone | Split trafficking income on a shared route | Stop paying and it ends |
+| Local truce | Across faction lines | No fighting in one region for a set time (built, but only through events so far) | Striking during it costs credibility heavily |
+
+### Outside cartels: CJNG and CdG
+
+| | CJNG | CdG (Gulf) |
+| --- | --- | --- |
+| Wants | Plazas and routes: a foothold in Sinaloa | Cash, and the eastern routes |
+| Troops | Better trained and equipped, fewer on offer | More men, cheaper, rougher |
+| Ambition | High: will come for you if you grow weak | Lower: more purely mercenary |
+
+- **Who deals with them.** Faction heads and the player only. Hiring them angers nobody.
+- **Contact.** You need a way to reach them: hold a port or a border exit, or receive their envoy. Neutrals are courted too, and get better terms, because they are more attractive partners.
+- **Negotiation menu.** You ask for men at a quality level, weapons (gear upgrades for existing crews), armored trucks, or a cash advance. You offer cash up front, a weekly retainer, a percentage of a route, a plaza now (their people and lookouts move in), or a plaza promised later (they remember, and come to collect). They counter; about three rounds before they lose interest.
+- **Troop quality.**
+
+| Tier | Skill | Price per man | Weekly pay | Typical offer |
+| --- | --- | --- | --- | --- |
+| Carne de cañón | 1 | Cheap | Low | up to 40 men |
+| Sicarios | 3 | Moderate | Moderate | 20–30 men |
+| Elite (ex-military) | 5 | Several times more | High | 8–15 men |
+
+Elite troops cost more for fewer men; they are also quieter on the roads and harder to break in a fight.
+
+- **Loaned, not owned.** Hired troops stay their cartel's. You command them fully and they show your color with their cartel's mark, but their retainer goes to their cartel, they never count as your men for territory, score, or succession, and if you die they go home, not to your heir.
+- **Loyalty.** Each contingent has a loyalty meter. It falls with losses, missed pay, hopeless orders, and losing streaks, and rises with wins, pay on time, and sensible orders. Low loyalty means men desert in small numbers; at zero the contingent goes home.
+- **Recall.** Their boss can call them home when his own war needs them, with a little warning.
+- **Defection.** A contingent that likes you and resents its cartel may offer to stay as your men. Accepting makes them ordinary crews you own and makes that cartel hostile (it may raid you or back your enemies). Refusing changes nothing.
+- **Associates of the coalition.** If an outside cartel takes or is given a plaza, it holds it with its own crews and lookouts, keeps that plaza's income, and counts toward the coalition's share of the map. It answers calls for help and joins operations when it suits it.
+- **Ambition.** Their ambition meter grows while they are strong and the coalition is weak. At its peak they declare for themselves and their plazas become a third front.
+- **AI.** Rival faction heads can hire them too, so outside crews may fight for the other side.
+
+### Capturing bosses
+
+- **The boss must be there.** Each boss rides with one personal crew, and can only be captured in a fight that crew is in. Intel can say where he sleeps tonight; a boss can also be run down while fleeing a defeat.
+- **The capture roll,** when his side loses:
+
+| Factor | Effect |
+| --- | --- |
+| Force ratio | The bigger the attackers' advantage, the higher the chance; overwhelming odds at a rancheria make capture likely |
+| Encirclement | Attackers arriving from two or more directions cut off escape: a large bonus |
+| Rank | Crew leader easy; lieutenant moderate; senior lieutenant hard; head very hard (bodyguards, safehouses, getaway plans) |
+| Traits and terrain | Paranoico and Discreto bosses slip away more often; the sierra helps escape, a town traps |
+
+  If he escapes, he flees to his nearest friendly plaza or into the countryside.
+- **Who decides.** The captor decides the captive's fate, including when an ally's crew made the capture in your joint operation.
+- **What to do with a captive.**
+
+| Option | What happens |
+| --- | --- |
+| Ransom | His side pays, scaled by rank. Money, and a grudge. |
+| Trade | Swap him for your own captured people. |
+| Interrogate | Reveals his side's garrisons, plans, and schemes; each session risks his health and angers his family. |
+| Turn him | He joins you as a lieutenant with his remaining crews at low loyalty; easier if he resented his own head. |
+| Leverage | Hold him to force a local truce or a deal from his faction. |
+| Hand him to the State | Calentura falls sharply and the State likes you; other narcos see a snitch and respect falls. |
+| Execute | Fear rises, calentura spikes, and his family starts a vendetta. |
+| Release | He owes you: opinion rises sharply, and he may repay it. |
+
+- **Symmetric.** The player and the player's lieutenants can be captured by the same rules. AI captors choose by personality (a Sanguinario executes, a Codicioso ransoms). This replaces the automatic seven-day ransom placeholder.
+
+### A boss who has lost everything
+
+Losing every plaza no longer means fading away. The boss chooses, and AI bosses choose by goal and traits:
+
+| Choice | What it means |
+| --- | --- |
+| Go to ground | Take the remaining men and money into the countryside near the old plaza; raid, ambush, and wait for the garrison to leave (Vengativo). |
+| Serve another boss | Join a stronger boss on the same side as one of his lieutenants; crews merge into his force and rank drops (Leal). |
+| Go neutral and rebuild | Leave the faction with men and cash; hire mercenaries or outsiders and take an undefended plaza anywhere (Ambicioso). |
+| Defect | Offer himself to the other side, with his knowledge of the old side's ground. |
+| Flee Sinaloa | Leave the board with the cash; may return months later as an event (Cobarde). |
+
+The player is never eliminated for losing plazas alone; the game ends only with death without an heir, or extradition.
+
+### The countryside around each plaza
+
+Every plaza gets one surrounding countryside zone, sized by the town (wide for a city, small for a rancheria). Each zone holds two separate facts: who holds the plaza (the town, as today) and how much presence each side has in its countryside (an influence meter from 0 to 100 per side, raised by crews camped there and by local support, decaying without them). They can disagree: the Mayos hold Escuinapa, while Chapitos remnants keep 60 influence in the hills around it.
+
+- **Camping.** A new location, "in the hills around Escuinapa". Camps have a much lower signature in sierra and rancheria country, so finding them takes informants or drones. Camped crews can raid the town, ambush roads leaving it, harass supply runs, and tax the rural economy.
+- **Opportunism.** When the garrison drops below what the campers can beat, they are likely to strike. The AI does this too.
+- **Sweeps.** Clearing a countryside is its own operation: a rural skirmish in which the campers have the terrain.
+- **Roads** take their color from the countryside they pass through: safer for the dominant side's convoys, riskier for the other's. Trafficking routes through contested countryside earn less.
+- **Labs** move into the countryside: sierra labs sit outside town, and holding the countryside protects them.
+- **Map.** The plaza dot shows who holds the town; a soft colored zone around it shows countryside influence, blended where contested.
+- **Winning.** Countryside influence counts toward the share of the map at partial weight, about 30% of the plaza's value, so finishing an enemy means clearing the hills too. War length must be retuned once this lands.
+- **Precedent.** Culiacán's colonias already work this way (control meters that crews push and that flip at ±60); the countryside reuses the idea at state scale.
+
+### Recruitment
+
+| Source | Speed and cost | Notes |
+| --- | --- | --- |
+| Local recruits | Cheap, slow | Low skill; limited by each town's pool (as today) |
+| Training camps | Daily cost over days | Send recruits or a crew to a camp to gain skill; cheaper in the sierra; camps raise calentura and can be found and hit |
+| Hired veterans | Expensive | Ex-soldiers and ex-police, skilled at once, few at a time |
+| Mercenaries from outside Sinaloa | Fast, premium price | Loyalty risk like outside troops, but no cartel to recall them; they leave when the money stops |
+| Outside cartel contingents | Negotiated | See above |
+
+Skill (1–5) and gear (1–5) get names the player sees, such as Carne de cañón, Sicario, Veteran, and Elite. Weapons become their own purchase, separate from vehicles. Weekly pay scales with tier, which also gives the economy the money pressure it currently lacks.
+
+### Intelligence as estimates
+
+Sightings become ranges that narrow as sources accumulate, instead of single numbers.
+
+- **Drones over towns.** Today drones watch roads only. Over a town, a drone counts vehicles and anyone in the street, and misses men indoors.
+- **Undercover informants.** Planted in a town for a fee; a few days to settle in, then regular reports. Each day carries a chance of discovery, higher where rivals have more lookouts and a sharper boss. A caught informant is lost, along with his handler's cover.
+- **Estimates.** A report is a sample ("10 men at the bar on Calle Juárez"), turned into an estimate from town size and informant quality: "probably 25–45 men, most likely about 35." Several sources narrow the range; age widens it again.
+- **Same rules for everyone.** The UI shows ranges everywhere, and the AI plans from the same ranges, so it can be fooled the same way and planted rumors keep working.
+
+### Battles
+
+Battles keep resolving hour by hour, but give a decision point every two to three hours instead of pausing only when a side wavers. The player picks a stance for the next stretch:
+
+| Stance | Effect |
+| --- | --- |
+| Assault | More damage dealt and taken; best when outnumbering the enemy |
+| Hold | Less damage both ways; buys time for reinforcements |
+| Flank | Needs two crews and suitable terrain; a large bonus if it works, exposed if it fails |
+| Probe | Low losses; reveals the enemy's true strength |
+
+One-off actions join the existing ones (withdraw, push the armored truck, call for help, commit reserves, accept surrender): dig in (defenders spend an hour fortifying), a drone overhead (see reinforcements coming), hit the relief column (send a crew to ambush help on its way), offer terms mid-fight (let them leave, or ransom their leader), and execute prisoners (fear up, calentura way up, families turn against you).
+
+### New screens
+
+Diplomacy (pacts, peers, outside cartels, offers waiting); Operations (joint attacks and offensives you are in, timing, who has committed); Forces (every crew and column, men, quality, loyalty of hired troops, pay, location); Recruitment (pool, camps, veterans, mercenaries); Intel (each plaza's strength as a range, with sources and their age); Outside cartels (relationship, ambition, contingents, negotiation).
+
+### Build order
+
+1. Joint operations and the Diplomacy screen (the other pacts reuse its offer menu); coalition rule changes to requests, levies, and side switching.
+2. Intel estimates, drones over towns, and informants.
+3. Recruitment depth, crews of 50, and columns.
+4. Outside cartels (built on recruitment and loyalty).
+5. Capturing bosses and the choices for a boss who has lost everything, with countryside step one (camps, influence, the tinted map, remnants who hide, raid, and retake).
+6. Countryside step two: roads colored by countryside, rural income, labs out of town.
+7. Battle stances and actions.
+8. The remaining screens as each system lands, and retuning war length for countryside influence.
 
 ## The State
 
@@ -650,6 +830,8 @@ Build in five phases, logistics first, because the convoy-and-detection layer is
 
 Phases 1 and 2 prove the core fantasy on their own. Phases 3–5 turn a tactics toy into a full campaign.
 
+**After the five phases.** All five phases are built (see the build log). The next phase is "Coalition warfare", designed above, with its own build order.
+
 **Out of scope for version 1.** Multiplayer, 3D or animated combat, voice or video media, a mobile layout, and procedurally generated maps. Each could come later without changing the architecture.
 
 **How to hand this to Claude Code.**
@@ -680,7 +862,7 @@ Every starting value in this document goes into tuning.json. The headless AI-vs-
 - [x] Final Culiacán colonia list and starting control values: first draft in `colonias.json` (16 real colonias; review)
 - [x] Starting plaza ownership across the state: first draft in `map.json` (48 nodes; review)
 - [x] The 30-character roster: first draft in `characters.json` (2 heads, 24 lieutenants, 5 crew leaders; review)
-- [ ] Faction names in game: real names or lightly fictionalized? (working names: Chapitos, Mayos)
+- [ ] Faction names in game: real names or lightly fictionalized? (working names: Chapitos, Mayos; the outside cartels are named CJNG and CdG by decision)
 - [x] Message library and the 40 starter events: first drafts in `messages.json` (40) and `events/` (44); review
 - [ ] Final title: keep Cartel Conquest?
 - [ ] Where it will be released (itch.io, Steam), which sets the content review bar
