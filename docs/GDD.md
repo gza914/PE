@@ -1027,3 +1027,37 @@ Measured over 80 AI-vs-AI campaigns (`RUNS=80 npm run balance`; neutrals on odd 
 Per campaign the State spends 8% of region-days at surge or worse and makes 2.6 raids and 3.5 capture operations; 0.7 characters are jailed and 0.3 extradited. About 160 events fire in all, and 5.7 characters die. A tick takes about 3 ms, up from 1.3.
 
 Money pressure improved with checkpoint fees, bribes, and seizures, but it is still a miss. Not built in this phase: pacts other than local truces (non-aggression, safe passage, mutual defense, joint attack, route share), foreign allies' ambition meter, and faction rank progression.
+
+### Coalition warfare (built)
+
+Built in the order above, one commit per step:
+
+1. **Joint operations and pacts.** Proposals with strike and hold hours, cash and income-share sweeteners, and a plaza rule (proposer, a named ally, or contribution). Invitees answer with a readable reason or a counter (cash or the plaza); no-shows are remembered. Plans can leak. Pacts: non-aggression, safe passage, mutual defense, route share, local truce, income share, with offers, breaking, and secret deals. Partial levies, and traitor opinion that fades. Diplomacy screen and operation planner.
+2. **Intelligence as estimates.** Every report carries a range; sources combine by overlap and age widens them. Drones over towns count the street; informants settle in, report samples, and can be caught. Intel screen; the AI plans against the same ranges.
+3. **Recruitment depth.** Named tiers, weapons as a purchase, pay by tier, training camps, veterans, mercenaries, crews of 50, columns of two crews up to 100 men. Forces screen.
+4. **Outside cartels.** CJNG and CdG with contact (port, border road, envoy), three-round negotiation, lent contingents (loyalty, recall, defection), associate plazas, ambition and declaring, loans, promises, and raids on those who cross them. AI heads hire when losing ground.
+5. **Capture, remnants, countryside step one.** The capture roll and eight captive options; choices for a boss who loses everything; countryside influence, camps, sweeps, remnants who camp near a lost plaza, and hills in the map share.
+6. **Countryside step two.** Rural lookouts on roads, route income cut by contested hills, rural income, labs out of town.
+7. **Battle stances and actions.** Assault, hold, flank, probe at a decision every 3 hours; dig in, drone overhead, hit the relief column, offer terms, execute prisoners.
+
+Design decisions made during the build:
+
+- **Money became power, and power snowballed.** With AI bosses arming, training, and hiring freely, the richer side ran away with the war (median 75 days). The AI now takes on new weekly pay only when last week's income covers it (`ai.forces.payCover`) and keeps larger reserves before each kind of spending.
+- **Remnants come from idle crews only.** Letting garrisons leave to camp near a lost plaza stripped defenses and shortened wars; idle crews (often the ones that fell back) now do it.
+- **Outside cartels' bosses join the side they back** while associated, flagged as outsiders, so their plazas count for that coalition and allies never fight them; every faction-member loop skips them.
+- **Countryside weight is 35%,** slightly above the "about 30%" here, with influence fading at 0.6 a day.
+
+Measured over 80 AI-vs-AI campaigns after the retune:
+
+| Target | Result | |
+| --- | --- | --- |
+| War length | median 126 days | pass |
+| Time cap | 6% of runs | pass |
+| Faction balance | 50% / 50% of decided runs | pass |
+| Pulse | 6.6 quiet stretches per campaign | pass |
+| Neutral risk | 39% hold a plaza on day 60 | pass |
+| Event pacing | 2.9 events a week reach the player | pass |
+| Money pressure | 27% of lieutenants miss a payroll | **miss** |
+| Invariants | 0 problems | pass |
+
+The balance runner now takes `TUNE='{...}'` to deep-merge tuning overrides for experiments.

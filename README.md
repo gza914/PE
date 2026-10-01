@@ -15,7 +15,15 @@ checkpoints, army raids, and capture operations; banners, videos, corridos,
 and planted rumors move morale and what rivals believe; schemes flip, kill,
 frame, and buy halcones; 49 events tell the story. The war ends in
 territorial defeat, collapse, a truce, or the day-270 time cap, with a score
-and title. See the build log at the end of the GDD.
+and title.
+
+**Coalition warfare** is built on top: joint operations and pacts between
+bosses, sightings as ranges with drones over towns and informants, deeper
+recruitment (tiers, weapons, training camps, veterans, mercenaries, crews of
+50, columns), the outside cartels CJNG and CdG, capturing bosses and deciding
+their fate, choices for a boss who has lost everything, the countryside around
+every plaza, and battle stances and actions. See the build log at the end of
+the GDD.
 
 ## Commands
 
@@ -25,7 +33,8 @@ npm run dev        # dev server at http://localhost:5173
 npm test           # Vitest: content validation, determinism, save/load, headless run
 npm run typecheck
 npm run build
-npm run balance    # AI-vs-AI campaigns scored against the GDD balance targets (RUNS sets the count, default 12)
+npm run balance    # AI-vs-AI campaigns scored against the GDD balance targets (RUNS sets the count, default 12;
+                   # TUNE='{"ai":{...}}' deep-merges tuning overrides)
 ```
 
 In game: `Space` pauses, `1`–`5` set speed, `Esc` cancels route planning.
@@ -39,6 +48,14 @@ Banners, shows of force, tip-offs, and buying halcones are on the plaza
 panel; schemes against a person are on their character panel (click any
 name). Events pop up for a decision; "Decide later" parks them behind a top
 bar button. The top bar also has map overlays and a debug fog toggle.
+
+The side tabs: Intel (each rival town's strength as a range, sources, eyes
+there), Forces (every crew and column, pay, loyalty, recruitment and
+mercenaries), Diplomacy (joint operations, pacts, and the outside cartels),
+and Shadows (captives and, if you lose your last plaza, your choice). On a
+rival plaza, "Plan joint attack" invites allies; on yours, "Ask for help
+holding". Crews can camp in the hills around a plaza, strike the town from
+there, or sweep the hills. In a battle, pick a stance every few hours.
 
 ## Layout
 
@@ -61,11 +78,22 @@ src/sim/             pure, deterministic simulation core (no DOM)
   opinion.ts         relationship bases and decaying opinion modifiers
   requests.ts        faction requests (offensives, defense, levies)
   diplomacy.ts       declaring for a side and switching sides
-  pacts.ts           local truces
+  pacts.ts           pacts: non-aggression, safe passage, mutual defense, route
+                     share, local truce, income share
+  operations.ts      joint operations between bosses on one side
+  estimate.ts        sightings as ranges
+  intel.ts           drones over towns and informants
+  forces.ts          tiers, pay, weapons, training, veterans, mercenaries
+  outside.ts         CJNG and CdG: negotiation, contingents, associates
+  capture.ts         the capture roll and captive options
+  remnants.ts        a boss who has lost everything
+  countryside.ts     influence in the hills, camps, sweeps, rural economy
+  battleActions.ts   battle stances and one-off actions
   invariants.ts      what must always hold; checked in long AI campaigns
   balance.ts         headless AI-vs-AI campaign runner and target report
   ai/                strategic, operational, tactical, economy, logistics,
-                     and shadow (the State, messages, schemes) layers;
+                     shadow (the State, messages, schemes), coalition,
+                     outside, and countryside layers;
                      intel.ts is the AI's reports-only view
   systems/           movement, detection, combat, economy, characters, pulse,
                      endings, events, stateForces, infowar, schemes, ai
