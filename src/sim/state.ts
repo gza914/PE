@@ -30,6 +30,8 @@ export interface GameState {
   reports: Report[];
   drones: Drone[];
   informants: Informant[];
+  /** Countryside influence around each plaza, by network, 0–100 (GDD "The countryside around each plaza"). */
+  countryside: Record<Id, Record<NetworkId, number>>;
   /** Outside cartels (CJNG, CdG), by faction id. */
   outsiders: Record<Id, OutsiderState>;
   outsideDeals: OutsideDeal[];
@@ -136,7 +138,13 @@ export interface RegionState {
 // Characters and factions
 // ---------------------------------------------------------------------------
 
-export type CharacterStatus = 'free' | 'captured' | 'jailed' | 'dead' | 'extradited';
+export type CharacterStatus = 'free' | 'captured' | 'jailed' | 'dead' | 'extradited' | 'fled';
+
+/** Off the board for good. */
+export const GONE_STATUSES: readonly CharacterStatus[] = ['dead', 'extradited', 'fled'];
+export function isGone(status: CharacterStatus | undefined): boolean {
+  return status === undefined || GONE_STATUSES.includes(status);
+}
 
 export interface OpinionModifier {
   /** Machine key, e.g. "helped_defend", "paid_late", "killed_brother". */
@@ -210,6 +218,13 @@ export interface CharacterState {
   foreignAlly: { since: number } | null;
   /** Set for an outside cartel's boss: his cartel's faction id. Never a lieutenant of the side he backs. */
   outsider: Id | null;
+  /** Interrogation sessions endured as a captive. */
+  interrogated: number;
+  /** Plazas held at the last daily check, and the last one held (for a boss who loses everything). */
+  plazasHeld: number;
+  lastPlaza: Id | null;
+  /** Hour the player lost his last plaza and has a choice to make. */
+  lostEverythingAt: number | null;
 }
 
 export type WarPlanMode = 'attack' | 'defend' | 'regroup';
@@ -305,6 +320,8 @@ export type CrewOrder =
   | { type: 'idle' }
   | { type: 'garrison' }
   | { type: 'lie_low'; since?: number }
+  /** In the hills around the plaza it stands at: out of town, hard to find (GDD countryside). */
+  | { type: 'camp'; since: number }
   | {
       type: 'move';
       destination: Id;
@@ -315,7 +332,7 @@ export type CrewOrder =
       departAt: number | null;
       arriveAt: number | null;
       /** What to do on arrival (scouts lie low). */
-      onArrive?: 'lie_low';
+      onArrive?: 'lie_low' | 'camp';
     }
   /** Hold a point on a road; `atKm` is measured from the road's `from` node (null = midpoint). */
   | { type: 'ambush'; road: Id; atKm: number | null; since?: number }
@@ -341,6 +358,8 @@ export interface CrewTransit {
   shiftAt: number | null;
   /** Road to avoid when shifting. */
   shiftAvoidRoad: Id | null;
+  /** Road the crew last arrived by (for encirclement). */
+  lastRoad: Id | null;
   /** Networks that spotted the group on approach to its current target node. */
   spotted: { node: Id; by: NetworkId[] } | null;
 }
@@ -553,7 +572,7 @@ export interface Informant {
 // Combat, diplomacy, schemes, events
 // ---------------------------------------------------------------------------
 
-export type EngagementType = 'ambush' | 'road_clash' | 'raid' | 'siege' | 'urban_skirmish' | 'military_clash';
+export type EngagementType = 'ambush' | 'road_clash' | 'raid' | 'siege' | 'urban_skirmish' | 'military_clash' | 'sweep';
 
 export interface BattleSide {
   network: NetworkId;
@@ -590,6 +609,8 @@ export interface Battle {
   siegeProgress: number;
   /** Attackers win the plaza if they win the battle (raids and sieges). */
   capture: boolean;
+  /** Roads the attackers came in by: two or more cut off escape. */
+  approaches: Id[];
   /** Player's crews withdrawing in good order this hour. */
   withdrawing: Id[];
   /** Player's crews pushing their armored trucks forward this hour. */
@@ -771,7 +792,7 @@ export interface FeedEntry {
   node: Id | null;
 }
 
-export type EndReason = 'faction_collapse' | 'territorial_defeat' | 'negotiated_truce' | 'time_cap' | 'player_eliminated';
+export type EndReason = 'faction_collapse' | 'territorial_defeat' | 'negotiated_truce' | 'time_cap' | 'player_eliminated' | 'player_fled';
 
 export interface StartSnapshot {
   playerId: Id;

@@ -25,6 +25,7 @@ import { pactBetween, truceBetween } from '../pacts';
 import { world } from '../world';
 import { withinHops, type Intel } from './intel';
 import { cautionOf, isAi, majorFactions } from './util';
+import { isGone } from '../state';
 
 /** Crews that are not tied up and could be sent somewhere. */
 /**
@@ -475,7 +476,7 @@ function supportBroke(ctx: SimContext, fs: FactionState): void {
   const head = fs.head!;
   const aid = content.tuning.economy.aid;
   for (const c of Object.values(state.characters).sort((a, b) => (a.id < b.id ? -1 : 1))) {
-    if (c.faction !== fs.id || c.id === head || c.status === 'dead' || c.status === 'extradited') continue;
+    if (c.faction !== fs.id || c.id === head || isGone(c.status)) continue;
     const due = weeklyObligations(state, content, c.id);
     if (c.missedPayrollWeeks === 0 && cashOf(state, c.id) >= due) continue;
     if (c.lastAidAt !== null && state.hour - c.lastAidAt < aid.cooldownDays * 24) continue;

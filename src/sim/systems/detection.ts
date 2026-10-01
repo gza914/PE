@@ -70,7 +70,8 @@ function observePresence(ctx: SimContext): void {
     byNode.set(key, [...(byNode.get(key) ?? []), c]);
   }
   for (const key of [...byNode.keys()].sort()) {
-    const here = byNode.get(key)!;
+    // Campers are out in the hills, not in town.
+    const here = byNode.get(key)!.filter((c) => c.order.type !== 'camp');
     if (key.endsWith('#-')) continue;
     const nets = [...new Set(here.map((c) => crewNetwork(state, c)))].sort();
     if (nets.length < 2) continue;
@@ -95,7 +96,8 @@ function rollStationary(ctx: SimContext): void {
     const group = groupOf(state, crew);
     const loc = crew.location;
     if (loc.kind === 'node') {
-      rollNode(ctx, group, loc.node, tuning.detection.stationaryVisibility);
+      const camp = crew.order.type === 'camp' ? (tuning.countryside.campVisibility[world(content).node(loc.node).type] ?? 1) : 1;
+      rollNode(ctx, group, loc.node, tuning.detection.stationaryVisibility * camp);
     } else {
       const road = world(content).road(loc.road);
       const at = kmFromRoadStart(content, loc);

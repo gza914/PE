@@ -6,6 +6,7 @@ import { SCHEME_LABEL, schemeVictim } from '../../sim/systems/schemes';
 import { commanderBribed, hasPolice, lyingLow, tierOf } from '../../sim/systems/stateForces';
 import { world } from '../../sim/world';
 import { useGame } from '../store';
+import { Captives, LostEverything } from './Captives';
 import { charLabel, playerNetwork } from '../util';
 
 const TIER_LABEL = { normal: 'Normal', elevated: 'Elevated', surge: 'Surge', occupation: 'Occupation' } as const;
@@ -36,6 +37,8 @@ export function ShadowPanel() {
 
   return (
     <div className="shadow">
+      <LostEverything />
+      <Captives />
       <h3>You</h3>
       <dl>
         <dt>Fear · Respect</dt>

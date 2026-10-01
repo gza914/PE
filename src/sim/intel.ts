@@ -99,7 +99,7 @@ function rivalsAt(ctx: SimContext, node: Id, net: Id): CrewState[] {
   const { state } = ctx;
   return sortedCrewIds(state)
     .map((id) => state.crews[id]!)
-    .filter((c) => c.location.kind === 'node' && c.location.node === node && c.order.type !== 'escort' && crewNetwork(state, c) !== net);
+    .filter((c) => c.location.kind === 'node' && c.location.node === node && c.order.type !== 'escort' && c.order.type !== 'camp' && crewNetwork(state, c) !== net);
 }
 
 /** Hourly: informants report on schedule. */

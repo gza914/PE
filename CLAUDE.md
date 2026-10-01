@@ -75,3 +75,9 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - `CrewState.hired` marks troops who are not the owner's own: mercenaries leave the week pay is missed; contingents (`kind: 'contingent'`, `from` a cartel) have loyalty, can be recalled, may defect, go home if their boss dies, and never count toward score.
 - CJNG and CdG are `kind: 'outside'` factions (`outside.ts`). Their boss characters carry `outsider` set to their cartel. While associated (after being handed a plaza) the boss sits in the partner faction, so his plazas count for that side; he is never a lieutenant there. Every faction-member loop (succession, acting head, offensives, requests, events, invites) must skip `outsider !== null`; `isAi` already does.
 - Only the player and faction heads deal with them (`dealerBlocked`). Contact: a port, a border road, or an envoy.
+
+## Capture, remnants, and the countryside
+
+- Leaders of losing crews roll `captureChance` (`capture.ts`): force ratio, encirclement (`Battle.approaches`, from `CrewTransit.lastRoad`), rank, traits, terrain, and how the crew left. The captor decides with the `captive` command; AI captors choose by personality in `runCaptivesDaily`.
+- A boss who loses his last plaza chooses in `remnants.ts` (AI by traits; the player from the Shadows tab). The player is never eliminated for losing plazas; `flee` ends the game as `player_fled`. Gone characters are `isGone(status)` (dead, extradited, fled).
+- `state.countryside[node][network]` is 0–100 influence in a plaza's hills (`countryside.ts`). Crews with order `camp` are in the hills: they stay out of town fights, presence sightings, informants, and drones over town; they fight `sweep` battles with the terrain. The hills count toward `territoryShares` at `countryside.shareWeight`.

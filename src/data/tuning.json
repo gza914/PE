@@ -302,7 +302,6 @@
     "routCaptureShare": 0.2,
     "routScatterShare": 0.2,
     "leaderRiskPerLossFraction": 0.1,
-    "leaderCaptureChanceOnRout": 0.3,
     "leaderDeathChanceOnDestroyed": 0.3,
     "engageRatio": 1.2,
     "estimatedPowerPerMan": 1.2,
@@ -418,8 +417,6 @@
     "opinionMax": 100,
     "heirSuccessionOpinionLoss": 20,
     "extraditionDays": 30,
-    "prisonerHoldDays": 7,
-    "ransomAmount": 100000,
     "relationOpinion": {
       "parent": 40,
       "child": 40,
@@ -1106,6 +1103,116 @@
       "tier": "sicarios",
       "men": 20,
       "cashShareOfPrice": 1
+    }
+  },
+  "capture": {
+    "rankBase": {
+      "crew_leader": 0.6,
+      "associate": 0.5,
+      "lieutenant": 0.35,
+      "senior_lieutenant": 0.2,
+      "inner_circle": 0.15,
+      "head": 0.08
+    },
+    "ratioDivisor": 2,
+    "ratioMin": 0.3,
+    "ratioMax": 2.5,
+    "encircledMultiplier": 1.8,
+    "traitMultiplier": {
+      "paranoico": 0.6,
+      "discreto": 0.7,
+      "cobarde": 0.8,
+      "valiente": 1.2
+    },
+    "terrainMultiplier": {
+      "sierra_hub": 0.7,
+      "rancheria": 0.8,
+      "town": 1.2,
+      "city": 1.2,
+      "port": 1.1,
+      "road": 1
+    },
+    "situation": {
+      "destroyed": 1.5,
+      "routed": 1,
+      "fellBack": 0.4,
+      "withdrew": 0.2
+    },
+    "max": 0.95,
+    "aiDecideHours": 24,
+    "maxHoldDays": 30,
+    "ransomByRank": {
+      "crew_leader": 30000,
+      "associate": 50000,
+      "lieutenant": 100000,
+      "senior_lieutenant": 200000,
+      "inner_circle": 300000,
+      "head": 1000000
+    },
+    "ransomGrudge": -25,
+    "interrogate": {
+      "healthLoss": 15,
+      "familyOpinion": -20,
+      "maxSessions": 3
+    },
+    "turn": {
+      "base": 0.2,
+      "perPalabra": 0.02,
+      "resentBonus": 0.4,
+      "resentBelow": -10,
+      "failOpinion": -15
+    },
+    "leverageDays": 21,
+    "handOver": {
+      "calenturaDrop": 25,
+      "respectLoss": 15,
+      "stateIntelDrop": 30
+    },
+    "execute": {
+      "fear": 20,
+      "calentura": 15
+    },
+    "release": {
+      "opinion": 40
+    }
+  },
+  "lostEverything": {
+    "campShareOfCash": 0.5,
+    "serveRankDrop": 1,
+    "neutralMercMen": 12
+  },
+  "countryside": {
+    "sizeByType": {
+      "city": 1.6,
+      "port": 1.2,
+      "town": 1.0,
+      "sierra_hub": 0.9,
+      "rancheria": 0.7
+    },
+    "startHolderInfluence": 60,
+    "campGainPerManPerDay": 0.25,
+    "holderGainPerDay": 2,
+    "garrisonGainPerManPerDay": 0.03,
+    "decayPerDay": 2,
+    "shareWeight": 0.3,
+    "campVisibility": {
+      "sierra_hub": 0.25,
+      "rancheria": 0.3,
+      "town": 0.6,
+      "city": 0.7,
+      "port": 0.6
+    },
+    "campDefenseMultiplier": 1.4,
+    "sweepCooldownHours": 12,
+    "ai": {
+      "opportunismRatio": 1.3,
+      "sweepInfluence": 30,
+      "sweepChancePerCheck": 0.3,
+      "remnantWithinDays": 10,
+      "remnantMinInfluence": 20,
+      "remnantChancePerCheck": 0.5,
+      "remnantMaxHops": 2,
+      "remnantMinMen": 8
     }
   }
 }

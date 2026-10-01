@@ -9,6 +9,9 @@ import { declare } from './diplomacy';
 import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
 import { buyWeapons, columnBlocked, hireMercenaries, hireVeterans, stopTraining, trainCrew } from './forces';
 import { acceptCounter as acceptOutsideCounter, answerDefection, proposeDeal, walkAway } from './outside';
+import { decideCaptive, type CaptiveOption } from './capture';
+import { campBlocked, sweep } from './countryside';
+import { chooseLost, type LostChoice } from './remnants';
 import { launchDrone, plantInformant, pullInformant } from './intel';
 import { breakPact, proposePact, respondPact, type PactSpec } from './pacts';
 import { chooseOption } from './systems/events';
@@ -41,11 +44,12 @@ export type OrderRequest =
       waypoints?: Id[];
       arriveAt?: number | null;
       avoidRivalPlazas?: boolean;
-      onArrive?: 'lie_low';
+      onArrive?: 'lie_low' | 'camp';
     }
   | { type: 'retreat' }
   | { type: 'garrison' }
   | { type: 'lie_low' }
+  | { type: 'camp' }
   | { type: 'idle' }
   | { type: 'ambush'; road: Id }
   | { type: 'patrol'; road: Id }
@@ -65,6 +69,9 @@ export type Command =
   | (Base & { type: 'outside_accept'; deal: Id })
   | (Base & { type: 'outside_walk'; deal: Id })
   | (Base & { type: 'answer_defection'; crew: Id; accept: boolean })
+  | (Base & { type: 'sweep'; crew: Id })
+  | (Base & { type: 'captive'; captive: Id; option: CaptiveOption; trade?: Id | null })
+  | (Base & { type: 'lost_everything'; choice: LostChoice; boss?: Id | null })
   | (Base & { type: 'train_crew'; crew: Id })
   | (Base & { type: 'stop_training'; crew: Id })
   | (Base & { type: 'buy_weapons'; crew: Id; gear: number })
@@ -205,6 +212,12 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       return walkAway(ctx, issuer.id, cmd.deal);
     case 'answer_defection':
       return answerDefection(ctx, issuer.id, cmd.crew, cmd.accept);
+    case 'captive':
+      return decideCaptive(ctx, issuer.id, cmd.captive, cmd.option, cmd.trade ?? null);
+    case 'lost_everything':
+      return chooseLost(ctx, issuer.id, cmd.choice, cmd.boss ?? null);
+    case 'sweep':
+      return sweep(ctx, issuer.id, cmd.crew);
     case 'train_crew':
       return trainCrew(ctx, issuer.id, cmd.crew);
     case 'stop_training':
@@ -267,6 +280,12 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
     case 'lie_low':
       if (loc.kind !== 'node') return `a crew must be in a node to ${req.type === 'garrison' ? 'garrison' : 'lie low'}`;
       return req.type === 'lie_low' ? { type: 'lie_low', since: state.hour } : { type: 'garrison' };
+    case 'camp': {
+      if (loc.kind !== 'node') return 'a crew camps in the hills around a plaza: get there first';
+      const why = campBlocked(content, loc.node);
+      if (why) return why;
+      return { type: 'camp', since: state.hour };
+    }
     case 'move': {
       if (!content.nodes.some((n) => n.id === req.destination)) return `unknown node "${req.destination}"`;
       for (const wp of req.waypoints ?? []) if (!content.nodes.some((n) => n.id === wp)) return `unknown waypoint "${wp}"`;
@@ -380,7 +399,7 @@ function split(ctx: SimContext, cmd: Extract<Command, { type: 'split_crew' }>): 
     men: cmd.men,
     vehicles: taken,
     armorDamage: taken.armored ? crew.armorDamage : 0,
-    order: crew.order.type === 'garrison' || crew.order.type === 'lie_low' ? { type: crew.order.type } : { type: 'idle' },
+    order: crew.order.type === 'garrison' || crew.order.type === 'lie_low' ? { type: crew.order.type } : crew.order.type === 'camp' ? { type: 'camp', since: state.hour } : { type: 'idle' },
     transit: newTransit(),
     training: null,
   };

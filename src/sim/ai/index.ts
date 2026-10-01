@@ -18,6 +18,7 @@ import { runEconomy } from './economy';
 import { Intel } from './intel';
 import { returnHome, supplyRun } from './logistics';
 import { runOperational } from './operational';
+import { runCountrysideAi } from './countryside';
 import { runShadow } from './shadow';
 import { runCoalition } from './coalition';
 import { runOutside } from './outside';
@@ -33,6 +34,7 @@ export function runAi(ctx: SimContext): Command[] {
     ...(on.tactical ? runTactical(ctx) : []),
     ...(on.strategic ? runStrategic(ctx, intel) : []),
     ...(on.operational ? runOperational(ctx, intel) : []),
+    ...(on.operational ? runCountrysideAi(ctx, intel) : []),
     ...(on.economy ? runEconomy(ctx) : []),
     ...(on.shadow ? runShadow(ctx) : []),
     ...(on.coalition ? runCoalition(ctx, intel) : []),

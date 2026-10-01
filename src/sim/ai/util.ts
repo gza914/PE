@@ -3,6 +3,7 @@ import type { Content } from '../../data/content';
 import type { AiAction } from '../../data/schemas';
 import type { SimContext } from '../context';
 import type { GameState, Id, RoutePreference } from '../state';
+import { GONE_STATUSES } from '../state';
 
 /** Stable per-id offset so AI checks are staggered across hours. */
 export function stagger(id: Id, interval: number): number {
@@ -42,7 +43,7 @@ export function isAi(state: GameState, id: Id): boolean {
 
 /** Does the AI run this character's affairs (economy, idle crews), even while they are held? */
 export function aiManaged(state: GameState, id: Id): boolean {
-  return (id !== state.playerId || state.autoplay) && state.characters[id]?.outsider == null && !['dead', 'extradited'].includes(state.characters[id]?.status ?? 'dead');
+  return (id !== state.playerId || state.autoplay) && state.characters[id]?.outsider == null && !GONE_STATUSES.includes(state.characters[id]?.status ?? 'dead');
 }
 
 export function majorFactions(content: Content): Id[] {

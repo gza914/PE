@@ -239,11 +239,11 @@ describe('morale, ammo, and leaders', () => {
     expect(s.nodes.villa_union!.owner).toBe('mayos_head');
   });
 
-  it('captives are ransomed after the hold period (placeholder for prisoner events)', () => {
+  it('a captive nobody decides about is bought out by his side', () => {
     const c = tuned((t) => {
       noAi(t);
       noWorld(t);
-      t.characters.prisonerHoldDays = 1;
+      t.capture.maxHoldDays = 1;
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
     const ch = s.characters.m_villa_union!;

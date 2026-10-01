@@ -10,6 +10,7 @@ import { isNight } from '../clock';
 import type { Engagement, SimContext } from '../context';
 import { escortIndex, groupOf, kmFromRoadStart, sortedCrewIds } from '../crews';
 import { crewNetwork, ownedBy } from '../network';
+import { campBlocked } from '../countryside';
 import { leaderName, notifyOwner, relocateOffRoad } from '../orders';
 import { groupPower, reportedPower, wantsToAttack } from '../power';
 import { chance } from '../rng';
@@ -60,7 +61,7 @@ export function runMovement(ctx: SimContext): void {
       if (didMove) {
         moved.add(c.id);
         c.fatigue = Math.min(100, c.fatigue + ctx.content.tuning.movement.fatiguePerTravelHour);
-      } else if (c.order.type === 'garrison' || c.order.type === 'lie_low' || (c.order.type === 'escort' && crew.order.type === 'garrison')) {
+      } else if (c.order.type === 'garrison' || c.order.type === 'lie_low' || c.order.type === 'camp' || (c.order.type === 'escort' && crew.order.type === 'garrison')) {
         c.fatigue = Math.max(0, c.fatigue - ctx.content.tuning.movement.fatigueRecoveryPerHour);
       }
     }
@@ -238,6 +239,7 @@ function followPath(run: MoveRun, crew: CrewState, group: CrewState[], path: Pat
     const now = crew.location;
     if (now.kind === 'road' && now.progressKm >= road.lengthKm - EPS) {
       crew.location = { kind: 'node', node: step.to };
+      for (const g of group) g.transit.lastRoad = road.id;
       path.shift();
       if (path.length && intercepted(run, crew, group, step.to)) return moved;
     }
@@ -273,7 +275,7 @@ function intercepted(run: MoveRun, crew: CrewState, group: CrewState[], node: Id
 function crewsAt(ctx: SimContext, node: Id): CrewState[] {
   return sortedCrewIds(ctx.state)
     .map((id) => ctx.state.crews[id]!)
-    .filter((c) => c.location.kind === 'node' && c.location.node === node && c.battle === null && c.order.type !== 'escort');
+    .filter((c) => c.location.kind === 'node' && c.location.node === node && c.battle === null && c.order.type !== 'escort' && c.order.type !== 'camp');
 }
 
 function arrive(run: MoveRun, crew: CrewState, group: CrewState[]): void {
@@ -302,7 +304,9 @@ function arrive(run: MoveRun, crew: CrewState, group: CrewState[]): void {
   crew.order =
     order.type === 'move' && order.onArrive === 'lie_low'
       ? { type: 'lie_low', since: state.hour }
-      : ownedBy(state, loc.node, network)
+      : order.type === 'move' && order.onArrive === 'camp' && campBlocked(content, loc.node) === null
+        ? { type: 'camp', since: state.hour }
+        : ownedBy(state, loc.node, network)
         ? { type: 'garrison' }
         : { type: 'idle' };
   notifyOwner(ctx, crew, 'routine', `${leaderName(ctx, crew)}'s crew reached ${world(content).node(loc.node).name}.`, loc.node);

@@ -26,6 +26,7 @@ import { traitProduct } from '../traits';
 import { world } from '../world';
 import { killCharacter } from './characters';
 import { raidPlaza } from './stateForces';
+import { isGone } from '../state';
 
 export const SCHEME_LABEL: Record<SchemeType, string> = {
   flip: 'Flip a lieutenant',
@@ -112,7 +113,7 @@ export function runSchemesDaily(ctx: SimContext): void {
     const owner = state.characters[s.owner];
     const victim = schemeVictim(state, s);
     const tv = victim ? state.characters[victim] : undefined;
-    if (!owner || owner.status === 'dead' || owner.status === 'extradited' || !tv || tv.status === 'dead' || tv.status === 'extradited' || (s.type !== 'buy_halcones' && tv.status !== 'free')) {
+    if (!owner || isGone(owner.status) || !tv || isGone(tv.status) || (s.type !== 'buy_halcones' && tv.status !== 'free')) {
       done.add(s.id);
       continue;
     }

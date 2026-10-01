@@ -16,9 +16,11 @@ import type { Battle, BattleSide, CrewOrder, CrewState, Id, NetworkId } from '..
 import { world } from '../world';
 import { captureCharacter, killCharacter } from './characters';
 import { addOpinion } from '../opinion';
+import { captureChance, type CaptureSituation } from '../capture';
 import { contingentLosses, contingentWon } from '../outside';
 import { mutualDefenseCalls, peaceBetween, settleDefenseCalls, truceBetween } from '../pacts';
 import { opForCapture } from '../operations';
+import { isGone } from '../state';
 
 type SideKey = 'attackers' | 'defenders';
 const SIDES: SideKey[] = ['attackers', 'defenders'];
@@ -65,7 +67,18 @@ const TYPE_LABEL: Record<Battle['type'], string> = {
   siege: 'Siege',
   urban_skirmish: 'Street fighting',
   military_clash: 'Clash with the army',
+  sweep: 'Sweep of the hills',
 };
+
+/** Roads the crews came in by (encirclement). */
+export function approachesOf(list: readonly CrewState[]): Id[] {
+  const roads = new Set<Id>();
+  for (const c of list) {
+    if (c.location.kind === 'road') roads.add(c.location.road);
+    else if (c.transit.lastRoad) roads.add(c.transit.lastRoad);
+  }
+  return [...roads].sort();
+}
 
 export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null = null): Battle | null {
   const { state, content } = ctx;
@@ -113,6 +126,7 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
     fortification: node && !colonia ? state.nodes[node]!.fortification : 0,
     siegeProgress: 0,
     capture: e.capture,
+    approaches: approachesOf(att),
     withdrawing: [],
     armorPush: [],
     prompted: [],
@@ -166,7 +180,7 @@ function garrisonsAttack(ctx: SimContext): void {
   const { state, content } = ctx;
   const leaders = sortedCrewIds(state)
     .map((id) => state.crews[id]!)
-    .filter((c) => c.location.kind === 'node' && c.battle === null && c.order.type !== 'escort' && c.order.type !== 'lie_low');
+    .filter((c) => c.location.kind === 'node' && c.battle === null && c.order.type !== 'escort' && c.order.type !== 'lie_low' && c.order.type !== 'camp');
   const byNode = new Map<Id, CrewState[]>();
   for (const c of leaders) {
     const n = (c.location as { node: Id }).node;
@@ -253,6 +267,8 @@ function joinArrivals(ctx: SimContext, b: Battle): void {
   for (const id of sortedCrewIds(state)) {
     const c = state.crews[id]!;
     if (c.battle !== null || c.order.type === 'escort' || c.order.type === 'lie_low' || !atBattle(ctx, b, c)) continue;
+    // Campers are in the hills: they fight sweeps, not fights in town.
+    if (c.order.type === 'camp' && b.type !== 'sweep') continue;
     const net = crewNetwork(state, c);
     const k = SIDES.find((s) => b[s].network === net);
     if (!k) continue;
@@ -262,6 +278,7 @@ function joinArrivals(ctx: SimContext, b: Battle): void {
       if (!b[k].owners.includes(g.owner)) b[k].owners.push(g.owner);
       b[k].ownerMen[g.owner] = (b[k].ownerMen[g.owner] ?? 0) + g.men;
     }
+    if (k === 'attackers') b.approaches = [...new Set([...b.approaches, ...approachesOf([c])])].sort();
     b.log.push(`H${b.hours + 1}: ${leaderName(ctx, c)}'s crew (${c.men}) joins the ${k}.`);
     notifyOwner(ctx, c, 'important', `${leaderName(ctx, c)}'s crew joined the fight at ${placeName(ctx, b)}.`, null, b.id);
   }
@@ -302,6 +319,7 @@ export function sidePower(ctx: SimContext, b: Battle, k: SideKey): number {
   if (k === 'defenders') p *= 1 + t.fortificationBonusPerLevel * b.fortification * (1 - b.siegeProgress / 100);
   // Terrain favors whoever chose the ground: ambushers, otherwise defenders.
   if ((b.type === 'ambush') === (k === 'attackers')) p *= terrainOf(ctx, b);
+  if (b.type === 'sweep' && k === 'defenders') p *= content.tuning.countryside.campDefenseMultiplier;
   return p;
 }
 
@@ -437,6 +455,16 @@ function loseLeader(ctx: SimContext, b: Battle, c: CrewState, how: 'killed' | 'c
   if (state.crews[c.id] && state.characters[c.owner]?.status === 'free') c.leader = c.owner;
 }
 
+/** A losing crew's leader may be taken (GDD "Capturing bosses"); the captor is the strongest enemy crew's owner. */
+function rollCapture(ctx: SimContext, b: Battle, c: CrewState, k: SideKey, captor: Id | null, situation: CaptureSituation): void {
+  const { state, content } = ctx;
+  const leader = state.characters[c.leader];
+  if (!captor || !leader || leader.status !== 'free' || leader.outsider !== null || c.hired) return;
+  const strongest = crews(ctx, b[other(k)].crews).sort((x, y) => y.men - x.men || (x.id < y.id ? -1 : 1))[0];
+  const p = captureChance(state, content, b, c, b[k].power, b[other(k)].power, situation);
+  if (chance(state.rng, p)) loseLeader(ctx, b, c, 'captured', strongest?.owner ?? captor);
+}
+
 /** Retreat, rout, destruction, ammo, and orderly withdrawal. */
 function checkCrews(ctx: SimContext, b: Battle, k: SideKey): void {
   const { state, content } = ctx;
@@ -453,8 +481,8 @@ function checkCrews(ctx: SimContext, b: Battle, k: SideKey): void {
       b.log.push(`H${b.hours}: ${name}'s crew was wiped out.`);
       notifyOwner(ctx, c, 'critical', `${name}'s crew was wiped out at ${placeName(ctx, b)}.`, null, b.id);
       if (state.characters[c.leader]?.status === 'free') {
-        const killed = !enemyOwner || chance(state.rng, t.leaderDeathChanceOnDestroyed);
-        loseLeader(ctx, b, c, killed ? 'killed' : 'captured', enemyOwner);
+        if (!enemyOwner || chance(state.rng, t.leaderDeathChanceOnDestroyed)) loseLeader(ctx, b, c, 'killed', null);
+        else rollCapture(ctx, b, c, k, enemyOwner, 'destroyed');
       }
       removeCrew(ctx, b, k, c);
       continue;
@@ -462,6 +490,7 @@ function checkCrews(ctx: SimContext, b: Battle, k: SideKey): void {
     const retreatAt = t.retreatMorale + traitOffset(ctx, c);
     if (b.withdrawing.includes(c.id)) {
       b.log.push(`H${b.hours}: ${name}'s crew withdrew in good order.`);
+      rollCapture(ctx, b, c, k, enemyOwner, 'withdrew');
       leave(ctx, b, k, c);
     } else if (c.morale < t.routMorale) {
       const captured = Math.round(c.men * t.routCaptureShare);
@@ -469,11 +498,12 @@ function checkCrews(ctx: SimContext, b: Battle, k: SideKey): void {
       c.men = Math.max(0, c.men - captured - scattered);
       b.log.push(`H${b.hours}: ${name}'s crew routed (${captured} captured, ${scattered} scattered).`);
       notifyOwner(ctx, c, 'critical', `${name}'s crew broke and ran at ${placeName(ctx, b)}.`, null, b.id);
-      if (enemyOwner && state.characters[c.leader]?.status === 'free' && chance(state.rng, t.leaderCaptureChanceOnRout)) loseLeader(ctx, b, c, 'captured', enemyOwner);
+      rollCapture(ctx, b, c, k, enemyOwner, 'routed');
       if (c.men <= 0) removeCrew(ctx, b, k, c);
       else leave(ctx, b, k, c);
     } else if (c.morale < retreatAt) {
       b.log.push(`H${b.hours}: ${name}'s crew fell back.`);
+      rollCapture(ctx, b, c, k, enemyOwner, 'fellBack');
       leave(ctx, b, k, c);
     } else if (c.ammo <= 0) {
       b.log.push(`H${b.hours}: ${name}'s crew ran out of ammunition and pulled out.`);
@@ -586,6 +616,7 @@ function endBattle(ctx: SimContext, b: Battle, forcedWinner: SideKey | null = nu
         c.location.node === node &&
         crewNetwork(state, c) !== net &&
         c.order.type !== 'lie_low' &&
+        c.order.type !== 'camp' &&
         c.order.type !== 'retreat',
     );
     if (!holdouts) {
@@ -633,7 +664,7 @@ export function plazaRecipient(ctx: SimContext, node: Id, winners: CrewState[], 
   if (agreed && score.has(agreed) && state.characters[agreed]?.status !== 'dead') return agreed;
   const men = (id: Id) => winners.filter((c) => c.owner === id).reduce((n, c) => n + c.men, 0);
   return [...score.keys()]
-    .filter((id) => state.characters[id] && state.characters[id]!.status !== 'dead' && state.characters[id]!.status !== 'extradited')
+    .filter((id) => state.characters[id] && !isGone(state.characters[id]!.status))
     .sort((a, b) => score.get(b)! - score.get(a)! || Number(b === op?.proposer) - Number(a === op?.proposer) || men(b) - men(a) || (a < b ? -1 : 1))[0] ?? winners[0]!.owner;
 }
 
@@ -775,7 +806,7 @@ function resupplyAndRecover(ctx: SimContext): void {
       const paid = costPerPct > 0 ? spendUpTo(state, content, c.owner, want * costPerPct, 'ammo') : 0;
       c.ammo += costPerPct > 0 ? paid / costPerPct : want;
     }
-    if (c.order.type === 'garrison' || c.order.type === 'idle' || c.order.type === 'lie_low') {
+    if (c.order.type === 'garrison' || c.order.type === 'idle' || c.order.type === 'lie_low' || c.order.type === 'camp') {
       const d = ct.moraleBaseline - c.morale;
       c.morale += Math.sign(d) * Math.min(Math.abs(d), ct.moraleRecoveryPerHour);
     }

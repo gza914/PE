@@ -563,6 +563,70 @@ export const TuningSchema = z.object({
     /** Percent of a full load restored per hour at a friendly plaza. */
     ammoResupplyPerHour: z.number().nonnegative(),
   }),
+  /** GDD "Capturing bosses". */
+  capture: z.object({
+    rankBase: z.record(Rank, pct),
+    /** Force ratio (winners / losers) is divided by this, then clamped. */
+    ratioDivisor: z.number().positive(),
+    ratioMin: z.number().nonnegative(),
+    ratioMax: z.number().positive(),
+    encircledMultiplier: z.number().positive(),
+    traitMultiplier: z.record(z.string(), z.number().positive()),
+    /** By node type, or "road". */
+    terrainMultiplier: z.record(z.string(), z.number().positive()),
+    situation: z.object({ destroyed: z.number().nonnegative(), routed: z.number().nonnegative(), fellBack: z.number().nonnegative(), withdrew: z.number().nonnegative() }),
+    max: pct,
+    aiDecideHours: z.number().nonnegative(),
+    /** A captive nobody decides about is bought out by his side after this long. */
+    maxHoldDays: z.number().positive(),
+    ransomByRank: z.record(Rank, z.number().nonnegative()),
+    ransomGrudge: z.number(),
+    interrogate: z.object({ healthLoss: z.number().nonnegative(), familyOpinion: z.number(), maxSessions: z.number().int().positive() }),
+    turn: z.object({ base: pct, perPalabra: z.number().nonnegative(), resentBonus: pct, resentBelow: z.number(), failOpinion: z.number() }),
+    leverageDays: z.number().positive(),
+    handOver: z.object({ calenturaDrop: z.number().nonnegative(), respectLoss: z.number().nonnegative(), stateIntelDrop: z.number().nonnegative() }),
+    execute: z.object({ fear: z.number().nonnegative(), calentura: z.number().nonnegative() }),
+    release: z.object({ opinion: z.number() }),
+  }),
+  /** GDD "A boss who has lost everything". */
+  lostEverything: z.object({
+    /** Share of his cash a boss going to ground keeps for the fight. */
+    campShareOfCash: pct,
+    serveRankDrop: z.number().int().nonnegative(),
+    /** Mercenaries a boss going neutral hires, if he can. */
+    neutralMercMen: z.number().int().nonnegative(),
+  }),
+  /** GDD "The countryside around each plaza". */
+  countryside: z.object({
+    /** Zone size by node type: bigger zones need more men to sway. */
+    sizeByType: z.record(z.string(), z.number().positive()),
+    startHolderInfluence: z.number().min(0).max(100),
+    campGainPerManPerDay: z.number().nonnegative(),
+    /** The town's holder gains this a day at full support. */
+    holderGainPerDay: z.number().nonnegative(),
+    garrisonGainPerManPerDay: z.number().nonnegative(),
+    decayPerDay: z.number().nonnegative(),
+    /** Countryside counts for this share of a plaza's value in the map share. */
+    shareWeight: z.number().nonnegative(),
+    /** Signature multiplier for camped crews, by node type. */
+    campVisibility: z.record(z.string(), z.number().nonnegative()),
+    /** Campers fight sweeps with the terrain on their side. */
+    campDefenseMultiplier: z.number().positive(),
+    sweepCooldownHours: z.number().nonnegative(),
+    ai: z.object({
+      /** Campers strike when they believe they beat the garrison by this ratio. */
+      opportunismRatio: z.number().positive(),
+      /** Holders sweep when a rival's influence in their hills passes this. */
+      sweepInfluence: z.number().min(0).max(100),
+      sweepChancePerCheck: pct,
+      /** After losing a plaza whose hills its side still holds, a spare crew nearby camps there. */
+      remnantWithinDays: z.number().nonnegative(),
+      remnantMinInfluence: z.number().min(0).max(100),
+      remnantChancePerCheck: pct,
+      remnantMaxHops: z.number().int().nonnegative(),
+      remnantMinMen: z.number().int().positive(),
+    }),
+  }),
   /** GDD "Outside cartels: CJNG and CdG". */
   outside: z.object({
     cartels: z.record(
@@ -713,7 +777,6 @@ export const TuningSchema = z.object({
     routScatterShare: pct,
     /** Chance the leader falls in an hour = loss fraction × this × trait risk. */
     leaderRiskPerLossFraction: z.number().nonnegative(),
-    leaderCaptureChanceOnRout: pct,
     leaderDeathChanceOnDestroyed: pct,
     /** A force attacks only with this power ratio or better (× leader caution). */
     engageRatio: z.number().positive(),
@@ -814,9 +877,6 @@ export const TuningSchema = z.object({
     opinionMax: z.number(),
     heirSuccessionOpinionLoss: z.number(),
     extraditionDays: z.number().positive(),
-    /** Placeholder until prisoner events: captives are ransomed after this long. */
-    prisonerHoldDays: z.number().positive(),
-    ransomAmount: z.number().nonnegative(),
     /** Permanent opinion from a relationship, by type. */
     relationOpinion: z.record(RelationType, z.number()),
     /** Opinion bonus between members of the same faction. */

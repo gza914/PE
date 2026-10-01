@@ -26,6 +26,7 @@ import { chance, rand } from './rng';
 import type { CrewState, GameState, Id, OutsideAsk, OutsideDeal, OutsideOffer, OutsiderState, OutsideTier } from './state';
 import { nodeValue, territoryShares } from './systems/economy';
 import { world } from './world';
+import { isGone } from './state';
 
 export const OUTSIDE_TIERS: OutsideTier[] = ['carne', 'sicarios', 'elite'];
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
@@ -586,7 +587,7 @@ function contingentsDaily(ctx: SimContext, weekly: boolean): void {
     if (!crew || crew.hired?.kind !== 'contingent') continue;
     const h = crew.hired;
     const owner = state.characters[crew.owner];
-    if (!owner || owner.status === 'dead' || owner.status === 'extradited') {
+    if (!owner || isGone(owner.status)) {
       goHome(ctx, crew, 'their boss is gone');
       continue;
     }

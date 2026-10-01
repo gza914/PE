@@ -17,6 +17,7 @@ const REASON = {
   negotiated_truce: 'A negotiated truce',
   time_cap: 'The war ran its course',
   player_eliminated: 'Your organization fell apart',
+  player_fled: 'You left Sinaloa',
 } as const;
 
 export function EndScreen() {

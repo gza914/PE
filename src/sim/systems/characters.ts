@@ -5,25 +5,15 @@
  */
 import { dayOf } from '../clock';
 import { pushFeed, type SimContext } from '../context';
-import { deposit, spendUpTo } from '../money';
 import { charName } from '../orders';
 import { endGame } from './endings';
+import { runCaptivesDaily } from '../capture';
+import { networkOf } from '../network';
 import type { Id } from '../state';
+import { isGone } from '../state';
 
 export function runCharactersDaily(ctx: SimContext): void {
-  const { state, content } = ctx;
-  const hold = content.tuning.characters.prisonerHoldDays * 24;
-  for (const id of Object.keys(state.characters).sort()) {
-    const ch = state.characters[id]!;
-    if (ch.status !== 'captured' || state.hour - ch.statusSince < hold) continue;
-    const ransom = spendUpTo(state, content, id, content.tuning.characters.ransomAmount, 'ransom');
-    if (ch.captor) deposit(state, content, ch.captor, ransom, 'ransom');
-    ch.status = 'free';
-    ch.statusSince = state.hour;
-    ch.captor = null;
-    const text = `${charName(ctx, id)} was released for a ransom of $${Math.round(ransom).toLocaleString()}.`;
-    pushFeed(state, 'important', text, ch.homePlaza, null);
-  }
+  runCaptivesDaily(ctx);
 }
 
 /** Takes a character prisoner. */
@@ -36,21 +26,29 @@ export function captureCharacter(ctx: SimContext, id: Id, captor: Id): void {
   ch.captor = captor;
   pushFeed(state, 'critical', `${charName(ctx, id)} was captured by ${charName(ctx, captor)}'s people.`, ch.homePlaza, null);
   if (id === state.playerId) {
-    pushFeed(state, 'critical', `You are a prisoner. Your people will pay the ransom within ${ctx.content.tuning.characters.prisonerHoldDays} days.`, null, null);
+    pushFeed(state, 'critical', `You are a prisoner. ${charName(ctx, captor)} will decide what to do with you.`, null, null);
+  } else if (captor === state.playerId) {
+    pushFeed(state, 'critical', `Your people took ${charName(ctx, id)}. Decide what to do with him (Shadows > Captives).`, null, networkOf(state, captor));
   }
 }
 
 /** Kills (or extradites) a character and hands their plazas, crews, and cash to a successor. */
-export function killCharacter(ctx: SimContext, id: Id, fate: 'dead' | 'extradited' = 'dead'): void {
+export function killCharacter(ctx: SimContext, id: Id, fate: 'dead' | 'extradited' | 'fled' = 'dead'): void {
   const { state } = ctx;
   const ch = state.characters[id];
-  if (!ch || ch.status === 'dead' || ch.status === 'extradited') return;
+  if (!ch || isGone(ch.status)) return;
   ch.status = fate;
   ch.statusSince = state.hour;
   ch.captor = null;
-  pushFeed(state, 'critical', fate === 'dead' ? `${charName(ctx, id)} is dead.` : `${charName(ctx, id)} was extradited and is gone for good.`, ch.homePlaza, null);
+  pushFeed(state, 'critical', fate === 'dead' ? `${charName(ctx, id)} is dead.` : fate === 'fled' ? `${charName(ctx, id)} left Sinaloa with what cash he had.` : `${charName(ctx, id)} was extradited and is gone for good.`, ch.homePlaza, null);
 
   const heir = successorOf(ctx, id);
+  // His prisoners pass to his heir, or walk free.
+  for (const c of Object.values(state.characters)) {
+    if (c.status !== 'captured' || c.captor !== id) continue;
+    if (heir) c.captor = heir;
+    else (c.status = 'free'), (c.statusSince = state.hour), (c.captor = null);
+  }
   if (id === state.playerId && !heir) {
     dissolve(ctx, id);
     endGame(ctx, 'player_eliminated', null, `With no heir to take over, your organization falls apart on day ${dayOf(state.hour)}.`);

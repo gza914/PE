@@ -87,6 +87,20 @@ export function NodePanel({ id }: { id: string }) {
           </ul>
         </>
       )}
+      {game.countryside[id] && (
+        <>
+          <h3>The countryside</h3>
+          <p className="small">
+            {Object.keys(game.countryside[id]!).length === 0
+              ? 'No one holds the hills.'
+              : Object.keys(game.countryside[id]!)
+                  .sort((a, b) => game.countryside[id]![b]! - game.countryside[id]![a]!)
+                  .map((k) => `${content.factions.find((f) => f.id === k)?.name ?? charLabel(game, k)} ${Math.round(game.countryside[id]![k]!)}`)
+                  .join(' · ')}
+          </p>
+          <p className="muted small">Camps raise a side's hold on the hills; the holder's support keeps its own. The hills count for {Math.round(content.tuning.countryside.shareWeight * 100)}% of the plaza's value in the share of the map.</p>
+        </>
+      )}
       {seen.length > 0 && (
         <>
           <h3>Reported here</h3>

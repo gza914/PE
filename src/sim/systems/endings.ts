@@ -16,6 +16,7 @@ import { chance } from '../rng';
 import { VEHICLE_TYPES } from '../signature';
 import type { EndReason, EndTitle, GameState, Id, ScoreBreakdown, StartSnapshot } from '../state';
 import { characterTerritory, territoryShares } from './economy';
+import { isGone } from '../state';
 
 const RANK_VALUE = { head: 5, inner_circle: 4, senior_lieutenant: 3, lieutenant: 2, associate: 1, crew_leader: 1 } as const;
 
@@ -134,7 +135,7 @@ export function checkEndings(ctx: SimContext): void {
       continue;
     }
     fs.headlessDays += 1;
-    if (!head || head.status === 'dead' || head.status === 'extradited') {
+    if (!head || isGone(head.status)) {
       const successor = Object.values(state.characters)
         .filter((c) => c.faction === f && c.outsider === null && c.status === 'free')
         .sort((x, y) => RANK_VALUE[y.rank] - RANK_VALUE[x.rank] || force(state, content, y.id) - force(state, content, x.id) || (x.id < y.id ? -1 : 1))[0];

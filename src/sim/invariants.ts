@@ -7,6 +7,7 @@ import type { Content } from '../data/content';
 import { VEHICLE_TYPES } from './signature';
 import type { GameState } from './state';
 import { world } from './world';
+import { isGone } from './state';
 
 const EPS = 1e-6;
 
@@ -20,7 +21,7 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     const at = `crew ${c.id}`;
     if (!Number.isInteger(c.men) || c.men < 1 || c.men > t.crews.maxMen) p.push(`${at}: men ${c.men}`);
     if (!state.characters[c.owner]) p.push(`${at}: unknown owner ${c.owner}`);
-    else if (state.characters[c.owner]!.status === 'dead' || state.characters[c.owner]!.status === 'extradited') p.push(`${at}: owner ${c.owner} is dead`);
+    else if (isGone(state.characters[c.owner]!.status)) p.push(`${at}: owner ${c.owner} is dead`);
     if (!state.characters[c.leader]) p.push(`${at}: unknown leader ${c.leader}`);
     for (const v of VEHICLE_TYPES) if (!Number.isInteger(c.vehicles[v]) || c.vehicles[v] < 0) p.push(`${at}: ${v} ${c.vehicles[v]}`);
     if (!inRange(c.armorDamage, 0, 100)) p.push(`${at}: armorDamage ${c.armorDamage}`);
@@ -67,7 +68,7 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     if (n.owner !== null) {
       const o = state.characters[n.owner];
       if (!o) p.push(`${at}: unknown owner`);
-      else if (o.status === 'dead' || o.status === 'extradited') p.push(`${at}: owned by the dead ${n.owner}`);
+      else if (isGone(o.status)) p.push(`${at}: owned by the dead ${n.owner}`);
     }
     if (w.node(n.id).type === 'border_exit' && n.owner !== null) p.push(`${at}: border exit owned`);
     if (n.stash < -EPS || !Number.isFinite(n.stash)) p.push(`${at}: stash ${n.stash}`);
@@ -129,6 +130,14 @@ export function checkInvariants(state: GameState, content: Content): string[] {
   }
   for (const d of state.outsideDeals) if (d.status === 'open' && !state.outsiders[d.cartel]) p.push(`deal ${d.id}: unknown cartel`);
   for (const c of Object.values(state.crews)) if (c.hired?.kind === 'contingent' && (!c.hired.from || !state.outsiders[c.hired.from])) p.push(`crew ${c.id}: contingent from unknown cartel`);
+  for (const [node, z] of Object.entries(state.countryside)) {
+    if (!state.nodes[node]) p.push(`countryside ${node}: unknown plaza`);
+    for (const [net, v] of Object.entries(z)) if (!(v > 0 && v <= 100)) p.push(`countryside ${node}: ${net} influence ${v}`);
+  }
+  for (const c of Object.values(state.crews)) {
+    if (c.order.type === 'camp' && (c.location.kind !== 'node' || c.location.node === content.culiacan.parentNode || w.node(c.location.node).type === 'border_exit')) p.push(`crew ${c.id}: camped where there are no hills`);
+  }
+  for (const ch of Object.values(state.characters)) if (ch.status === 'captured' && ch.captor && isGone(state.characters[ch.captor]?.status)) p.push(`character ${ch.id}: held by someone who is gone`);
   for (const d of state.drones) if ((d.road === null) === (d.node === null)) p.push(`drone ${d.id}: needs exactly one of road or town`);
   for (const i of state.informants) {
     if (!state.nodes[i.node]) p.push(`informant ${i.id}: unknown town ${i.node}`);

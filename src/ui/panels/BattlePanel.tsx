@@ -15,6 +15,7 @@ const TYPE_LABEL: Record<Battle['type'], string> = {
   siege: 'Siege',
   urban_skirmish: 'Street fighting',
   military_clash: 'Military clash',
+  sweep: 'Sweep of the hills',
 };
 
 function CrewRow({ c, detail }: { c: CrewState; detail: boolean }) {

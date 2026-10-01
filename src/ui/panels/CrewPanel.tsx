@@ -3,7 +3,8 @@ import type { OrderRequest } from '../../sim/commands';
 import { newContext } from '../../sim/context';
 import { escortsOf, sameLocation } from '../../sim/crews';
 import { crewPayPerWeek, gearName, skillName, tierLabel, trainingBlocked, trainingCostPerDay, weaponsCost } from '../../sim/forces';
-import { crewNetwork } from '../../sim/network';
+import { campBlocked } from '../../sim/countryside';
+import { crewNetwork, networkOf } from '../../sim/network';
 import { seats, VEHICLE_TYPES } from '../../sim/signature';
 import type { CrewState } from '../../sim/state';
 import { world } from '../../sim/world';
@@ -33,6 +34,8 @@ function orderText(game: ReturnType<typeof useGame.getState>['game'], content: R
       return `In a column with ${charLabel(game!, game!.crews[o.crew]?.leader ?? '')}'s crew`;
     case 'lie_low':
       return 'Lying low (invisible, cannot act)';
+    case 'camp':
+      return `Camped in the hills around ${c.location.kind === 'node' ? w.node(c.location.node).name : 'here'}`;
     default:
       return o.type[0]!.toUpperCase() + o.type.slice(1);
   }
@@ -156,6 +159,21 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
             <button onClick={() => set({ plan: { kind: 'raid', crew: crew.id, destination: null, waypoints: [] } })}>Raid…</button>
             {crew.location.kind === 'node' && <button onClick={() => order({ type: 'garrison' })}>Garrison</button>}
             {crew.location.kind === 'node' && <button onClick={() => order({ type: 'lie_low' })}>Lie low</button>}
+            {crew.location.kind === 'node' && campBlocked(content, crew.location.node) === null && crew.order.type !== 'camp' && (
+              <button title="Out of town, hard to find: raises your side's hold on the countryside; strike the town when the garrison is weak" onClick={() => order({ type: 'camp' })}>
+                Camp in the hills
+              </button>
+            )}
+            {crew.location.kind === 'node' && crew.order.type === 'camp' && game.nodes[crew.location.node]!.owner !== null && crewNetwork(game, crew) !== networkOf(game, game.nodes[crew.location.node]!.owner!) && (
+              <button title="Hit the town from the hills" onClick={() => order({ type: 'raid', target: (crew.location as { node: string }).node, preference: 'fastest' })}>
+                Strike the town
+              </button>
+            )}
+            {crew.location.kind === 'node' && campBlocked(content, crew.location.node) === null && crew.order.type !== 'camp' && (
+              <button title="Comb the hills for enemy camps: a fight in which they have the terrain" onClick={() => enqueue({ type: 'sweep', issuer: crew.owner, crew: crew.id })}>
+                Sweep the hills
+              </button>
+            )}
             <button onClick={() => order({ type: 'retreat' })}>Retreat</button>
             <button onClick={() => order({ type: 'idle' })}>Stop</button>
           </div>

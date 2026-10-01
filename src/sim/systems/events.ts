@@ -36,6 +36,7 @@ import { killCharacter } from './characters';
 import { characterTerritory } from './economy';
 import { jailBreakout, jailBribe, militaryClash, resolveCapture, tierOf, TIERS } from './stateForces';
 import { plantRumor } from './infowar';
+import { isGone } from '../state';
 
 export interface Instance {
   def: GameEvent;
@@ -370,7 +371,7 @@ function pickCounterpart(ctx: SimContext, def: GameEvent, decider: Id): Id | nul
  */
 export function fireEvent(ctx: SimContext, def: GameEvent, scope: Id, decider: Id, other: Id | null, mtth = false): boolean {
   const { state } = ctx;
-  if (!state.characters[decider] || state.characters[decider]!.status === 'dead' || state.characters[decider]!.status === 'extradited') return false;
+  if (!state.characters[decider] || isGone(state.characters[decider]!.status)) return false;
   if (!mayDecide(ctx, decider)) return false;
   if (other === null && def.scope === 'character' && def.counterpart) {
     const picked = pickCounterpart(ctx, def, decider);
@@ -560,7 +561,7 @@ function rivalHeads(ctx: SimContext, of: Id): Id[] {
   return majorFactions(content)
     .filter((f) => f !== net)
     .map((f) => state.factions[f]?.head)
-    .filter((h): h is Id => !!h && state.characters[h]?.status !== 'dead' && state.characters[h]?.status !== 'extradited' && h !== of);
+    .filter((h): h is Id => !!h && !isGone(state.characters[h]?.status) && h !== of);
 }
 
 function ownHead(ctx: SimContext, of: Id): Id | null {

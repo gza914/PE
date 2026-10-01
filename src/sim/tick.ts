@@ -13,6 +13,8 @@ import { runOperationsDaily, updateOperations } from './operations';
 import { runInformants, runInformantsDaily } from './intel';
 import { runTrainingDaily } from './forces';
 import { runOutsidersDaily } from './outside';
+import { runCountrysideDaily } from './countryside';
+import { runRemnantsDaily } from './remnants';
 import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -80,6 +82,8 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runInformantsDaily(ctx);
     runTrainingDaily(ctx);
     runOutsidersDaily(ctx);
+    runCountrysideDaily(ctx);
+    runRemnantsDaily(ctx);
     pruneOpinions(state);
     prunePacts(state);
   }

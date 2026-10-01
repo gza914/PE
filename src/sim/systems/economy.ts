@@ -4,6 +4,7 @@
  * Also runs the recruit pools, the armored-truck market, and the effect of
  * extortion and fighting on businesses and support. GDD: "Economy".
  */
+import { countrysideShares } from '../countryside';
 import { crewPayPerWeek, mercenariesLeave, restockVeterans } from '../forces';
 import type { Content } from '../../data/content';
 import { pushFeed, type SimContext } from '../context';
@@ -12,6 +13,7 @@ import { networkOf } from '../network';
 import type { CrewState, GameState, Id, IncomeStream, NetworkId } from '../state';
 import { payShares } from '../pacts';
 import { world } from '../world';
+import { isGone, GONE_STATUSES } from '../state';
 
 /** One line of daily income: who gets it, from where, and why. */
 export interface IncomeLine {
@@ -40,7 +42,7 @@ export function coloniaHolder(state: GameState, content: Content, colonia: Id): 
 
 function freeHead(state: GameState, faction: NetworkId): Id | null {
   const head = state.factions[faction]?.head;
-  return head && !['dead', 'extradited'].includes(state.characters[head]?.status ?? 'dead') ? head : null;
+  return head && !GONE_STATUSES.includes(state.characters[head]?.status ?? 'dead') ? head : null;
 }
 
 /** Who collects a colonia's money: the owner of the biggest holding crew there, else the faction head. */
@@ -137,7 +139,7 @@ export function settleDailyIncome(ctx: SimContext): void {
   const w = world(content);
   const quiet = content.tuning.state.lieLow.incomeMultiplier;
   for (const line of dailyIncome(state, content)) {
-    if (state.characters[line.recipient]?.status === 'dead' || state.characters[line.recipient]?.status === 'extradited') continue;
+    if (isGone(state.characters[line.recipient]?.status)) continue;
     // Lying low: business slows in the regions you are keeping quiet in.
     const low = line.node !== null && state.lieLow.some((l) => l.owner === line.recipient && l.region === w.node(line.node!).region && l.until > state.hour);
     const amount = low ? line.amount * quiet : line.amount;
@@ -201,7 +203,7 @@ export function payWeeklyPayroll(ctx: SimContext): void {
   const e = content.tuning.economy;
   const payers = Object.keys(state.characters)
     .sort()
-    .filter((id) => state.characters[id]!.status !== 'dead' && state.characters[id]!.status !== 'extradited');
+    .filter((id) => !isGone(state.characters[id]!.status));
   for (const id of payers) {
     payCrews(ctx, id);
     payHalcones(ctx, id);
@@ -390,6 +392,10 @@ export function territoryShares(state: GameState, content: Content): Map<Network
     add(owner ? networkOf(state, owner) : null, v);
   }
   for (const col of content.culiacan.colonias) add(coloniaHolder(state, content, col.id), coloniaValue(state, content, col.id));
+  // The hills count too, at partial weight (GDD "Winning").
+  const hills = countrysideShares(state, content, (n) => nodeValue(state, content, n));
+  total += hills.total;
+  for (const [net, v] of hills.byNetwork) value.set(net, (value.get(net) ?? 0) + v);
   const shares = new Map<NetworkId, number>();
   for (const [k, v] of value) shares.set(k, total > 0 ? v / total : 0);
   return shares;

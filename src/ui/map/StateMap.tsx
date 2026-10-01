@@ -60,6 +60,22 @@ export function StateMap() {
   return (
     <div className="mapwrap">
       <svg viewBox={pz.viewBox} className="svgmap" role="img" aria-label="Map of Sinaloa" {...pz.handlers} onClick={() => !plan && select(null)}>
+        {/* The countryside: a soft zone per plaza, colored by who holds the hills. */}
+        {content.nodes.map((n) => {
+          const z = game.countryside[n.id];
+          if (!z) return null;
+          const r = 22 * (content.tuning.countryside.sizeByType[n.type] ?? 1);
+          return Object.keys(z)
+            .sort()
+            .map((netId) => (
+              <circle key={`cs-${n.id}-${netId}`} cx={n.x} cy={n.y} r={r} fill={content.factions.find((f) => f.id === netId)?.color ?? ownerColor(content, game, netId)} opacity={(z[netId]! / 100) * 0.22} pointerEvents="none">
+                <title>{`Hills around ${n.name}: ${Object.keys(z)
+                  .sort()
+                  .map((k) => `${content.factions.find((f) => f.id === k)?.name ?? game.characters[k]?.alias ?? k} ${Math.round(z[k]!)}`)
+                  .join(', ')}`}</title>
+              </circle>
+            ));
+        })}
         {overlay === 'war' &&
           content.nodes.map((n) => (
             <circle key={`war-${n.id}`} cx={n.x} cy={n.y} r={40} className={`ov-war ${game.regions[n.region]?.warState}`} />

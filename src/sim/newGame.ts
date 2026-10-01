@@ -2,6 +2,7 @@
 import type { Content } from '../data/content';
 import type { VehicleType } from '../data/schemas';
 import { newId } from './context';
+import { networkOf } from './network';
 import { characterTerritory } from './systems/economy';
 import { snapshot } from './systems/endings';
 import { seedRng } from './rng';
@@ -17,7 +18,7 @@ export interface NewGameOptions {
 }
 
 export function newTransit(): CrewTransit {
-  return { waitUntil: null, rolled: [], lastRolledNode: null, nextStationaryRoll: 0, shiftAt: null, shiftAvoidRoad: null, spotted: null };
+  return { waitUntil: null, rolled: [], lastRolledNode: null, nextStationaryRoll: 0, shiftAt: null, shiftAvoidRoad: null, lastRoad: null, spotted: null };
 }
 
 export const NO_VEHICLES: Record<VehicleType, number> = { pickup: 0, suv: 0, motorcycle: 0, armored: 0 };
@@ -46,6 +47,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     reports: [],
     drones: [],
     informants: [],
+    countryside: {},
     outsiders: {},
     outsideDeals: [],
     market: { armored: content.tuning.economy.armoredStartStock, veterans: content.tuning.forces.veterans.perWeek, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
@@ -164,6 +166,10 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       lastVideoAt: null,
       lastClaimAt: null,
       foreignAlly: null,
+      interrogated: 0,
+      plazasHeld: 0,
+      lastPlaza: null,
+      lostEverythingAt: null,
       outsider: content.factions.find((f) => f.kind === 'outside' && f.head === def.id)?.id ?? null,
     };
     state.characters[def.id] = ch;
@@ -216,6 +222,18 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     if (f.kind !== 'outside') continue;
     const cfg = tuning.outside.cartels[f.id];
     state.outsiders[f.id] = { faction: f.id, ambition: cfg?.startAmbition ?? 0, attitude: {}, envoys: {}, promises: [], loans: [], payments: [], hostile: [], silentUntil: {}, declared: false };
+  }
+
+  // Each plaza's hills start with its holder's people in them.
+  for (const n of content.nodes) {
+    if (n.type === 'border_exit' || n.id === content.culiacan.parentNode) continue;
+    const owner = state.nodes[n.id]!.owner;
+    state.countryside[n.id] = owner ? { [networkOf(state, owner)]: tuning.countryside.startHolderInfluence } : {};
+  }
+  for (const ch of Object.values(state.characters)) {
+    const held = Object.keys(state.nodes).sort().filter((n) => state.nodes[n]!.owner === ch.id);
+    ch.plazasHeld = held.length;
+    ch.lastPlaza = held[0] ?? null;
   }
 
   for (const ch of Object.values(state.characters)) ch.baseTerritory = characterTerritory(state, content, ch.id);
