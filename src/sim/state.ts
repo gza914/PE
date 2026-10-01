@@ -414,7 +414,7 @@ export interface HiredTroops {
   defectOffer: number | null;
 }
 
-export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom' | 'deals';
+export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'rural' | 'tribute' | 'aid' | 'ransom' | 'deals';
 export type CostStream =
   | 'payroll'
   | 'halcones'

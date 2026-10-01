@@ -238,3 +238,40 @@ describe('the countryside', () => {
     expect(Object.values(s.battles).some((b) => b.where.kind === 'node' && b.where.node === 'la_noria')).toBe(true);
   });
 });
+
+describe('the countryside, step two', () => {
+  it('people in the hills watch the roads: rural lookouts', async () => {
+    const { watchersOf } = await import('../src/sim/network');
+    const s = empty();
+    s.countryside.villa_union = { chapitos: 80 };
+    const w = watchersOf(s, calm, 'villa_union');
+    expect(w.some((x) => x.network === 'chapitos' && x.coverage > 0)).toBe(true);
+    s.countryside.villa_union = { chapitos: 5 };
+    expect(watchersOf(s, calm, 'villa_union').some((x) => x.network === 'chapitos')).toBe(false);
+  });
+
+  it('contested hills cut route income; holding them pays a rural income', async () => {
+    const { dailyIncome } = await import('../src/sim/systems/economy');
+    const s = empty();
+    const node = calm.routes[0]!.nodes.find((n) => s.countryside[n] && s.nodes[n]!.owner)!;
+    const owner = s.nodes[node]!.owner!;
+    const route = (g: GameState) => dailyIncome(g, calm).filter((l) => l.node === node && (l.stream === 'trafficking' || l.stream === 'tolls')).reduce((n, l) => n + l.amount, 0);
+    const calmRoute = route(s);
+    const rival = networkOf(s, owner) === 'chapitos' ? 'mayos' : 'chapitos';
+    s.countryside[node] = { [networkOf(s, owner)]: 50, [rival]: 50 };
+    expect(route(s)).toBeLessThan(calmRoute);
+    expect(dailyIncome(s, calm).some((l) => l.stream === 'rural' && l.recipient === owner && l.node === node)).toBe(true);
+  });
+
+  it('sierra labs follow the hold on the hills', async () => {
+    const { labFactor } = await import('../src/sim/countryside');
+    const s = empty();
+    const lab = calm.nodes.find((n) => calm.tuning.countryside.labsOutsideTypes.includes(n.type) && s.nodes[n.id]!.owner)!.id;
+    const own = networkOf(s, s.nodes[lab]!.owner!);
+    s.countryside[lab] = { [own]: 80 };
+    expect(labFactor(s, calm, lab)).toBe(1);
+    s.countryside[lab] = { [own]: 20, rival_x: 80 };
+    expect(labFactor(s, calm, lab)).toBeLessThan(0.5);
+    expect(labFactor(s, calm, 'mazatlan')).toBe(1);
+  });
+});

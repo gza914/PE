@@ -122,3 +122,79 @@ export function sweep(ctx: SimContext, issuer: Id, crewId: Id): string | null {
   startBattle(ctx, { type: 'sweep', attackers: attackers.map((c) => c.id), defenders: defenders.map((c) => c.id), where: { kind: 'node', node }, capture: false });
   return null;
 }
+
+/** The rivals' share of a plaza's hills, from the point of view of `network` (0 with no zone or no one there). */
+export function rivalShare(state: GameState, node: Id, network: NetworkId): number {
+  const z = state.countryside[node];
+  if (!z) return 0;
+  const sum = Object.values(z).reduce((a, b) => a + b, 0);
+  if (sum <= 0) return 0;
+  return (sum - (z[network] ?? 0)) / sum;
+}
+
+/** A network's share of a plaza's hills (1 with no zone or no one there). */
+export function holdShare(state: GameState, node: Id, network: NetworkId): number {
+  const z = state.countryside[node];
+  if (!z) return 1;
+  const sum = Object.values(z).reduce((a, b) => a + b, 0);
+  return sum > 0 ? (z[network] ?? 0) / sum : 1;
+}
+
+/** Who holds the countryside a road runs through: the average of its two ends' hills. */
+export function roadCountryside(state: GameState, content: Content, roadId: Id): { network: NetworkId | null; influence: number } {
+  const road = world(content).road(roadId);
+  const sum = new Map<NetworkId, number>();
+  for (const n of [road.from, road.to]) for (const [net, v] of Object.entries(state.countryside[n] ?? {})) sum.set(net, (sum.get(net) ?? 0) + v / 2);
+  let best: NetworkId | null = null;
+  let v = 0;
+  for (const net of [...sum.keys()].sort()) if (sum.get(net)! > v) (best = net), (v = sum.get(net)!);
+  return { network: best, influence: v };
+}
+
+/** Rural lookouts: the side holding a plaza's hills watches the roads into it. */
+export function ruralWatcher(state: GameState, content: Content, node: Id): { network: NetworkId; coverage: number } | null {
+  const t = content.tuning.countryside;
+  const d = dominant(state, node);
+  if (!d.network || d.influence < t.lookoutMinInfluence) return null;
+  return { network: d.network, coverage: Math.min(100, d.influence * t.lookoutCoveragePerInfluence) };
+}
+
+/** Who collects a network's share of a zone's rural economy: the town's holder if his side, else its biggest camp. */
+function ruralRecipient(state: GameState, node: Id, network: NetworkId): Id | null {
+  const owner = state.nodes[node]?.owner ?? null;
+  if (owner && networkOf(state, owner) === network) return owner;
+  const camp = campersAt(state, node)
+    .filter((c) => crewNetwork(state, c) === network)
+    .sort((a, b) => b.men - a.men || (a.id < b.id ? -1 : 1))[0];
+  return camp?.owner ?? null;
+}
+
+export interface RuralLine {
+  recipient: Id;
+  node: Id;
+  amount: number;
+}
+
+/** The rural economy each zone pays today, split by influence. */
+export function ruralIncome(state: GameState, content: Content): RuralLine[] {
+  const t = content.tuning.countryside;
+  const out: RuralLine[] = [];
+  for (const n of content.nodes) {
+    const z = state.countryside[n.id];
+    if (!z) continue;
+    const base = t.ruralIncomePerDayPerSize * zoneSize(content, n.id);
+    for (const net of Object.keys(z).sort()) {
+      const who = ruralRecipient(state, n.id, net);
+      if (who) out.push({ recipient: who, node: n.id, amount: (base * z[net]!) / 100 });
+    }
+  }
+  return out;
+}
+
+/** Labs out of town produce in proportion to the holder's hold on the hills. */
+export function labFactor(state: GameState, content: Content, node: Id): number {
+  const t = content.tuning.countryside;
+  const owner = state.nodes[node]?.owner;
+  if (!owner || !t.labsOutsideTypes.includes(world(content).node(node).type)) return 1;
+  return Math.max(t.labFloor, holdShare(state, node, networkOf(state, owner)));
+}

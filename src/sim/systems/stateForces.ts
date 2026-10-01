@@ -115,7 +115,9 @@ function planRaids(ctx: SimContext): void {
     if (state.scheduledEvents.some((e) => e.scope === id && (e.event === 'army_lab_raid' || e.event === 'stash_house_raided'))) continue;
     if (state.pendingEvents.some((e) => e.scope === id)) continue;
     const bribed = commanderBribed(ctx, region, networkOf(state, p.owner));
-    const odds = s.raids.dailyChance[tier] * (bribed ? s.raids.bribedMultiplier : 1);
+    // Labs out in hills your people hold are harder for the army to find (GDD countryside step two).
+    const hills = lab && !stash ? (state.countryside[id]?.[networkOf(state, p.owner)] ?? 0) / 100 : 0;
+    const odds = s.raids.dailyChance[tier] * (bribed ? s.raids.bribedMultiplier : 1) * (1 - content.tuning.countryside.labProtection * hills);
     if (!chance(state.rng, odds)) continue;
     const target: 'lab' | 'stash' = lab && (!stash || rand(state.rng) < 0.5) ? 'lab' : 'stash';
     raidPlaza(ctx, id, target);

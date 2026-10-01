@@ -4,6 +4,7 @@
  */
 import type { Content } from '../data/content';
 import type { CrewState, GameState, Id, NetworkId } from './state';
+import { ruralWatcher } from './countryside';
 import { world } from './world';
 
 export function networkOf(state: GameState, character: Id): NetworkId {
@@ -25,20 +26,22 @@ export interface Watcher {
  */
 export function watchersOf(state: GameState, content: Content, node: Id): Watcher[] {
   const plaza = state.nodes[node];
-  if (!plaza || plaza.halconCoverage <= 0) return [];
-  if (plaza.owner) {
-    // Police on the owner's payroll add eyes; bought halcones report to the buyer instead.
-    const region = world(content).node(node).region;
-    const police = state.police.some((p) => p.owner === plaza.owner && p.region === region && p.until > state.hour);
-    const coverage = Math.min(100, plaza.halconCoverage + (police ? content.tuning.state.police.halconBonus : 0));
-    return [{ network: plaza.halconesBoughtBy ?? networkOf(state, plaza.owner), coverage }];
-  }
+  if (!plaza) return [];
   if (node === content.culiacan.parentNode) {
+    if (plaza.halconCoverage <= 0) return [];
     return content.factions
       .filter((f) => f.kind === 'major')
       .map((f) => ({ network: f.id, coverage: plaza.halconCoverage }));
   }
-  return [];
+  const base: Watcher[] = [];
+  if (plaza.owner && plaza.halconCoverage > 0) {
+    // Police on the owner's payroll add eyes; bought halcones report to the buyer instead.
+    const region = world(content).node(node).region;
+    const police = state.police.some((p) => p.owner === plaza.owner && p.region === region && p.until > state.hour);
+    const coverage = Math.min(100, plaza.halconCoverage + (police ? content.tuning.state.police.halconBonus : 0));
+    base.push({ network: plaza.halconesBoughtBy ?? networkOf(state, plaza.owner), coverage });
+  }
+  return withRural(state, content, node, base);
 }
 
 /**
@@ -55,4 +58,13 @@ export function estimatedWatchersOf(state: GameState, content: Content, node: Id
 export function ownedBy(state: GameState, node: Id, network: NetworkId): boolean {
   const owner = state.nodes[node]?.owner;
   return owner != null && networkOf(state, owner) === network;
+}
+
+/** People in the hills watch the roads too (GDD countryside step two). */
+function withRural(state: GameState, content: Content, node: Id, list: Watcher[]): Watcher[] {
+  const r = ruralWatcher(state, content, node);
+  if (!r) return list;
+  const same = list.find((w) => w.network === r.network);
+  if (same) return list.map((w) => (w === same ? { ...w, coverage: Math.max(w.coverage, r.coverage) } : w));
+  return [...list, r];
 }

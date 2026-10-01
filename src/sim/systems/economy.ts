@@ -4,7 +4,7 @@
  * Also runs the recruit pools, the armored-truck market, and the effect of
  * extortion and fighting on businesses and support. GDD: "Economy".
  */
-import { countrysideShares } from '../countryside';
+import { countrysideShares, labFactor, rivalShare, ruralIncome } from '../countryside';
 import { crewPayPerWeek, mercenariesLeave, restockVeterans } from '../forces';
 import type { Content } from '../../data/content';
 import { pushFeed, type SimContext } from '../context';
@@ -97,7 +97,7 @@ export function dailyIncome(state: GameState, content: Content): IncomeLine[] {
     const rate = e.extortionRates[plaza.extortionRate].incomePerBusinessPerDay;
     lines.push({ recipient: owner, node: n.id, stream: 'extortion', amount: plaza.businesses * rate * compliance(state, content, n.id, owner), source: n.id });
     lines.push({ recipient: owner, node: n.id, stream: 'rackets', amount: plaza.businesses * e.racketPerBusinessPerDay * (plaza.support / 100), source: n.id });
-    if (plaza.labs > 0) lines.push({ recipient: owner, node: n.id, stream: 'labs', amount: plaza.labs * e.labOutputPerDay, source: n.id });
+    if (plaza.labs > 0) lines.push({ recipient: owner, node: n.id, stream: 'labs', amount: plaza.labs * e.labOutputPerDay * labFactor(state, content, n.id), source: n.id });
   }
 
   // Culiacán pays by colonia, to whoever holds each one.
@@ -120,9 +120,12 @@ export function dailyIncome(state: GameState, content: Content): IncomeLine[] {
       const who = nodeRecipient(state, content, n);
       if (!who) continue;
       const stream: IncomeStream = sourceNet !== null && networkOf(state, who) === sourceNet ? 'trafficking' : 'tolls';
-      lines.push({ recipient: who, node: n === city ? null : n, stream, amount: share, source: route.id });
+      // Contested hills cut what moves through (GDD countryside step two).
+      const cut = 1 - content.tuning.countryside.contestedRouteCut * rivalShare(state, n, networkOf(state, who));
+      lines.push({ recipient: who, node: n === city ? null : n, stream, amount: share * cut, source: route.id });
     }
   }
+  for (const r of ruralIncome(state, content)) lines.push({ recipient: r.recipient, node: r.node, stream: 'rural', amount: r.amount, source: r.node });
   return lines.filter((l) => l.amount > 0);
 }
 

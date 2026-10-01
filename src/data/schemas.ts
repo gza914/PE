@@ -613,6 +613,19 @@ export const TuningSchema = z.object({
     /** Campers fight sweeps with the terrain on their side. */
     campDefenseMultiplier: z.number().positive(),
     sweepCooldownHours: z.number().nonnegative(),
+    /** Step two: people in the hills watch the roads; coverage per point of influence, from this much up. */
+    lookoutCoveragePerInfluence: z.number().nonnegative(),
+    lookoutMinInfluence: z.number().min(0).max(100),
+    /** Route income through a plaza falls by this times the rivals' share of its hills. */
+    contestedRouteCut: pct,
+    /** Rural economy a zone pays a day, per unit of zone size, split by influence. */
+    ruralIncomePerDayPerSize: z.number().nonnegative(),
+    /** Plaza types whose labs sit out of town: their output follows the holder's hold on the hills. */
+    labsOutsideTypes: z.array(z.string()),
+    labFloor: pct,
+    /** Army lab raids are this much less likely at full influence in the hills. */
+    labProtection: pct,
+    roadTintMinInfluence: z.number().min(0).max(100),
     ai: z.object({
       /** Campers strike when they believe they beat the garrison by this ratio. */
       opportunismRatio: z.number().positive(),

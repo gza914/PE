@@ -1213,6 +1213,17 @@
       "remnantChancePerCheck": 0.5,
       "remnantMaxHops": 2,
       "remnantMinMen": 8
-    }
+    },
+    "lookoutCoveragePerInfluence": 0.6,
+    "lookoutMinInfluence": 20,
+    "contestedRouteCut": 0.5,
+    "ruralIncomePerDayPerSize": 1500,
+    "labsOutsideTypes": [
+      "sierra_hub",
+      "rancheria"
+    ],
+    "labFloor": 0.3,
+    "labProtection": 0.6,
+    "roadTintMinInfluence": 30
   }
 }

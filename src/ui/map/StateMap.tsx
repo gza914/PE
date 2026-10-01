@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 import { crewNetwork, estimatedWatchersOf } from '../../sim/network';
+import { roadCountryside } from '../../sim/countryside';
 import { fmtRange, shortRange } from '../../sim/estimate';
 import { lastSeen } from '../../sim/knowledge';
 import type { CrewState, PathStep, RoutePreference } from '../../sim/state';
@@ -90,9 +91,12 @@ export function StateMap() {
           const b = w.node(r.to);
           const st = ROAD_STYLE[r.type];
           const isSel = selected?.kind === 'road' && selected.id === r.id;
+          const hills = roadCountryside(game, content, r.id);
+          const tint = hills.network && hills.influence >= content.tuning.countryside.roadTintMinInfluence ? (content.factions.find((f) => f.id === hills.network)?.color ?? ownerColor(content, game, hills.network)) : null;
           return (
             <g key={r.id} className="roadg" onClick={(e) => (e.stopPropagation(), !plan && select({ kind: 'road', id: r.id }))}>
               <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="roadhit" />
+              {tint && <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={tint} strokeWidth={st.width + 4} opacity={(hills.influence / 100) * 0.35} strokeLinecap="round" pointerEvents="none" />}
               <line
                 x1={a.x}
                 y1={a.y}

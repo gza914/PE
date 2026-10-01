@@ -13,6 +13,7 @@ const INCOME_LABEL: Record<IncomeStream, string> = {
   extortion: 'Extortion',
   labs: 'Labs',
   rackets: 'Rackets',
+  rural: 'Rural economy',
   tribute: 'Tribute received',
   aid: 'Faction aid',
   ransom: 'Ransoms',

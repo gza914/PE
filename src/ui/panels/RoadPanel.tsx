@@ -1,3 +1,4 @@
+import { roadCountryside } from '../../sim/countryside';
 import { fmtRange } from '../../sim/estimate';
 import { lastSeen } from '../../sim/knowledge';
 import { cashOf } from '../../sim/money';
@@ -30,6 +31,15 @@ export function RoadPanel({ id }: { id: string }) {
         <dd>{t.roads[road.type].speed}×</dd>
         <dt>Visibility</dt>
         <dd>{t.roads[road.type].visibility}×</dd>
+        <dt>Countryside</dt>
+        <dd>
+          {(() => {
+            const h = roadCountryside(game, content, id);
+            if (!h.network || h.influence < 1) return 'no one holds the hills';
+            const name = content.factions.find((f) => f.id === h.network)?.name ?? charLabel(game, h.network);
+            return `${name} (${Math.round(h.influence)}): their lookouts watch this road`;
+          })()}
+        </dd>
         {road.passesNear.length > 0 && (
           <>
             <dt>Passes near</dt>
