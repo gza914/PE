@@ -1,3 +1,4 @@
+import { fmtRange } from '../../sim/estimate';
 import { lastSeen } from '../../sim/knowledge';
 import { cashOf } from '../../sim/money';
 import { world } from '../../sim/world';
@@ -56,7 +57,7 @@ export function RoadPanel({ id }: { id: string }) {
             {seen.map((s) => (
               <li key={s.id}>
                 {s.confidence === 'estimated' ? '~' : ''}
-                {s.men} men, {charLabel(game, s.owner)}'s · {s.source} · {s.ageHours}h ago
+                {fmtRange(s)} men, {charLabel(game, s.owner)}'s · {s.source} · {s.ageHours}h ago
               </li>
             ))}
           </ul>

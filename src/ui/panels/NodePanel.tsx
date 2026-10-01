@@ -1,3 +1,4 @@
+import { fmtRange } from '../../sim/estimate';
 import { lastSeen } from '../../sim/knowledge';
 import { crewNetwork, networkOf } from '../../sim/network';
 import { useGame } from '../store';
@@ -92,8 +93,7 @@ export function NodePanel({ id }: { id: string }) {
           <ul className="mono small">
             {seen.map((s) => (
               <li key={s.id}>
-                {s.confidence === 'estimated' ? '~' : ''}
-                {s.men} men, {charLabel(game, s.owner)}'s · {s.ageHours}h ago
+                {fmtRange(s)} men, {charLabel(game, s.owner)}'s · {s.ageHours}h ago{s.sources && s.sources > 1 ? ` · ${s.sources} sources` : ''}
               </li>
             ))}
           </ul>

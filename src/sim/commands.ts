@@ -7,6 +7,7 @@
 import type { ExtortionRate, SchemeType, VehicleType } from '../data/schemas';
 import { declare } from './diplomacy';
 import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
+import { launchDrone, plantInformant, pullInformant } from './intel';
 import { breakPact, proposePact, respondPact, type PactSpec } from './pacts';
 import { chooseOption } from './systems/events';
 import { infowarCommand, type InfowarCommand } from './systems/infowar';
@@ -56,7 +57,9 @@ export type Command =
   | (Base & { type: 'order_crew'; crew: Id; order: OrderRequest })
   | (Base & { type: 'split_crew'; crew: Id; men: number; vehicles: Partial<Record<VehicleType, number>>; leader?: Id })
   | (Base & { type: 'merge_crews'; crew: Id; into: Id })
-  | (Base & { type: 'launch_drone'; road: Id })
+  | (Base & { type: 'launch_drone'; road?: Id; node?: Id })
+  | (Base & { type: 'plant_informant'; node: Id })
+  | (Base & { type: 'pull_informant'; informant: Id })
   | (Base & { type: 'recruit'; crew: Id; men: number })
   | (Base & { type: 'form_crew'; node: Id; men: number; leader?: Id })
   | (Base & { type: 'buy_vehicles'; crew: Id; vehicle: VehicleType; count: number })
@@ -179,22 +182,12 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       return split(ctx, cmd);
     case 'merge_crews':
       return merge(ctx, cmd);
-    case 'launch_drone': {
-      const road = content.roads.find((r) => r.id === cmd.road);
-      if (!road) return `unknown road "${cmd.road}"`;
-      const cost = content.tuning.detection.droneCost;
-      if (!spend(state, content, issuer.id, cost, 'drones')) return `a drone costs $${cost.toLocaleString()}`;
-      state.drones.push({
-        id: newId(state, 'drone'),
-        network: networkOf(state, issuer.id),
-        owner: issuer.id,
-        road: road.id,
-        launchedAt: state.hour,
-        until: state.hour + content.tuning.detection.droneRevealHours,
-        rolled: [],
-      });
-      return null;
-    }
+    case 'launch_drone':
+      return launchDrone(ctx, issuer.id, cmd.road ?? null, cmd.node ?? null);
+    case 'plant_informant':
+      return plantInformant(ctx, issuer.id, cmd.node);
+    case 'pull_informant':
+      return pullInformant(ctx, issuer.id, cmd.informant);
     case 'choose_event_option':
       return chooseOption(ctx, cmd.issuer, cmd.instance, cmd.option);
     case 'start_scheme':

@@ -10,6 +10,7 @@ import type { GameState } from './state';
 import { pruneOpinions } from './opinion';
 import { prunePacts, runPactsDaily } from './pacts';
 import { runOperationsDaily, updateOperations } from './operations';
+import { runInformants, runInformantsDaily } from './intel';
 import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -58,6 +59,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
   // Hourly systems, in dependency order.
   runMovement(ctx);
   runDetection(ctx);
+  runInformants(ctx);
   runCombat(ctx);
   runScheduledEvents(ctx);
   updateRequests(ctx);
@@ -73,6 +75,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runEventsDaily(ctx);
     runOperationsDaily(ctx);
     runPactsDaily(ctx);
+    runInformantsDaily(ctx);
     pruneOpinions(state);
     prunePacts(state);
   }

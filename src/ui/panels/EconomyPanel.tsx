@@ -27,6 +27,7 @@ const COST_LABEL: Record<CostStream, string> = {
   vehicles: 'Vehicles',
   recruits: 'Recruits',
   drones: 'Drones',
+  informants: 'Informants',
   ransom: 'Ransoms',
   bribes: 'Bribes',
   messages: 'Messages',

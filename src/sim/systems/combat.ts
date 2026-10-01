@@ -404,9 +404,11 @@ function applyLosses(ctx: SimContext, b: Battle, k: SideKey, inflicted: number, 
     const before = c.men;
     c.men -= loss;
     men += loss;
-    // A crew that changed hands mid-fight (its owner died) counts for its new owner.
-    if (b[k].ownerMen[c.owner] === undefined) b[k].ownerMen[c.owner] = before;
     if (loss > 0) b[k].ownerLosses[c.owner] = (b[k].ownerLosses[c.owner] ?? 0) + loss;
+    // Men who fought are at least those lost plus those still standing; this
+    // also covers crews that changed hands, recruited, or joined by any path.
+    const standing = list.filter((x) => x.owner === c.owner).reduce((n, x) => n + x.men, 0);
+    b[k].ownerMen[c.owner] = Math.max(b[k].ownerMen[c.owner] ?? 0, (b[k].ownerLosses[c.owner] ?? 0) + standing);
     const moraleMult = leaderModifier(state, content, c, 'crewMoraleLossMultiplier');
     c.morale = Math.max(0, c.morale - ((loss / before) * 100 * t.moraleLossPerPctLost + t.moraleLossPerHour) * scale.morale * moraleMult);
     if (loss > 0 && state.characters[c.leader]?.status === 'free') {

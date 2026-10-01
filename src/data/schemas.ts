@@ -487,11 +487,58 @@ export const TuningSchema = z.object({
     stationaryVisibility: z.number().nonnegative(),
     /** Coverage a network assumes for rival plazas it has no intel on. */
     assumedUnknownCoverage: meter,
-    /** Halcón sightings report men within ± this fraction. */
-    halconMenEstimateError: pct,
     reportRetentionHours: z.number().positive(),
     /** Crews in the same node see each other; a sighting is refiled at most this often. */
     presenceReportIntervalHours: z.number().int().positive(),
+  }),
+  /** GDD "Intelligence as estimates": sightings are ranges that narrow and age. */
+  intel: z.object({
+    /** Half-width of the range a source supports, as a fraction of its estimate. */
+    spread: z.object({ halcon: pct, patrol: pct, drone: pct, presence: pct, rumor: pct, informant: pct }),
+    /** The estimate itself is off by up to this share of the spread. */
+    errorShareOfSpread: pct,
+    /** Ranges widen by this fraction per hour of age, up to maxWiden times. */
+    widenPerHour: z.number().nonnegative(),
+    maxWiden: z.number().min(1),
+    droneTown: z.object({
+      cost: z.number().nonnegative(),
+      hours: z.number().positive(),
+      /** Share of men in the street a drone can count. */
+      streetMin: pct,
+      streetMax: pct,
+      /** Crews lying low stay indoors: their street share is multiplied by this. */
+      lyingLowFactor: pct,
+      noticeAlertnessFactor: z.number().nonnegative(),
+    }),
+    informant: z.object({
+      cost: z.number().nonnegative(),
+      settleDays: z.number().nonnegative(),
+      reportEveryHours: z.number().int().positive(),
+      qualityMin: pct,
+      qualityMax: pct,
+      qualityPerAstucia: z.number().nonnegative(),
+      /** Share of a garrison one report samples, at quality 0 and 1. */
+      sampleAtWorst: pct,
+      sampleAtBest: pct,
+      /** Range half-width at quality 0 and 1. */
+      spreadAtWorst: pct,
+      spreadAtBest: pct,
+      maxPerNetwork: z.number().int().positive(),
+      discovery: z.object({
+        base: pct,
+        /** Per point of the plaza holder's halcón coverage. */
+        perCoverage: z.number().nonnegative(),
+        /** Per point of the plaza owner's astucia. */
+        perAstucia: z.number().nonnegative(),
+        /** Taken off per point of quality. */
+        qualityProtect: z.number().nonnegative(),
+        max: pct,
+      }),
+      caughtOpinion: z.number(),
+      caughtOpinionDecayDays: z.number().positive(),
+      /** Places a sample is taken, for the report text. */
+      spots: z.array(z.string()).min(1),
+    }),
   }),
   movement: z.object({
     fatiguePerTravelHour: z.number().nonnegative(),
@@ -951,6 +998,10 @@ export const TuningSchema = z.object({
     shadow: z.object({
       /** Weeks of bills kept in reserve before spending on any of this. */
       reserveWeeks: z.number().nonnegative(),
+      /** Daily chance to plant an informant in the war target when intel on it is thin. */
+      informantDailyChance: pct,
+      /** Daily chance to fly a drone over the war target when intel on it is stale. */
+      droneTownDailyChance: pct,
       /** Region tier (0 normal … 3 occupation) at which a character bribes the commander where it has labs or cash. */
       bribeCommanderTier: z.number().int().min(0).max(3),
       /** Region tier at which a cautious character lies low. */
@@ -1033,6 +1084,8 @@ export const TuningSchema = z.object({
       /** Garrison assumed at rival plazas with no fresh intel. */
       priorGarrisonMenByType: z.record(NodeType, z.number().nonnegative()),
       intelStaleHours: z.number().positive(),
+      /** Plans against most likely + this share of the way to the top of the range. */
+      rangeCaution: pct,
       threatHops: z.number().int().nonnegative(),
       threatRecentHours: z.number().positive(),
       /** A plaza is threatened when nearby enemy strength exceeds its garrison × this. */

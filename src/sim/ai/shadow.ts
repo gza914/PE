@@ -9,6 +9,8 @@
 import type { SchemeType } from '../../data/schemas';
 import type { Command } from '../commands';
 import type { SimContext } from '../context';
+import { informantBlocked } from '../intel';
+import { plazaIntel } from '../knowledge';
 import { cashOf } from '../money';
 import { networkOf } from '../network';
 import { chance, rand } from '../rng';
@@ -64,6 +66,22 @@ function decide(ctx: SimContext, id: Id): Command[] {
     const reg = state.regions[r]!;
     const ready = reg.scapegoatAt === null || state.hour - reg.scapegoatAt >= s.scapegoat.cooldownDays * 24;
     if (tier(r) >= t.scapegoatTier && ready) cmds.push({ type: 'hand_over_scapegoat', issuer: id, region: r });
+  }
+
+  // Eyes on the war target: an informant if thin on intel, a drone if stale.
+  const target = me.faction !== null ? state.factions[me.faction]?.warPlan.target ?? null : null;
+  if (target && !informantBlocked(ctx, id, target)) {
+    const known = plazaIntel(state, content, net, target, content.tuning.ai.strategic.intelStaleHours);
+    const spyCost = content.tuning.intel.informant.cost;
+    const droneCost = content.tuning.intel.droneTown.cost;
+    const spying = actionWeight(state, content, id, 'scout');
+    if (!known.complete && cash >= spyCost && chance(state.rng, Math.min(1, t.informantDailyChance * spying))) {
+      cmds.push({ type: 'plant_informant', issuer: id, node: target });
+      cash -= spyCost;
+    } else if ((known.age === null || known.age > content.tuning.ai.operational.scoutStaleHours) && cash >= droneCost && chance(state.rng, Math.min(1, t.droneTownDailyChance * spying))) {
+      cmds.push({ type: 'launch_drone', issuer: id, node: target });
+      cash -= droneCost;
+    }
   }
 
   // Messages.

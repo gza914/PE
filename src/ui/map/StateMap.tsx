@@ -1,5 +1,6 @@
 import type { MouseEvent } from 'react';
 import { crewNetwork, estimatedWatchersOf } from '../../sim/network';
+import { fmtRange, shortRange } from '../../sim/estimate';
 import { lastSeen } from '../../sim/knowledge';
 import type { CrewState, PathStep, RoutePreference } from '../../sim/state';
 import { world } from '../../sim/world';
@@ -52,7 +53,7 @@ export function StateMap() {
   }
   const sightings = revealAll ? [] : lastSeen(game, content, net);
   const fade = content.tuning.detection.lastSeenFadeHours;
-  const droneRoads = new Set(game.drones.filter((d) => d.network === net && game.hour < d.until).map((d) => d.road));
+  const droneRoads = new Set(game.drones.filter((d) => d.network === net && game.hour < d.until && d.road !== null).map((d) => d.road!));
   const selectedCrew = selected?.kind === 'crew' ? game.crews[selected.id] : undefined;
   const scale = 1 / Math.sqrt(pz.zoom);
 
@@ -147,11 +148,10 @@ export function StateMap() {
           const opacity = Math.max(0.2, 1 - s.ageHours / (fade + 1));
           return (
             <g key={`seen-${s.crew}`} className="sighting" opacity={opacity} transform={`translate(${p.x + 10} ${p.y - 16}) scale(${scale})`}>
-              <title>{`${charLabel(game, s.owner)}'s people · ${s.confidence} · ${s.ageHours}h ago`}</title>
-              <rect x={-14} y={-9} width={28} height={18} rx={4} stroke={ownerColor(content, game, s.owner)} className={s.confidence} />
+              <title>{`${charLabel(game, s.owner)}'s people · ${fmtRange(s)} men · ${s.ageHours}h ago`}</title>
+              <rect x={s.low === s.high ? -14 : -20} y={-9} width={s.low === s.high ? 28 : 40} height={18} rx={4} stroke={ownerColor(content, game, s.owner)} className={s.low === s.high ? 'confirmed' : 'estimated'} />
               <text textAnchor="middle" y={4}>
-                {s.confidence === 'estimated' ? '~' : ''}
-                {s.men}
+                {shortRange(s)}
               </text>
             </g>
           );

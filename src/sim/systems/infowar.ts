@@ -18,6 +18,7 @@ import type { MessageTemplate } from '../../data/schemas';
 import { newId, pushFeed, tellSide, type SimContext } from '../context';
 import { groupOf } from '../crews';
 import { spend } from '../money';
+import { around, spreadOf } from '../estimate';
 import { crewNetwork, networkOf } from '../network';
 import { addOpinion, opinionOf } from '../opinion';
 import { charName } from '../orders';
@@ -119,18 +120,19 @@ export function plantRumor(ctx: SimContext, owner: Id, network: NetworkId, kind:
     const roads = w.neighbors(home!).map((n) => n.road).sort((a, b) => (a.id < b.id ? -1 : 1));
     const road = kind === 'fake_convoy' && roads.length ? roads[Math.floor(rand(state.rng) * roads.length)]! : null;
     const id = newId(state, 'rep');
+    const source = kind === 'fake_weakness' ? 'presence' : 'halcon';
     state.reports.push({
       id,
       network,
       crew: `ghost_${rumor.id}`,
       owner,
-      men,
+      ...around(men, spreadOf(content.tuning, source)),
       vehicles: { pickup: Math.max(1, Math.ceil(men / 4)) },
       where: road ? { kind: 'road', road: road.id, from: road.from === home ? road.from : road.to, to: road.from === home ? road.to : road.from, progressKm: road.lengthKm / 2 } : { kind: 'node', node: home! },
       roadType: road ? road.type : null,
       hour: state.hour,
       confidence: kind === 'fake_weakness' ? 'confirmed' : 'estimated',
-      source: kind === 'fake_weakness' ? 'presence' : 'halcon',
+      source,
       planted: true,
     });
     rumor.reports.push(id);

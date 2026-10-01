@@ -3,6 +3,7 @@
  * depend on what a side knows take their enemy estimate as input, so callers
  * choose between true values (close contact) and report estimates.
  */
+import { crewEstimate } from './knowledge';
 import type { Content } from '../data/content';
 import type { CrewState, GameState, Id, NetworkId } from './state';
 
@@ -58,16 +59,6 @@ export function wantsToAttack(state: GameState, content: Content, own: readonly 
 export function reportedPower(state: GameState, content: Content, network: NetworkId, crews: readonly CrewState[]): number {
   const fade = content.tuning.detection.lastSeenFadeHours;
   let men = 0;
-  for (const crew of crews) {
-    let best: number | null = null;
-    let bestHour = -Infinity;
-    for (const r of state.reports) {
-      if (r.network === network && r.crew === crew.id && state.hour - r.hour <= fade && r.hour > bestHour) {
-        best = r.men;
-        bestHour = r.hour;
-      }
-    }
-    if (best !== null) men += best;
-  }
+  for (const crew of crews) men += crewEstimate(state, content, network, crew.id, fade)?.men ?? 0;
   return men * content.tuning.combat.estimatedPowerPerMan;
 }

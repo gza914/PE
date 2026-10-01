@@ -6,7 +6,7 @@
 import type { ExtortionRate, Goal, Rank, RelationType, RoadType, SchemeType, Skill, VehicleType } from '../data/schemas';
 import type { RngState } from './rng';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type Id = string;
 
@@ -29,6 +29,7 @@ export interface GameState {
   schemes: Scheme[];
   reports: Report[];
   drones: Drone[];
+  informants: Informant[];
   market: Market;
   battles: Record<Id, Battle>;
   /** Faction requests from heads to their people (the player included). */
@@ -379,6 +380,7 @@ export type CostStream =
   | 'vehicles'
   | 'recruits'
   | 'drones'
+  | 'informants'
   | 'ransom'
   | 'bribes'
   | 'messages'
@@ -404,7 +406,7 @@ export interface Market {
 // ---------------------------------------------------------------------------
 
 export type Confidence = 'confirmed' | 'estimated' | 'rumor';
-export type ReportSource = 'halcon' | 'patrol' | 'drone' | 'presence' | 'rumor';
+export type ReportSource = 'halcon' | 'patrol' | 'drone' | 'presence' | 'rumor' | 'informant';
 
 /**
  * A network is a faction id, or a neutral character's own id. Everyone in a
@@ -418,7 +420,11 @@ export interface Report {
   crew: Id;
   /** Owner of the sighted crew, as far as the network can tell. */
   owner: Id;
+  /** Most likely head count. */
   men: number;
+  /** The range the source supports, before aging widens it (see estimate.ts). */
+  low: number;
+  high: number;
   vehicles: Partial<Record<VehicleType, number>>;
   where: CrewLocation;
   roadType: RoadType | null;
@@ -433,11 +439,28 @@ export interface Drone {
   id: Id;
   network: NetworkId;
   owner: Id;
-  road: Id;
+  /** A drone watches a road or flies over a town. */
+  road: Id | null;
+  node: Id | null;
   launchedAt: number;
   until: number;
   /** Crews that already rolled to notice this drone. */
   rolled: Id[];
+}
+
+/** Someone planted in a town who reports what he sees (GDD "Intelligence as estimates"). */
+export interface Informant {
+  id: Id;
+  network: NetworkId;
+  /** Handler: pays for him and is named if he is caught. */
+  owner: Id;
+  node: Id;
+  plantedAt: number;
+  /** Reports start once he has settled in. */
+  activeAt: number;
+  /** 0..1: how much he sees and how well he judges it. */
+  quality: number;
+  nextReport: number;
 }
 
 // ---------------------------------------------------------------------------

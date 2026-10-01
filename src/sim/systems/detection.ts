@@ -7,9 +7,11 @@ import { isNight } from '../clock';
 import { newId, pushFeed, type SimContext } from '../context';
 import { groupOf, kmFromRoadStart, sortedCrewIds } from '../crews';
 import { crewNetwork, watchersOf } from '../network';
+import { fmtRange, sample, spreadOf, type Range } from '../estimate';
 import { chance, randRange } from '../rng';
 import { detectionChance, signature, VEHICLE_TYPES } from '../signature';
 import type { Confidence, CrewState, DroneReaction, Id, NetworkId, ReportSource } from '../state';
+import { droneOverTown } from '../intel';
 import { world } from '../world';
 import { leaderName, notifyOwner, relocateOffRoad } from '../orders';
 
@@ -142,6 +144,11 @@ function runDrones(ctx: SimContext): void {
   const { tuning } = content;
   for (const drone of state.drones) {
     if (state.hour >= drone.until) continue;
+    if (drone.node !== null) {
+      droneOverTown(ctx, drone);
+      continue;
+    }
+    if (drone.road === null) continue;
     const road = world(content).road(drone.road);
     for (const crew of groupLeaders(ctx)) {
       if (crew.location.kind !== 'road' || crew.location.road !== road.id || crewNetwork(state, crew) === drone.network) continue;
@@ -179,20 +186,31 @@ export function roadLabel(ctx: SimContext, roadId: Id): string {
   return `the ${road.type} ${w.node(road.from).name}–${w.node(road.to).name}`;
 }
 
-export function report(ctx: SimContext, network: NetworkId, group: CrewState[], source: ReportSource, confidence: Confidence, node: Id | null): void {
+export function report(
+  ctx: SimContext,
+  network: NetworkId,
+  group: CrewState[],
+  source: ReportSource,
+  confidence: Confidence,
+  node: Id | null,
+  estimateFor?: (crew: CrewState) => Range,
+  quiet = false,
+): void {
   const { state, content } = ctx;
   const { tuning } = content;
   const fade = tuning.detection.lastSeenFadeHours;
-  const err = tuning.detection.halconMenEstimateError;
   let fresh = false;
   let men = 0;
+  let low = 0;
+  let high = 0;
   let vehicles = 0;
   for (const crew of group) {
     const existing = state.reports.find((r) => r.network === network && r.crew === crew.id && r.hour === state.hour && r.source === source);
     if (existing) continue;
     const seenRecently = state.reports.some((r) => r.network === network && r.crew === crew.id && state.hour - r.hour <= fade);
+    const est = estimateFor ? estimateFor(crew) : sample(state.rng, tuning, crew.men, spreadOf(tuning, source));
+    if (est.men <= 0) continue;
     if (!seenRecently) fresh = true;
-    const estimate = confidence === 'estimated' ? Math.max(1, Math.round(crew.men * (1 + randRange(state.rng, -err, err)))) : crew.men;
     const v: Partial<Record<(typeof VEHICLE_TYPES)[number], number>> = {};
     for (const t of VEHICLE_TYPES) if (crew.vehicles[t] > 0) v[t] = crew.vehicles[t];
     state.reports.push({
@@ -200,7 +218,9 @@ export function report(ctx: SimContext, network: NetworkId, group: CrewState[], 
       network,
       crew: crew.id,
       owner: crew.owner,
-      men: estimate,
+      men: est.men,
+      low: est.low,
+      high: est.high,
       vehicles: v,
       where: structuredClone(crew.location),
       roadType: crew.location.kind === 'road' ? world(content).road(crew.location.road).type : null,
@@ -209,11 +229,13 @@ export function report(ctx: SimContext, network: NetworkId, group: CrewState[], 
       source,
       planted: false,
     });
-    men += estimate;
+    men += est.men;
+    low += est.low;
+    high += est.high;
     vehicles += Object.values(v).reduce((a, b) => a + b, 0);
   }
   // Repeat sightings go to the intel ledger only; the feed flags new contacts.
-  if (men === 0 || !fresh) return;
+  if (men === 0 || !fresh || quiet) return;
   const owner = state.characters[group[0]!.owner];
   const whose = owner ? `${owner.alias ?? owner.name}'s people` : 'unknown crew';
   const loc = group[0]!.location;
@@ -222,9 +244,8 @@ export function report(ctx: SimContext, network: NetworkId, group: CrewState[], 
     loc.kind === 'node'
       ? `in ${w.node(loc.node).name}`
       : `on ${roadLabel(ctx, loc.road)}, heading for ${w.node(loc.to).name}`;
-  const by = { halcon: `Halcones${node ? ` at ${w.node(node).name}` : ''}`, patrol: 'Patrol', drone: 'Drone', presence: 'Our people in town', rumor: 'Rumor' }[source];
-  const approx = confidence === 'estimated' ? '~' : '';
-  pushFeed(state, 'critical', `${by}: ${approx}${men} men in ${vehicles} vehicles, ${whose}, ${where}.`, loc.kind === 'node' ? loc.node : loc.to, network);
+  const by = { halcon: `Halcones${node ? ` at ${w.node(node).name}` : ''}`, patrol: 'Patrol', drone: 'Drone', presence: 'Our people in town', rumor: 'Rumor', informant: 'Informant' }[source];
+  pushFeed(state, 'critical', `${by}: ${fmtRange({ men, low, high })} men in ${vehicles} vehicles, ${whose}, ${where}.`, loc.kind === 'node' ? loc.node : loc.to, network);
 }
 
 function prune(ctx: SimContext): void {

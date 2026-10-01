@@ -116,9 +116,63 @@
     "stationaryRollIntervalHours": 24,
     "stationaryVisibility": 0.5,
     "assumedUnknownCoverage": 50,
-    "halconMenEstimateError": 0.25,
     "reportRetentionHours": 168,
     "presenceReportIntervalHours": 6
+  },
+  "intel": {
+    "spread": {
+      "halcon": 0.35,
+      "patrol": 0.15,
+      "drone": 0.15,
+      "presence": 0.1,
+      "rumor": 0.5,
+      "informant": 0.3
+    },
+    "errorShareOfSpread": 0.6,
+    "widenPerHour": 0.01,
+    "maxWiden": 2,
+    "droneTown": {
+      "cost": 5000,
+      "hours": 4,
+      "streetMin": 0.25,
+      "streetMax": 0.6,
+      "lyingLowFactor": 0.3,
+      "noticeAlertnessFactor": 0.3
+    },
+    "informant": {
+      "cost": 15000,
+      "settleDays": 3,
+      "reportEveryHours": 12,
+      "qualityMin": 0.3,
+      "qualityMax": 0.8,
+      "qualityPerAstucia": 0.004,
+      "sampleAtWorst": 0.2,
+      "sampleAtBest": 0.6,
+      "spreadAtWorst": 0.6,
+      "spreadAtBest": 0.15,
+      "maxPerNetwork": 6,
+      "discovery": {
+        "base": 0.01,
+        "perCoverage": 0.0004,
+        "perAstucia": 0.0004,
+        "qualityProtect": 0.01,
+        "max": 0.25
+      },
+      "caughtOpinion": -15,
+      "caughtOpinionDecayDays": 120,
+      "spots": [
+        "the bar on Calle Juárez",
+        "the taquería by the plaza",
+        "the car wash on the highway",
+        "the cockfight ring",
+        "the tire shop",
+        "the church steps",
+        "the cantina by the bus stop",
+        "the pharmacy lot",
+        "the corner store on Morelos",
+        "the hotel parking lot"
+      ]
+    }
   },
   "movement": {
     "fatiguePerTravelHour": 2,
@@ -735,6 +789,7 @@
         "border_exit": 0
       },
       "intelStaleHours": 96,
+      "rangeCaution": 0.3,
       "threatHops": 2,
       "threatRecentHours": 12,
       "defendRatio": 1.0,
@@ -814,6 +869,8 @@
     },
     "shadow": {
       "reserveWeeks": 3,
+      "informantDailyChance": 0.3,
+      "droneTownDailyChance": 0.25,
       "bribeCommanderTier": 2,
       "lieLowTier": 2,
       "lieLowMinWeight": 1.2,

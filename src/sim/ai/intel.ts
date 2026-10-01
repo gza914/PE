@@ -4,6 +4,8 @@
  * plaza it assumes a typical garrison, so scouting pays and bad intel misleads.
  */
 import type { Content } from '../../data/content';
+import { total } from '../estimate';
+import { beliefs } from '../knowledge';
 import { crewNetwork, networkOf } from '../network';
 import { groupPower } from '../power';
 import type { CrewState, GameState, Id, NetworkId } from '../state';
@@ -12,15 +14,20 @@ import { world } from '../world';
 export interface Believed {
   crew: Id;
   owner: Id;
+  /** Most likely men, and the range the reports support. */
   men: number;
+  low: number;
+  high: number;
   hour: number;
-  /** Seen by our own people in the node, so the whole garrison was in view. */
+  /** Seen by our own people (a crew or an informant) in the node, so the whole garrison was in view. */
   presence: boolean;
 }
 
 export interface Estimate {
-  /** Men believed there. */
+  /** Men believed there (most likely), and the range. */
   men: number;
+  low: number;
+  high: number;
   /** Fighting power, with fortification and terrain for a defender. */
   power: number;
   /** False if this is only the assumed garrison. */
@@ -43,16 +50,10 @@ export class Intel {
     if (this.atNode.has(net)) return;
     const { state, content } = this;
     const stale = content.tuning.ai.strategic.intelStaleHours;
-    const latest = new Map<Id, { r: GameState['reports'][number] }>();
-    for (const r of state.reports) {
-      if (r.network !== net || state.hour - r.hour > stale) continue;
-      const prev = latest.get(r.crew);
-      if (!prev || r.hour > prev.r.hour) latest.set(r.crew, { r });
-    }
     const nodes = new Map<Id, Believed[]>();
     const roads = new Map<Id, Believed[]>();
-    for (const { r } of [...latest.values()].sort((a, b) => (a.r.crew < b.r.crew ? -1 : 1))) {
-      const b: Believed = { crew: r.crew, owner: r.owner, men: r.men, hour: r.hour, presence: r.source === 'presence' };
+    for (const r of beliefs(state, content, net, stale).sort((a, b) => (a.crew < b.crew ? -1 : 1))) {
+      const b: Believed = { crew: r.crew, owner: r.owner, men: r.men, low: r.low, high: r.high, hour: r.hour, presence: r.source === 'presence' || r.source === 'informant' };
       if (r.where.kind === 'node') nodes.set(r.where.node, [...(nodes.get(r.where.node) ?? []), b]);
       else roads.set(r.where.road, [...(roads.get(r.where.road) ?? []), b]);
     }
@@ -86,17 +87,21 @@ export class Intel {
     const multiplier = (1 + c.fortificationBonusPerLevel * plaza.fortification) * (c.terrain[c.nodeTerrain[def.type]] ?? 1);
     if (plaza.owner && networkOf(state, plaza.owner) === net) {
       const own = this.ownAt(net, node);
-      return { men: own.reduce((n, x) => n + x.men, 0), power: groupPower(state, content, own) * multiplier, known: true, age: 0 };
+      const men = own.reduce((n, x) => n + x.men, 0);
+      return { men, low: men, high: men, power: groupPower(state, content, own) * multiplier, known: true, age: 0 };
     }
     const seen = this.believedAt(net, node).filter((b) => networkOf(state, b.owner) !== net);
     const prior = plaza.owner ? content.tuning.ai.strategic.priorGarrisonMenByType[def.type] : 0;
-    const seenMen = seen.reduce((n, b) => n + b.men, 0);
+    const sum = total(seen);
     const age = seen.length ? state.hour - Math.max(...seen.map((b) => b.hour)) : Infinity;
     // Only someone inside the plaza sees the whole garrison. Otherwise a few
     // sightings are a floor, not the full picture: assume at least the prior.
     const complete = seen.some((b) => b.presence);
-    const men = complete ? seenMen : Math.max(seenMen, prior);
-    return { men, power: men * c.estimatedPowerPerMan * multiplier, known: complete, age };
+    const men = complete ? sum.men : Math.max(sum.men, prior);
+    const low = complete ? sum.low : Math.max(sum.low, Math.min(prior, sum.high));
+    const high = complete ? sum.high : Math.max(sum.high, prior);
+    const planned = men + content.tuning.ai.strategic.rangeCaution * Math.max(0, high - men);
+    return { men, low, high, power: planned * c.estimatedPowerPerMan * multiplier, known: complete, age };
   }
 
   /** Rival strength `net` believes is within `hops` of a node, from recent reports (nodes and roads). */

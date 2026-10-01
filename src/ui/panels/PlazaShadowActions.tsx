@@ -1,4 +1,5 @@
 import { newContext } from '../../sim/context';
+import { informantBlocked } from '../../sim/intel';
 import { networkOf } from '../../sim/network';
 import { schemeBlocked } from '../../sim/systems/schemes';
 import { useGame } from '../store';
@@ -21,6 +22,9 @@ export function PlazaShadowActions({ id }: { id: string }) {
   const ourSide = p.owner !== null && !rival;
   const aligned = game.characters[me]!.faction !== null;
   const isTown = content.nodes.find((n) => n.id === id)!.type !== 'border_exit' && id !== content.culiacan.parentNode;
+  const inf = game.informants.find((i) => i.network === net && i.node === id);
+  const spy = rival ? informantBlocked(newContext(game, content), me, id) : 'not a rival plaza';
+  const drone = game.drones.some((d) => d.network === net && d.node === id && game.hour < d.until);
   if (!mine && !rival && !present && !(ourSide && aligned)) return null;
   return (
     <>
@@ -71,6 +75,21 @@ export function PlazaShadowActions({ id }: { id: string }) {
             Tip off the army
           </button>
         )}
+        {rival && isTown && !inf && (
+          <button
+            className="small"
+            disabled={spy !== null}
+            title={spy ?? `${money(t.intel.informant.cost)}: settles in ${t.intel.informant.settleDays} days, then reports every ${t.intel.informant.reportEveryHours}h; may be caught, and then they know you sent him`}
+            onClick={() => enqueue({ type: 'plant_informant', issuer: me, node: id })}
+          >
+            Plant an informant
+          </button>
+        )}
+        {rival && isTown && (
+          <button className="small" disabled={drone} title={`${money(t.intel.droneTown.cost)}: counts vehicles and men in the street for ${t.intel.droneTown.hours}h; misses men indoors`} onClick={() => enqueue({ type: 'launch_drone', issuer: me, node: id })}>
+            {drone ? 'Drone overhead' : 'Drone over town'}
+          </button>
+        )}
         {rival && (
           <button
             className="small"
@@ -83,6 +102,11 @@ export function PlazaShadowActions({ id }: { id: string }) {
         )}
       </div>
       {p.halconesBoughtBy === net && <p className="small muted">These halcones report to you.</p>}
+      {inf && (
+        <p className="small muted">
+          {inf.owner === me ? 'Your' : `${charLabel(game, inf.owner)}'s`} informant here is {game.hour < inf.activeAt ? 'still settling in' : `reporting (quality ${Math.round(inf.quality * 100)}%)`}.
+        </p>
+      )}
     </>
   );
 }

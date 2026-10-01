@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { formatDateTime } from '../sim/clock';
-import { ledger } from '../sim/knowledge';
 import { EconomyPanel } from './panels/EconomyPanel';
 import { FactionPanel } from './panels/FactionPanel';
 import { ShadowPanel } from './panels/ShadowPanel';
 import { DiplomacyPanel } from './panels/DiplomacyPanel';
+import { IntelPanel } from './panels/IntelPanel';
 import { useGame } from './store';
-import { charLabel, locationName, playerNetwork, vehicleSummary } from './util';
+import { playerNetwork } from './util';
 
 export function Feed() {
   const [tab, setTab] = useState<'feed' | 'intel' | 'money' | 'faction' | 'shadow' | 'diplomacy'>('feed');
@@ -40,7 +40,7 @@ export function Feed() {
           Shadows
         </button>
       </div>
-      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : tab === 'diplomacy' ? <DiplomacyPanel /> : <ShadowPanel />}
+      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelPanel /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : tab === 'diplomacy' ? <DiplomacyPanel /> : <ShadowPanel />}
     </div>
   );
 }
@@ -61,32 +61,6 @@ function ReportFeed() {
         >
           <span className="muted small">{formatDateTime(e.hour, content.tuning)}</span>
           <span className="mono">{e.text}</span>
-        </button>
-      ))}
-    </>
-  );
-}
-
-function IntelLedger() {
-  const { content, game, select } = useGame();
-  if (!game) return null;
-  const rows = ledger(game, playerNetwork(game)).slice(0, 300);
-  if (!rows.length) return <p className="muted">Your network has no reports on rival crews yet.</p>;
-  return (
-    <>
-      {rows.map((r) => (
-        <button
-          key={r.id}
-          className={`entry ${r.ageHours > content.tuning.detection.lastSeenFadeHours ? 'stale' : ''}`}
-          onClick={() => select(r.where.kind === 'node' ? { kind: 'node', id: r.where.node } : { kind: 'road', id: r.where.road })}
-        >
-          <span className="muted small">
-            {r.ageHours}h ago · {r.source} · {r.confidence}
-          </span>
-          <span className="mono">
-            {r.confidence === 'estimated' ? '~' : ''}
-            {r.men} men ({vehicleSummary(r.vehicles)}), {charLabel(game, r.owner)}'s, {locationName(content, r.where)}
-          </span>
         </button>
       ))}
     </>

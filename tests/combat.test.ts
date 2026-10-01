@@ -285,7 +285,8 @@ describe('interception and garrisons', () => {
     addCrew(s, 'x', 'c_mazatlan', 'la_cruz', { men: 6, vehicles: pickups(2), order: { type: 'idle' } });
     s = step(s, [], c);
     const b = battles(s)[0]!;
-    expect(b.attackers.crews).toContain('x');
+    // The intruders may already have fallen back; who fought stays recorded.
+    expect(b.attackers.ownerMen.c_mazatlan).toBe(6);
     expect(b.defenders.crews).toContain('g');
   });
 });

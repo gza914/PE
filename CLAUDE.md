@@ -56,3 +56,15 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - Mechanics tests switch the random world off with `noWorld` (events, State forces, schemes); `calm`, `certain`, and `quiet()` already include it.
 - Planted rumors are ordinary `Report`s with `planted: true` and a ghost crew id (`ghost_…`) that is not in `state.crews`. UI and AI code must not assume a report's crew exists.
 - Army units are not on the map: fights with the State resolve at once in `militaryClash`.
+
+## Intelligence as estimates
+
+- Every `Report` carries `men` (most likely) plus `low`/`high`. Make sightings with `sample`/`around` from `estimate.ts`; never file a bare number.
+- Read rivals through `knowledge.ts` (`beliefs`, `lastSeen`, `crewEstimate`, `plazaIntel`): they combine every report on a crew (overlap of ranges) and widen them with age. Show ranges with `fmtRange`/`shortRange`.
+- Informants and drones over towns live in `intel.ts` and file ordinary reports (`source: 'informant'` or `'drone'`). An informant or a presence report means the whole garrison was in view.
+- AI plans against most likely plus `ai.strategic.rangeCaution` of the way to the top of the range.
+
+## Coalition warfare
+
+- Joint operations (`operations.ts`) and pacts (`pacts.ts`) are proposed and answered through commands; the AI side is `ai/coalition.ts` (layer `coalition`). Refusing costs nothing; agreeing and not showing up is remembered.
+- Spoils: `plazaRecipient` in combat gives a captured plaza by the operation's agreed rule, else by contribution (men who fought + `contributionLossWeight` × losses, from `BattleSide.ownerMen`/`ownerLosses`).

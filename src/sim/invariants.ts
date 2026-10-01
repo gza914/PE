@@ -114,6 +114,13 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     for (const inv of op.invites) if (!state.characters[inv.to]) p.push(`operation ${op.id}: unknown invitee ${inv.to}`);
   }
   for (const o of state.pactOffers) if (!state.characters[o.from] || !state.characters[o.to]) p.push(`pact offer ${o.id}: unknown character`);
+  for (const d of state.drones) if ((d.road === null) === (d.node === null)) p.push(`drone ${d.id}: needs exactly one of road or town`);
+  for (const i of state.informants) {
+    if (!state.nodes[i.node]) p.push(`informant ${i.id}: unknown town ${i.node}`);
+    if (!state.characters[i.owner]) p.push(`informant ${i.id}: unknown handler`);
+    if (i.quality < 0 || i.quality > 1) p.push(`informant ${i.id}: quality ${i.quality} out of range`);
+  }
+  for (const r of state.reports) if (!(r.low <= r.men && r.men <= r.high)) p.push(`report ${r.id}: ${r.men} outside its range ${r.low}–${r.high}`);
   for (const b of Object.values(state.battles)) {
     for (const side of [b.attackers, b.defenders]) for (const [o, n] of Object.entries(side.ownerLosses)) if (n > (side.ownerMen[o] ?? 0) + 1e-9) p.push(`battle ${b.id}: ${o} lost more men than he brought`);
   }

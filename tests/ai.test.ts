@@ -34,6 +34,8 @@ function sighting(s: GameState, network: string, crew: CrewState, source: Report
     crew: crew.id,
     owner: crew.owner,
     men: crew.men,
+    low: crew.men,
+    high: crew.men,
     vehicles: { pickup: crew.vehicles.pickup },
     where: structuredClone(crew.location),
     roadType: null,

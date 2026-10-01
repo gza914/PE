@@ -45,6 +45,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     schemes: [],
     reports: [],
     drones: [],
+    informants: [],
     market: { armored: content.tuning.economy.armoredStartStock, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
     battles: {},
     requests: [],

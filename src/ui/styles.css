@@ -195,3 +195,17 @@ select { font-size: 13px; max-width: 100%; }
 .pos { color: #7fd18b; }
 .diplomacy .row, .opplanner .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .diplomacy input[type='number'] { width: 90px; }
+
+.intel .intelrow {
+  border-bottom: 1px solid #2a2e36;
+  padding: 6px 0;
+}
+.intel .intelrow .row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.intel .actions button.on {
+  background: #3a4150;
+}

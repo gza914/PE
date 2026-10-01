@@ -81,7 +81,7 @@ describe('joint operations', () => {
     let s = setup();
     // Rival crews right next to his plaza.
     addCrew(s, 'threat', 'm_villa_union', 'la_noria', { men: 40 });
-    s.reports.push({ id: 'rep_x', network: 'chapitos', crew: 'threat', owner: 'm_villa_union', men: 200, vehicles: {}, where: { kind: 'node', node: 'la_noria' }, roadType: null, hour: s.hour, confidence: 'confirmed', source: 'presence', planted: false });
+    s.reports.push({ id: 'rep_x', network: 'chapitos', crew: 'threat', owner: 'm_villa_union', men: 200, low: 200, high: 200, vehicles: {}, where: { kind: 'node', node: 'la_noria' }, roadType: null, hour: s.hour, confidence: 'confirmed', source: 'presence', planted: false });
     const before = opinionOf(s, c, 'c_san_ignacio', 'c_mazatlan');
     s = run(propose(s, c).state, c, 2);
     const inv = s.operations[0]!.invites[0]!;
