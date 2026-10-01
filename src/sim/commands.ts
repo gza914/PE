@@ -6,6 +6,8 @@
  */
 import type { ExtortionRate, SchemeType, VehicleType } from '../data/schemas';
 import { declare } from './diplomacy';
+import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
+import { breakPact, proposePact, respondPact, type PactSpec } from './pacts';
 import { chooseOption } from './systems/events';
 import { infowarCommand, type InfowarCommand } from './systems/infowar';
 import { cancelScheme, startScheme } from './systems/schemes';
@@ -60,7 +62,7 @@ export type Command =
   | (Base & { type: 'buy_vehicles'; crew: Id; vehicle: VehicleType; count: number })
   | (Base & { type: 'move_cash'; from: Id; to: Id; amount: number })
   | (Base & { type: 'request_aid' })
-  | (Base & { type: 'respond_request'; request: Id; accept: boolean })
+  | (Base & { type: 'respond_request'; request: Id; accept: boolean; amount?: number })
   | (Base & { type: 'accept_truce' })
   | (Base & { type: 'deploy_crew'; crew: Id; colonia: Id | null })
   | (Base & { type: 'battle_withdraw'; battle: Id })
@@ -71,6 +73,14 @@ export type Command =
   | (Base & { type: 'choose_event_option'; instance: Id; option: number })
   | (Base & { type: 'start_scheme'; scheme: SchemeType; target: Id })
   | (Base & { type: 'cancel_scheme'; scheme: Id })
+  | (Base & { type: 'propose_operation' } & ProposeSpec)
+  | (Base & { type: 'respond_operation' } & RespondSpec)
+  | (Base & { type: 'accept_counter'; op: Id; invitee: Id })
+  | (Base & { type: 'cancel_operation'; op: Id })
+  | (Base & { type: 'withdraw_operation'; op: Id })
+  | (Base & { type: 'propose_pact' } & PactSpec)
+  | (Base & { type: 'respond_pact'; offer: Id; accept: boolean })
+  | (Base & { type: 'break_pact'; pact: Id })
   | StateCommand
   | InfowarCommand;
 
@@ -136,7 +146,23 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
     case 'battle_accept_surrender':
       return battleCommand(ctx, cmd);
     case 'respond_request':
-      return respondToRequest(ctx, cmd.issuer, cmd.request, cmd.accept);
+      return respondToRequest(ctx, cmd.issuer, cmd.request, cmd.accept, cmd.amount);
+    case 'propose_operation':
+      return proposeOperation(ctx, cmd.issuer, cmd);
+    case 'respond_operation':
+      return respondOperation(ctx, cmd.issuer, cmd);
+    case 'accept_counter':
+      return acceptCounter(ctx, cmd.issuer, cmd.op, cmd.invitee);
+    case 'cancel_operation':
+      return cancelOperation(ctx, cmd.issuer, cmd.op);
+    case 'withdraw_operation':
+      return withdrawFromOperation(ctx, cmd.issuer, cmd.op);
+    case 'propose_pact':
+      return proposePact(ctx, cmd.issuer, cmd);
+    case 'respond_pact':
+      return respondPact(ctx, cmd.issuer, cmd.offer, cmd.accept);
+    case 'break_pact':
+      return breakPact(ctx, cmd.issuer, cmd.pact);
     case 'accept_truce': {
       if (!state.truceOffered) return 'no truce is on the table';
       if (!content.factions.some((f) => state.factions[f.id]?.head === cmd.issuer)) return 'only a faction head can agree to a truce';
@@ -190,6 +216,19 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
     case 'show_of_force':
       return infowarCommand(ctx, cmd);
   }
+}
+
+/**
+ * Gives a crew an order on its owner's behalf (used when a boss accepts a
+ * joint operation). Returns a reason if the order is impossible.
+ */
+export function orderCrew(ctx: SimContext, crew: CrewState, req: OrderRequest): string | null {
+  if (crew.battle !== null) return 'that crew is in a battle';
+  const order = buildOrder(ctx, crew, req);
+  if (typeof order === 'string') return order;
+  crew.order = order;
+  crew.transit.shiftAt = null;
+  return null;
 }
 
 function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOrder | string {

@@ -21,7 +21,7 @@ import { cancelOffensiveRequests, createRequest, mayAsk, onDuty, settleOffensive
 import { travelHours } from '../routing';
 import type { CrewState, FactionState, GameState, Id, NetworkId, Offensive } from '../state';
 import { nodeValue, territoryShares, weeklyObligations } from '../systems/economy';
-import { truceBetween } from '../pacts';
+import { pactBetween, truceBetween } from '../pacts';
 import { world } from '../world';
 import { withinHops, type Intel } from './intel';
 import { cautionOf, isAi, majorFactions } from './util';
@@ -265,6 +265,7 @@ export function pickOffensive(ctx: SimContext, intel: Intel, fs: FactionState): 
     const neutral = state.characters[owner]?.faction === null;
     if (!rivals.has(ownerNet) && !(neutral && neutralsFair)) continue;
     if (truceBetween(state, fs.id, ownerNet, n.region)) continue;
+    if (pactBetween(state, fs.head!, owner, 'non_aggression')) continue;
     const est = intel.defense(fs.id, n.id);
     const retake = fs.warPlan.lost.some((l) => l.node === n.id && state.hour - l.at <= s.retakeWindowDays * 24);
     // Retakes and lone neutrals (no faction to answer the call for help) take a smaller margin.

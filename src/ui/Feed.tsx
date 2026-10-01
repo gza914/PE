@@ -4,11 +4,19 @@ import { ledger } from '../sim/knowledge';
 import { EconomyPanel } from './panels/EconomyPanel';
 import { FactionPanel } from './panels/FactionPanel';
 import { ShadowPanel } from './panels/ShadowPanel';
+import { DiplomacyPanel } from './panels/DiplomacyPanel';
 import { useGame } from './store';
 import { charLabel, locationName, playerNetwork, vehicleSummary } from './util';
 
 export function Feed() {
-  const [tab, setTab] = useState<'feed' | 'intel' | 'money' | 'faction' | 'shadow'>('feed');
+  const [tab, setTab] = useState<'feed' | 'intel' | 'money' | 'faction' | 'shadow' | 'diplomacy'>('feed');
+  const diplomacyCount = useGame((s) =>
+    s.game
+      ? s.game.operations.filter((o) => o.status === 'planning' && o.invites.some((i) => i.to === s.game!.playerId && i.status === 'pending')).length +
+        s.game.pactOffers.filter((o) => o.to === s.game!.playerId).length +
+        s.game.operations.filter((o) => o.status === 'planning' && o.proposer === s.game!.playerId && o.invites.some((i) => i.status === 'countered')).length
+      : 0,
+  );
   const pendingCount = useGame((s) => (s.game ? s.game.requests.filter((r) => r.to === s.game!.playerId && r.status === 'pending').length : 0));
   return (
     <div className="feed">
@@ -25,11 +33,14 @@ export function Feed() {
         <button className={tab === 'faction' ? 'on' : ''} onClick={() => setTab('faction')}>
           Faction{pendingCount > 0 && <span className="badge">{pendingCount}</span>}
         </button>
+        <button className={tab === 'diplomacy' ? 'on' : ''} onClick={() => setTab('diplomacy')}>
+          Diplomacy{diplomacyCount > 0 && <span className="badge">{diplomacyCount}</span>}
+        </button>
         <button className={tab === 'shadow' ? 'on' : ''} onClick={() => setTab('shadow')}>
           Shadows
         </button>
       </div>
-      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : <ShadowPanel />}
+      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelLedger /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : tab === 'diplomacy' ? <DiplomacyPanel /> : <ShadowPanel />}
     </div>
   );
 }

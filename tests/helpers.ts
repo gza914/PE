@@ -22,7 +22,7 @@ export const noBreakdowns = (t: Content['tuning']) => {
 
 /** Every AI layer off: the world only moves when a test moves it. */
 export const noAi = (t: Content['tuning']) => {
-  t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: false, events: false, shadow: false };
+  t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: false, events: false, shadow: false, coalition: false };
 };
 
 /** No random world: no events, State forces, or schemes. */

@@ -41,7 +41,7 @@ export function autosaveSummary(): string | null {
   return `${name}, day ${Math.floor(g.hour / 24)}${g.ended ? ' (war over)' : ''}`;
 }
 
-export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road' | 'battle' | 'character'; id: Id } | null;
+export type Selection = { kind: 'node' | 'colonia' | 'crew' | 'road' | 'battle' | 'character' | 'plan_attack' | 'plan_defend'; id: Id } | null;
 export type Overlay = 'none' | 'halcones' | 'calentura' | 'income' | 'war';
 
 /** Route planning in progress for one crew. */

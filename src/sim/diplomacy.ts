@@ -1,7 +1,8 @@
 /**
- * Declaring for a side and switching sides. Declaring from neutral is free;
- * leaving a faction marks you a traitor with its head, and the new faction
- * starts suspicious. GDD: "Factions and diplomacy".
+ * Declaring for a side and switching sides. Declaring from neutral is free.
+ * Leaving a coalition is politics, not a crime: the old head holds a grudge
+ * that fades over a year, and the new faction starts suspicious.
+ * GDD: "Factions and diplomacy".
  */
 import { pushFeed, type SimContext } from './context';
 import { addOpinion } from './opinion';
@@ -36,7 +37,7 @@ export function declare(ctx: SimContext, id: Id, faction: Id | null): void {
   const old = ch.faction;
   if (old !== null && state.hour > 0) {
     const oldHead = state.factions[old]?.head;
-    if (oldHead && oldHead !== id) addOpinion(state, content, oldHead, id, 'traitor', d.traitorOpinion, null);
+    if (oldHead && oldHead !== id) addOpinion(state, content, oldHead, id, 'traitor', d.traitorOpinion, d.traitorDecayDays);
   }
   if (faction !== null && old !== null && state.hour > 0) {
     const newHead = state.factions[faction]?.head;

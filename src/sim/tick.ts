@@ -8,7 +8,8 @@ import { applyCommand, type Command, type Rejection } from './commands';
 import { newContext } from './context';
 import type { GameState } from './state';
 import { pruneOpinions } from './opinion';
-import { prunePacts } from './pacts';
+import { prunePacts, runPactsDaily } from './pacts';
+import { runOperationsDaily, updateOperations } from './operations';
 import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -60,6 +61,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
   runCombat(ctx);
   runScheduledEvents(ctx);
   updateRequests(ctx);
+  updateOperations(ctx);
 
   if (isIncomeHour(state.hour, tuning)) {
     settleDailyIncome(ctx);
@@ -69,6 +71,8 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runSchemesDaily(ctx);
     runInfowarDaily(ctx);
     runEventsDaily(ctx);
+    runOperationsDaily(ctx);
+    runPactsDaily(ctx);
     pruneOpinions(state);
     prunePacts(state);
   }

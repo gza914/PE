@@ -188,3 +188,10 @@ ul.plain { list-style: none; padding: 0; margin: 4px 0; }
 .scheme > span:first-child { min-width: 0; }
 select { font-size: 13px; max-width: 100%; }
 .actions select { font-size: 12px; }
+
+/* Coalition warfare: operations and diplomacy */
+.opplanner input[type='number'] { width: 90px; }
+.invite { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.pos { color: #7fd18b; }
+.diplomacy .row, .opplanner .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.diplomacy input[type='number'] { width: 90px; }

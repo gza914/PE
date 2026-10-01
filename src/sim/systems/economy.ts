@@ -9,6 +9,7 @@ import { pushFeed, type SimContext } from '../context';
 import { cashOf, deposit, spend, spendUpTo } from '../money';
 import { networkOf } from '../network';
 import type { CrewState, GameState, Id, IncomeStream, NetworkId } from '../state';
+import { payShares } from '../pacts';
 import { world } from '../world';
 
 /** One line of daily income: who gets it, from where, and why. */
@@ -131,6 +132,7 @@ export function settleDailyIncome(ctx: SimContext): void {
 
   const totals = new Map<Id, number>();
   const routeIncome = new Map<Id, number>();
+  const paidLines: { recipient: Id; amount: number; source: Id; node: Id | null }[] = [];
   const w = world(content);
   const quiet = content.tuning.state.lieLow.incomeMultiplier;
   for (const line of dailyIncome(state, content)) {
@@ -139,9 +141,13 @@ export function settleDailyIncome(ctx: SimContext): void {
     const low = line.node !== null && state.lieLow.some((l) => l.owner === line.recipient && l.region === w.node(line.node!).region && l.until > state.hour);
     const amount = low ? line.amount * quiet : line.amount;
     deposit(state, content, line.recipient, amount, line.stream, line.node);
+    paidLines.push({ recipient: line.recipient, amount, source: line.source, node: line.node });
     totals.set(line.recipient, (totals.get(line.recipient) ?? 0) + amount);
     if (line.stream === 'trafficking' || line.stream === 'tolls') routeIncome.set(line.recipient, (routeIncome.get(line.recipient) ?? 0) + amount);
   }
+
+  // Route and income shares agreed in pacts.
+  payShares(ctx, paidLines);
 
   // Outside partners take their cut of the routes.
   for (const [id, income] of [...routeIncome].sort(([a], [b]) => (a < b ? -1 : 1))) {

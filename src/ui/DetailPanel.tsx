@@ -1,5 +1,6 @@
 import { BattlePanel } from './panels/BattlePanel';
 import { CharacterPanel } from './panels/CharacterPanel';
+import { OperationPlanner } from './panels/OperationPlanner';
 import { ColoniaPanel } from './panels/ColoniaPanel';
 import { CrewPanel } from './panels/CrewPanel';
 import { NodePanel } from './panels/NodePanel';
@@ -28,6 +29,7 @@ export function DetailPanel() {
       </>
     );
   }
+  if (selected.kind === 'plan_attack' || selected.kind === 'plan_defend') return (<>{error}<OperationPlanner key={selected.kind + selected.id} kind={selected.kind === 'plan_attack' ? 'attack' : 'defend'} target={selected.id} /></>);
   if (selected.kind === 'character') return (<>{error}<CharacterPanel id={selected.id} /></>);
   if (selected.kind === 'node') return (<>{error}<NodePanel id={selected.id} /></>);
   if (selected.kind === 'road') return (<>{error}<RoadPanel id={selected.id} /></>);

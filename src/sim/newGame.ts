@@ -57,6 +57,8 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     police: [],
     publicClaims: [],
     rumors: [],
+    operations: [],
+    pactOffers: [],
     feed: [],
     ended: null,
     truceDays: 0,

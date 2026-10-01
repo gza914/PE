@@ -19,6 +19,7 @@ import { Intel } from './intel';
 import { returnHome, supplyRun } from './logistics';
 import { runOperational } from './operational';
 import { runShadow } from './shadow';
+import { runCoalition } from './coalition';
 import { runStrategic } from './strategic';
 import { runTactical } from './tactical';
 import { isAi, stagger } from './util';
@@ -33,6 +34,7 @@ export function runAi(ctx: SimContext): Command[] {
     ...(on.operational ? runOperational(ctx, intel) : []),
     ...(on.economy ? runEconomy(ctx) : []),
     ...(on.shadow ? runShadow(ctx) : []),
+    ...(on.coalition ? runCoalition(ctx, intel) : []),
   ];
   if (!on.traffic) return cmds;
   // Idle crews that nobody gave a job this hour: supply runs and coming home.

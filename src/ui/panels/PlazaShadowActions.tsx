@@ -8,7 +8,7 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 /** Banners, shows of force, tip-offs, and buying halcones, for the selected plaza. */
 export function PlazaShadowActions({ id }: { id: string }) {
-  const { content, game, enqueue } = useGame();
+  const { content, game, enqueue, select } = useGame();
   if (!game) return null;
   const p = game.nodes[id]!;
   const me = game.playerId;
@@ -18,9 +18,29 @@ export function PlazaShadowActions({ id }: { id: string }) {
   const present = Object.values(game.crews).some((c) => c.owner === me && c.location.kind === 'node' && c.location.node === id && c.battle === null);
   const t = content.tuning;
   const buy = rival ? schemeBlocked(newContext(game, content), me, 'buy_halcones', id) : 'not a rival plaza';
-  if (!mine && !rival && !present) return null;
+  const ourSide = p.owner !== null && !rival;
+  const aligned = game.characters[me]!.faction !== null;
+  const isTown = content.nodes.find((n) => n.id === id)!.type !== 'border_exit' && id !== content.culiacan.parentNode;
+  if (!mine && !rival && !present && !(ourSide && aligned)) return null;
   return (
     <>
+      {aligned && isTown && (rival || ourSide) && (
+        <>
+          <h3>With your side</h3>
+          <div className="actions">
+            {rival && (
+              <button className="small" title="Invite bosses on your side to hit this plaza together. Free for them to refuse." onClick={() => select({ kind: 'plan_attack', id })}>
+                Plan joint attack
+              </button>
+            )}
+            {ourSide && (
+              <button className="small" title="Ask bosses on your side to help hold this plaza. Free for them to refuse." onClick={() => select({ kind: 'plan_defend', id })}>
+                Ask for help holding
+              </button>
+            )}
+          </div>
+        </>
+      )}
       <h3>In the shadows</h3>
       <div className="actions">
         {(mine || present) && (

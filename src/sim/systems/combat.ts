@@ -15,7 +15,9 @@ import { planRoute, travelHours } from '../routing';
 import type { Battle, BattleSide, CrewOrder, CrewState, Id, NetworkId } from '../state';
 import { world } from '../world';
 import { captureCharacter, killCharacter } from './characters';
-import { truceBetween } from '../pacts';
+import { addOpinion } from '../opinion';
+import { mutualDefenseCalls, peaceBetween, settleDefenseCalls, truceBetween } from '../pacts';
+import { opForCapture } from '../operations';
 
 type SideKey = 'attackers' | 'defenders';
 const SIDES: SideKey[] = ['attackers', 'defenders'];
@@ -76,6 +78,9 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
   const holder = node ? state.nodes[node]?.owner : null;
   const defNet = def.length ? crewNetwork(state, def[0]!) : holder ? networkOf(state, holder) : null;
   if (defNet && truceBetween(state, crewNetwork(state, att[0]!), defNet, truceRegion)) return null;
+  // Pacts between the bosses involved (non-aggression, safe passage, a truce between two bosses).
+  const defOwners = [...new Set([...def.map((c) => c.owner), ...(holder && e.capture ? [holder] : [])])];
+  if (peaceBetween(state, [...new Set(att.map((c) => c.owner))], defOwners, truceRegion, e.capture)) return null;
   if (!def.length) {
     if (e.capture && node) {
       capturePlaza(ctx, node, att);
@@ -91,6 +96,8 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
     casualties: 0,
     power: 0,
     helpCalled: false,
+    ownerMen: list.reduce<Record<Id, number>>((m, c) => ((m[c.owner] = (m[c.owner] ?? 0) + c.men), m), {}),
+    ownerLosses: {},
   });
   const battle: Battle = {
     id: newId(state, 'battle'),
@@ -132,7 +139,25 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
     if (!state.autoplay && mine.some((c) => c.owner === state.playerId)) continue;
     if (groupPower(state, content, mine) < groupPower(state, content, crews(ctx, battle[other(k)].crews))) callForHelp(ctx, battle, k);
   }
+  // Mutual defense partners of the plaza's owner are called; AI partners send their nearest crew.
+  mutualDefenseCalls(ctx, battle, (partner) => answerDefenseCall(ctx, battle, partner));
   return battle;
+}
+
+/** A mutual defense partner's crews that could reach the battle; AI partners send the nearest. Returns whether any could come. */
+function answerDefenseCall(ctx: SimContext, b: Battle, partner: Id): boolean {
+  const { state, content } = ctx;
+  const options = sortedCrewIds(state)
+    .map((id) => state.crews[id]!)
+    .filter((c) => c.owner === partner && c.battle === null && c.location.kind === 'node' && (c.order.type === 'garrison' || c.order.type === 'idle'))
+    .map((c) => ({ c, order: reinforceOrder(ctx, c, b, content.tuning.combat.reinforceMaxHours) }))
+    .filter((x) => x.order !== null);
+  if (!options.length) return false;
+  if (partner !== state.playerId || state.autoplay) {
+    const pick = options.sort((x, y) => x.order!.path.length - y.order!.path.length || (x.c.id < y.c.id ? -1 : 1))[0]!;
+    pick.c.order = pick.order!;
+  }
+  return true;
 }
 
 /** A node's owners attack hostile crews they spotted in their own plaza this hour. */
@@ -234,6 +259,7 @@ function joinArrivals(ctx: SimContext, b: Battle): void {
       g.battle = b.id;
       b[k].crews.push(g.id);
       if (!b[k].owners.includes(g.owner)) b[k].owners.push(g.owner);
+      b[k].ownerMen[g.owner] = (b[k].ownerMen[g.owner] ?? 0) + g.men;
     }
     b.log.push(`H${b.hours + 1}: ${leaderName(ctx, c)}'s crew (${c.men}) joins the ${k}.`);
     notifyOwner(ctx, c, 'important', `${leaderName(ctx, c)}'s crew joined the fight at ${placeName(ctx, b)}.`, null, b.id);
@@ -378,6 +404,9 @@ function applyLosses(ctx: SimContext, b: Battle, k: SideKey, inflicted: number, 
     const before = c.men;
     c.men -= loss;
     men += loss;
+    // A crew that changed hands mid-fight (its owner died) counts for its new owner.
+    if (b[k].ownerMen[c.owner] === undefined) b[k].ownerMen[c.owner] = before;
+    if (loss > 0) b[k].ownerLosses[c.owner] = (b[k].ownerLosses[c.owner] ?? 0) + loss;
     const moraleMult = leaderModifier(state, content, c, 'crewMoraleLossMultiplier');
     c.morale = Math.max(0, c.morale - ((loss / before) * 100 * t.moraleLossPerPctLost + t.moraleLossPerHour) * scale.morale * moraleMult);
     if (loss > 0 && state.characters[c.leader]?.status === 'free') {
@@ -538,6 +567,7 @@ function endBattle(ctx: SimContext, b: Battle, forcedWinner: SideKey | null = nu
   }
   const node = b.where.kind === 'node' && !b.colonia ? b.where.node : null;
   if (b.where.kind === 'node') state.nodes[b.where.node]!.lastBattleAt = state.hour;
+  settleDefenseCalls(ctx, b);
   if (winner === 'attackers' && b.capture && node) {
     const net = b.attackers.network;
     const holdouts = Object.values(state.crews).some(
@@ -551,7 +581,7 @@ function endBattle(ctx: SimContext, b: Battle, forcedWinner: SideKey | null = nu
     if (!holdouts) {
       const plaza = state.nodes[node]!;
       if (b.type === 'siege') plaza.fortification = Math.max(0, plaza.fortification - t.siege.fortificationLossOnFall);
-      capturePlaza(ctx, node, alive.attackers);
+      capturePlaza(ctx, node, alive.attackers, b);
     }
   }
   const text = winner
@@ -572,19 +602,52 @@ function resumeAfterWin(ctx: SimContext, b: Battle, c: CrewState): void {
 }
 
 /** The attackers take the plaza: new owner, fresh halcones, seized stash. */
-export function capturePlaza(ctx: SimContext, node: Id, winners: CrewState[]): void {
+/**
+ * Who takes a captured plaza. A joint operation's agreed rule comes first;
+ * otherwise the highest contribution: each man who fought counts 1 and each
+ * man lost counts 2 (blood outweighs headcount). Ties go to the operation's
+ * proposer, then to the bigger force, then by id.
+ */
+export function plazaRecipient(ctx: SimContext, node: Id, winners: CrewState[], battle: Battle | null): Id {
+  const { state, content } = ctx;
+  const net = crewNetwork(state, winners[0]!);
+  const score = new Map<Id, number>();
+  if (battle) {
+    const k = SIDES.find((x) => battle[x].network === net) ?? 'attackers';
+    const lossWeight = content.tuning.combat.contributionLossWeight;
+    for (const [owner, men] of Object.entries(battle[k].ownerMen)) score.set(owner, men + lossWeight * (battle[k].ownerLosses[owner] ?? 0));
+  }
+  for (const c of winners) if (!score.has(c.owner)) score.set(c.owner, c.men);
+  const op = opForCapture(state, node, net, content.tuning.coalition.earlyHours);
+  const agreed = op?.plaza === 'proposer' ? op.proposer : op && op.plaza !== 'contribution' ? op.plaza : null;
+  if (agreed && score.has(agreed) && state.characters[agreed]?.status !== 'dead') return agreed;
+  const men = (id: Id) => winners.filter((c) => c.owner === id).reduce((n, c) => n + c.men, 0);
+  return [...score.keys()]
+    .filter((id) => state.characters[id] && state.characters[id]!.status !== 'dead' && state.characters[id]!.status !== 'extradited')
+    .sort((a, b) => score.get(b)! - score.get(a)! || Number(b === op?.proposer) - Number(a === op?.proposer) || men(b) - men(a) || (a < b ? -1 : 1))[0] ?? winners[0]!.owner;
+}
+
+export function capturePlaza(ctx: SimContext, node: Id, winners: CrewState[], battle: Battle | null = null): void {
   const { state, content } = ctx;
   const t = content.tuning.combat;
   if (!winners.length || node === content.culiacan.parentNode) return;
   const plaza = state.nodes[node]!;
-  const lead = [...winners].sort((a, b) => b.men - a.men || (a.id < b.id ? -1 : 1))[0]!;
+  const lead = { owner: plazaRecipient(ctx, node, winners, battle) };
   const prev = plaza.owner;
-  if (prev && networkOf(state, prev) === crewNetwork(state, lead)) return;
+  if (prev && networkOf(state, prev) === crewNetwork(state, winners[0]!)) return;
   if (prev) {
     const f = state.factions[networkOf(state, prev)];
     if (f) f.warPlan.lost = [...f.warPlan.lost.filter((l) => l.node !== node && state.hour - l.at < 30 * 24), { node, at: state.hour }];
   }
   plaza.owner = lead.owner;
+  // Those who refused to help hold this plaza are remembered by their head.
+  if (prev) {
+    const keep = content.tuning.ai.requests.keepHours;
+    for (const r of state.requests) {
+      if (r.kind !== 'defend' || r.target !== node || (r.status !== 'declined' && r.status !== 'expired') || state.hour - (r.resolvedAt ?? 0) > keep) continue;
+      addOpinion(state, content, r.from, r.to, 'left_us_exposed', content.tuning.ai.requests.leftExposedOpinion, content.tuning.ai.requests.opinionDecayDays);
+    }
+  }
   plaza.halconCoverage = t.capturedPlazaHalcones;
   plaza.support = Math.max(0, plaza.support - t.capturedPlazaSupportLoss);
   plaza.claims = [];

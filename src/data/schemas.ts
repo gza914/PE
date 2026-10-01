@@ -571,6 +571,8 @@ export const TuningSchema = z.object({
     calenturaPerCasualty: z.number().nonnegative(),
     supplyPerCombatHour: z.number().nonnegative(),
     exhaustionPerCasualty: z.number().nonnegative(),
+    /** Spoils by contribution: a man lost counts this many times a man who fought. */
+    contributionLossWeight: z.number().nonnegative(),
     /** Each side's exhaustion rises this much per hour of fighting. */
     exhaustionPerCombatHour: z.number().nonnegative(),
     respectPerVictory: z.number().nonnegative(),
@@ -664,6 +666,8 @@ export const TuningSchema = z.object({
     neutralOpinionFloor: z.number(),
     ultimatumDays: z.array(z.number().int().nonnegative()),
     traitorOpinion: z.number(),
+    /** Leaving a coalition is politics: the old head's grudge fades over this many days. */
+    traitorDecayDays: z.number().positive(),
     sideSwitchNewFactionOpinion: z.number(),
     truceExhaustionThreshold: meter,
     truceSustainDays: z.number().int().positive(),
@@ -767,6 +771,80 @@ export const TuningSchema = z.object({
     eventLogDays: z.number().int().positive(),
     /** Opinion modifiers from event choices fade over this many days. */
     opinionDecayDays: z.number().positive(),
+  }),
+  /** Coalition warfare: joint operations between bosses, and pacts. */
+  coalition: z.object({
+    maxInvites: z.number().int().positive(),
+    /** A strike can be set this many hours ahead, at least and at most. */
+    minLeadHours: z.number().int().nonnegative(),
+    maxLeadHours: z.number().int().positive(),
+    /** Invitees need crews that can reach the target within this many hours. */
+    inviteMaxTravelHours: z.number().positive(),
+    /** AI invitees answer after this many hours. */
+    aiAnswerDelayHours: z.number().int().nonnegative(),
+    /** The player answers by this many hours after the proposal (and before the strike). */
+    playerResponseHours: z.number().int().positive(),
+    /** An attack is judged this many hours after the strike time (sooner if the plaza falls). */
+    resolveWindowHours: z.number().int().positive(),
+    /** Fighting at the target this many hours before the strike still counts for the operation. */
+    earlyHours: z.number().int().nonnegative(),
+    /** Opinion of someone who agreed and did not show up. */
+    noShowOpinion: z.number(),
+    noShowDecayDays: z.number().positive(),
+    leak: z.object({ base: pct, perParticipant: pct, perAstucia: pct }),
+    ai: z.object({
+      /** Committed power against the target's estimated defense needed before a boss joins. */
+      minRatio: z.number().positive(),
+      valuePerPoint: z.number().positive(),
+      cashPerPoint: z.number().positive(),
+      opinionWeight: z.number(),
+      riskPenalty: z.number().nonnegative(),
+      threshold: z.number(),
+      maxCounterCash: z.number().nonnegative(),
+      /** Base value of helping hold an ally's plaza. */
+      defendBase: z.number(),
+      /** Daily chance, before weights, that an AI lieutenant proposes an attack or asks for help defending. */
+      proposeDailyChance: pct,
+      defendProposeDailyChance: pct,
+      /** A joiner stops adding crews once committed power reaches the need times this. */
+      commitOvershoot: z.number().positive(),
+      /** Crews sent to hold an ally's plaza. */
+      defendCrews: z.number().int().positive(),
+      defendLeadHours: z.number().int().positive(),
+      defendHoldHours: z.number().int().positive(),
+      /** Extra hours on top of the slowest crew when an AI sets a strike time. */
+      slackHours: z.number().int().nonnegative(),
+      /** An AI proposer gives up the plaza to a counter-offer only if it wants plazas less than this (raid weight). */
+      plazaCounterMaxRaidWeight: z.number().positive(),
+      /** An AI proposer pays a cash counter only up to this share of its cash. */
+      counterMaxCashShare: pct,
+    }),
+    pacts: z.object({
+      offerHours: z.number().int().positive(),
+      defaultDays: z.number().nonnegative(),
+      breakOpinion: z.record(z.enum(['non_aggression', 'safe_passage', 'mutual_defense', 'route_share', 'local_truce', 'income_share']), z.number()),
+      /** Ignoring a mutual defense call when you could have come. */
+      ignoredCallOpinion: z.number(),
+      truceBreakCredibility: z.number().nonnegative(),
+      secretDiscoveryPerDay: pct,
+      secretDiscoveredOpinion: z.number(),
+      maxRouteShare: pct,
+      ai: z.object({
+        opinionPerPoint: z.number().positive(),
+        cashPerPoint: z.number().positive(),
+        /** Score an AI needs to accept each pact. */
+        threshold: z.record(z.enum(['non_aggression', 'safe_passage', 'mutual_defense', 'route_share', 'local_truce', 'income_share']), z.number()),
+        /** Points for feeling outgunned by the proposer (non-aggression): when its men are below this share of the proposer's. */
+        weakerBonus: z.number(),
+        weakerRatio: pct,
+        /** An AI offers mutual defense only to neighbors who think at least this well of it. */
+        minOpinionToOffer: z.number(),
+        /** Points per 10 Exhaustion (local truce). */
+        exhaustionPer10: z.number(),
+        /** Daily chance an AI lieutenant proposes a pact. */
+        proposeDailyChance: pct,
+      }),
+    }),
   }),
   infowar: z.object({
     /** Message effects scale by (base + credibility/100). */
@@ -909,6 +987,8 @@ export const TuningSchema = z.object({
       events: z.boolean(),
       /** AI dealings with the State, messages, and schemes. */
       shadow: z.boolean(),
+      /** AI joint operations and pacts. */
+      coalition: z.boolean(),
     }),
     /** Multipliers on AI action scores by goal (GDD "AI": goal weight). */
     goalWeights: z.record(Goal, z.partialRecord(AiAction, z.number().nonnegative())),
@@ -1009,6 +1089,8 @@ export const TuningSchema = z.object({
       failedOpinion: z.number(),
       ignoredOpinion: z.number(),
       rewardOpinion: z.number(),
+    /** Refusing to help defend a plaza that then falls. */
+    leftExposedOpinion: z.number(),
       opinionDecayDays: z.number().positive(),
       keepHours: z.number().nonnegative(),
       /** After a refused or ignored request, the head waits this long before asking that person again. */

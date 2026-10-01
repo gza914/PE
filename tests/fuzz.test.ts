@@ -76,6 +76,14 @@ function randomCommand(s: GameState, r: RngState): Command {
     { type: 'commission_corrido', issuer },
     { type: 'plant_rumor', issuer, network: pick(r, nets), kind: pick(r, ['fake_convoy', 'fake_weakness', 'fake_betrayal'] as const), subject: pick(r, chars), node: rand(r) < 0.5 ? node : null },
     { type: 'show_of_force', issuer, node },
+    { type: 'propose_operation', issuer, kind: pick(r, ['attack', 'defend'] as const), target: node, strikeAt: s.hour + n(-5, 120), holdUntil: s.hour + n(0, 200), plaza: pick(r, ['proposer', 'contribution', pick(r, chars)]), crews: mine.length ? [pick(r, mine)] : [], invites: [{ to: pick(r, chars), cash: n(-10, 100000) }] },
+    { type: 'respond_operation', issuer: s.operations[0]?.invites[0]?.to ?? issuer, op: s.operations[0]?.id ?? 'nope', accept: rand(r) < 0.6, crews: mine.length ? [pick(r, mine)] : [], counter: rand(r) < 0.2 ? { plaza: rand(r) < 0.5, cash: n(0, 50000) } : null },
+    { type: 'accept_counter', issuer, op: s.operations[0]?.id ?? 'nope', invitee: pick(r, chars) },
+    { type: 'cancel_operation', issuer, op: s.operations[0]?.id ?? 'nope' },
+    { type: 'withdraw_operation', issuer, op: s.operations[0]?.id ?? 'nope' },
+    { type: 'propose_pact', issuer, to: pick(r, chars), pact: pick(r, ['non_aggression', 'safe_passage', 'mutual_defense', 'local_truce', 'route_share'] as const), region: pick(r, regions), route: pick(r, content.routes.map((x) => x.id)), share: rand(r), cash: n(-5, 200000), days: n(-1, 60) },
+    { type: 'respond_pact', issuer: s.pactOffers[0]?.to ?? issuer, offer: s.pactOffers[0]?.id ?? 'nope', accept: rand(r) < 0.5 },
+    { type: 'break_pact', issuer, pact: s.pacts[0]?.id ?? 'nope' },
     { type: 'declare_alignment', issuer, faction: rand(r) < 0.05 ? pick(r, ['chapitos', 'mayos', null] as const) : s.characters[issuer]!.faction },
   ];
   return pick(r, all);

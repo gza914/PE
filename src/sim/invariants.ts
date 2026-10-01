@@ -108,6 +108,15 @@ export function checkInvariants(state: GameState, content: Content): string[] {
   }
   for (const pact of state.pacts) for (const id of pact.parties) if (!state.characters[id]) p.push(`pact ${pact.id}: unknown party ${id}`);
   for (const r of [...state.rumors, ...state.publicClaims]) if (!state.characters[r.owner]) p.push(`${r.id}: unknown owner`);
+  for (const op of state.operations) {
+    if (!state.characters[op.proposer]) p.push(`operation ${op.id}: unknown proposer`);
+    if (!state.nodes[op.target]) p.push(`operation ${op.id}: unknown target`);
+    for (const inv of op.invites) if (!state.characters[inv.to]) p.push(`operation ${op.id}: unknown invitee ${inv.to}`);
+  }
+  for (const o of state.pactOffers) if (!state.characters[o.from] || !state.characters[o.to]) p.push(`pact offer ${o.id}: unknown character`);
+  for (const b of Object.values(state.battles)) {
+    for (const side of [b.attackers, b.defenders]) for (const [o, n] of Object.entries(side.ownerLosses)) if (n > (side.ownerMen[o] ?? 0) + 1e-9) p.push(`battle ${b.id}: ${o} lost more men than he brought`);
+  }
   if (!state.characters[state.playerId]) p.push(`unknown player ${state.playerId}`);
   return p;
 }

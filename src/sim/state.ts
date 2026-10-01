@@ -6,7 +6,7 @@
 import type { ExtortionRate, Goal, Rank, RelationType, RoadType, SchemeType, Skill, VehicleType } from '../data/schemas';
 import type { RngState } from './rng';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type Id = string;
 
@@ -51,6 +51,10 @@ export interface GameState {
   publicClaims: PublicClaim[];
   /** Rumors planted in rival networks, until they fade or are found out. */
   rumors: Rumor[];
+  /** Joint operations planned between bosses (peer proposals, free to refuse). */
+  operations: JointOp[];
+  /** Pact proposals waiting for an answer. */
+  pactOffers: PactOffer[];
   feed: FeedEntry[];
   ended: EndState | null;
   /** Consecutive days both factions have been above the truce exhaustion threshold. */
@@ -454,6 +458,10 @@ export interface BattleSide {
   power: number;
   /** Faction help was already requested for this side. */
   helpCalled: boolean;
+  /** Men each owner brought into the fight (summed over arrivals), for spoils by contribution. */
+  ownerMen: Record<Id, number>;
+  /** Men each owner lost. */
+  ownerLosses: Record<Id, number>;
 }
 
 export interface Battle {
@@ -484,15 +492,84 @@ export interface Battle {
   winner: 'attackers' | 'defenders' | null;
 }
 
-export type PactType = 'non_aggression' | 'safe_passage' | 'mutual_defense' | 'joint_attack' | 'route_share' | 'local_truce';
+export type PactType = 'non_aggression' | 'safe_passage' | 'mutual_defense' | 'route_share' | 'local_truce' | 'income_share';
 
 export interface Pact {
   id: Id;
   type: PactType;
+  /** For route_share and income_share, parties[0] pays parties[1]. */
   parties: [Id, Id];
   secret: boolean;
   expiresAt: number | null;
   region: Id | null;
+  /** Route (route_share) or plaza (income_share) the pact is about. */
+  route?: Id | null;
+  node?: Id | null;
+  /** Share of income paid (route_share, income_share). */
+  share?: number;
+  createdAt?: number;
+  /** Mutual defense: battles the other party was called to, and whether they came. */
+  calls?: { battle: Id; at: number; caller: Id; answered: boolean }[];
+}
+
+/** A pact someone proposed and the other has not answered yet. */
+export interface PactOffer {
+  id: Id;
+  type: PactType;
+  from: Id;
+  to: Id;
+  region: Id | null;
+  route: Id | null;
+  /** Share of route income offered (route_share). */
+  share: number;
+  /** Cash offered with the pact. */
+  cash: number;
+  days: number;
+  createdAt: number;
+  respondBy: number;
+}
+
+export type OpKind = 'attack' | 'defend';
+export type OpStatus = 'planning' | 'done' | 'cancelled';
+export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'countered' | 'withdrawn';
+
+export interface OpInvite {
+  to: Id;
+  status: InviteStatus;
+  /** Cash offered up front, paid when the invitee accepts. */
+  cash: number;
+  /** Share of the plaza's income offered, for a number of weeks (attack). */
+  incomeShare: number;
+  incomeWeeks: number;
+  /** Crews the invitee committed. */
+  crews: Id[];
+  /** Why they said no, or what they want instead. */
+  reason: string | null;
+  counter: { plaza: boolean; cash: number } | null;
+  answeredAt: number | null;
+}
+
+export interface JointOp {
+  id: Id;
+  kind: OpKind;
+  proposer: Id;
+  /** Plaza attacked (attack) or held (defend). */
+  target: Id;
+  /** When everyone arrives. */
+  strikeAt: number;
+  /** Defend: hold until this hour. */
+  holdUntil: number | null;
+  /** Who gets the plaza if taken: the proposer, an invitee's id, or "contribution". */
+  plaza: 'proposer' | 'contribution' | Id;
+  /** The proposer's own crews. */
+  crews: Id[];
+  invites: OpInvite[];
+  status: OpStatus;
+  createdAt: number;
+  leaked: boolean;
+  result: 'taken' | 'failed' | 'held' | 'lost' | null;
+  /** Owners whose crews fought at the target during the operation. */
+  fought: Id[];
 }
 
 export type { SchemeType };

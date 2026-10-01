@@ -9,7 +9,8 @@ import { deposit, spend } from './money';
 import { networkOf } from './network';
 import { addOpinion } from './opinion';
 import { charName } from './orders';
-import type { FactionRequest, Id, RequestKind } from './state';
+import { onOperation } from './operations';
+import type { FactionRequest, GameState, Id, RequestKind } from './state';
 import { world } from './world';
 
 export interface RequestSpec {
@@ -86,8 +87,11 @@ function resolve(ctx: SimContext, r: FactionRequest, status: FactionRequest['sta
   }
 }
 
-/** Answer a request. Levies are paid on the spot. */
-export function respondToRequest(ctx: SimContext, issuer: Id, id: Id, accept: boolean): string | null {
+/**
+ * Answer a request. Levies are paid on the spot, and are a negotiation: a
+ * member may pay part (`amount`), for proportionate credit with the head.
+ */
+export function respondToRequest(ctx: SimContext, issuer: Id, id: Id, accept: boolean, amount?: number): string | null {
   const { state, content } = ctx;
   const r = state.requests.find((x) => x.id === id);
   if (!r) return 'no such request';
@@ -98,8 +102,17 @@ export function respondToRequest(ctx: SimContext, issuer: Id, id: Id, accept: bo
     return null;
   }
   if (r.kind === 'levy') {
-    if (!spend(state, content, issuer, r.amount, 'tribute')) return `you do not have $${Math.round(r.amount).toLocaleString()}`;
-    deposit(state, content, r.from, r.amount, 'tribute');
+    const pay = amount === undefined ? r.amount : Math.floor(amount);
+    if (!(pay > 0) || pay > r.amount) return `pay between $1 and $${Math.round(r.amount).toLocaleString()}`;
+    if (!spend(state, content, issuer, pay, 'tribute')) return `you do not have $${Math.round(pay).toLocaleString()}`;
+    deposit(state, content, r.from, pay, 'tribute');
+    if (pay < r.amount) {
+      r.status = 'fulfilled';
+      r.resolvedAt = state.hour;
+      headOpinion(ctx, r, 'paid_part_of_a_levy', content.tuning.ai.requests.fulfilledOpinion * (pay / r.amount));
+      r.amount = pay;
+      return null;
+    }
     resolve(ctx, r, 'fulfilled');
     return null;
   }
@@ -147,8 +160,8 @@ export function pendingRequestsFor(state: { requests: FactionRequest[] }, id: Id
 }
 
 /** Crews tied to an accepted request that has not been judged yet: they stay on the job. */
-export function onDuty(state: { requests: FactionRequest[] }, crew: Id): boolean {
-  return state.requests.some((r) => r.status === 'accepted' && r.crews.includes(crew));
+export function onDuty(state: GameState, crew: Id): boolean {
+  return state.requests.some((r) => r.status === 'accepted' && r.crews.includes(crew)) || onOperation(state, crew);
 }
 
 /** May `from` ask `to` for something right now? Not while a request is open, nor soon after a refusal. */
