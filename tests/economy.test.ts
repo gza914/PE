@@ -256,7 +256,7 @@ describe('spending', () => {
 describe('AI economy', () => {
   it('an AI lieutenant with money recruits a depleted crew back to strength', () => {
     const c = tuned((t) => {
-      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false, events: false, shadow: false, coalition: false };
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false, events: false, shadow: false, coalition: false, outside: false };
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
     const crew = Object.values(s.crews).find((x) => x.owner === 'm_guasave')!;
@@ -269,7 +269,7 @@ describe('AI economy', () => {
 
   it('a broke AI squeezes harder and cuts its halcones', () => {
     const c = tuned((t) => {
-      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false, events: false, shadow: false, coalition: false };
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: true, traffic: false, events: false, shadow: false, coalition: false, outside: false };
     });
     let s = newGame(c, { seed: 1, playerId: 'c_mazatlan' });
     s.characters.m_guasave!.missedPayrollWeeks = 1;

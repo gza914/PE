@@ -109,6 +109,7 @@ export function proposeOperation(ctx: SimContext, issuer: Id, spec: ProposeSpec)
     if (!c || inv.to === issuer || seen.has(inv.to)) return 'invalid or repeated invitee';
     if (c.status !== 'free') return `${charName(ctx, inv.to)} is ${c.status}`;
     if (c.faction !== me.faction) return `${charName(ctx, inv.to)} is not on your side`;
+    if (c.outsider !== null) return `${charName(ctx, inv.to)} deals only as an outside cartel`;
     if ((inv.cash ?? 0) < 0 || (inv.incomeShare ?? 0) < 0 || (inv.incomeShare ?? 0) > 0.5 || (inv.incomeWeeks ?? 0) < 0) return 'invalid offer';
     seen.add(inv.to);
   }

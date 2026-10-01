@@ -8,6 +8,7 @@ import type { ExtortionRate, SchemeType, VehicleType } from '../data/schemas';
 import { declare } from './diplomacy';
 import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
 import { buyWeapons, columnBlocked, hireMercenaries, hireVeterans, stopTraining, trainCrew } from './forces';
+import { acceptCounter as acceptOutsideCounter, answerDefection, proposeDeal, walkAway } from './outside';
 import { launchDrone, plantInformant, pullInformant } from './intel';
 import { breakPact, proposePact, respondPact, type PactSpec } from './pacts';
 import { chooseOption } from './systems/events';
@@ -21,7 +22,7 @@ import { cashOf, deposit, moveCash, spend } from './money';
 import { newTransit } from './newGame';
 import { nearestNode, planRoute } from './routing';
 import { allowedRoadTypes, seats, VEHICLE_TYPES } from './signature';
-import type { CrewOrder, CrewState, Id, RoutePreference } from './state';
+import type { CrewOrder, CrewState, Id, OutsideAsk, OutsideOffer, RoutePreference } from './state';
 import { respondToRequest } from './requests';
 import { acceptSurrender, callForHelp, reinforceOrder, sideOf } from './systems/combat';
 import { endGame } from './systems/endings';
@@ -60,6 +61,10 @@ export type Command =
   | (Base & { type: 'merge_crews'; crew: Id; into: Id })
   | (Base & { type: 'launch_drone'; road?: Id; node?: Id })
   | (Base & { type: 'plant_informant'; node: Id })
+  | (Base & { type: 'outside_deal'; cartel: Id; ask: OutsideAsk; offer: OutsideOffer; deal?: Id | null })
+  | (Base & { type: 'outside_accept'; deal: Id })
+  | (Base & { type: 'outside_walk'; deal: Id })
+  | (Base & { type: 'answer_defection'; crew: Id; accept: boolean })
   | (Base & { type: 'train_crew'; crew: Id })
   | (Base & { type: 'stop_training'; crew: Id })
   | (Base & { type: 'buy_weapons'; crew: Id; gear: number })
@@ -192,6 +197,14 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       return launchDrone(ctx, issuer.id, cmd.road ?? null, cmd.node ?? null);
     case 'plant_informant':
       return plantInformant(ctx, issuer.id, cmd.node);
+    case 'outside_deal':
+      return proposeDeal(ctx, issuer.id, { cartel: cmd.cartel, ask: cmd.ask, offer: cmd.offer, deal: cmd.deal ?? null });
+    case 'outside_accept':
+      return acceptOutsideCounter(ctx, issuer.id, cmd.deal);
+    case 'outside_walk':
+      return walkAway(ctx, issuer.id, cmd.deal);
+    case 'answer_defection':
+      return answerDefection(ctx, issuer.id, cmd.crew, cmd.accept);
     case 'train_crew':
       return trainCrew(ctx, issuer.id, cmd.crew);
     case 'stop_training':

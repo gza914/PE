@@ -260,7 +260,8 @@ interface Candidate {
 }
 
 function free(state: GameState, id: Id | null | undefined): id is Id {
-  return !!id && state.characters[id]?.status === 'free';
+  // Outside cartels' bosses are not part of anyone's story here.
+  return !!id && state.characters[id]?.status === 'free' && state.characters[id]?.outsider === null;
 }
 
 /** Every (scope, decider) pair an event could fire for, in a fixed order. */
@@ -344,13 +345,13 @@ function pickCounterpart(ctx: SimContext, def: GameEvent, decider: Id): Id | nul
     case 'ally':
       if (!me.faction) return undefined;
       pool = Object.values(state.characters)
-        .filter((c) => c.id !== decider && c.faction === me.faction && c.status === 'free' && ranks.has(c.rank))
+        .filter((c) => c.id !== decider && c.faction === me.faction && c.outsider === null && c.status === 'free' && ranks.has(c.rank))
         .map((c) => c.id);
       break;
     case 'rival_lieutenant':
       if (!me.faction) return undefined;
       pool = Object.values(state.characters)
-        .filter((c) => c.faction !== null && c.faction !== me.faction && c.status === 'free' && ranks.has(c.rank) && state.factions[c.faction]?.head !== c.id)
+        .filter((c) => c.faction !== null && c.outsider === null && c.faction !== me.faction && c.status === 'free' && ranks.has(c.rank) && state.factions[c.faction]?.head !== c.id)
         .map((c) => c.id);
       break;
     case 'relative':
@@ -751,7 +752,8 @@ function foreignAlliance(ctx: SimContext, id: Id): void {
     battles: 0,
     establishment: f.men,
     training: null,
-    hired: null,
+    // Their people, lent: they stay the cartel's (GDD "Loaned, not owned").
+    hired: { kind: 'contingent', from: content.factions.find((x) => x.kind === 'outside')?.id ?? null, loyalty: content.tuning.outside.loyalty.start, payMultiplier: 1, weekly: null, recallAt: null, defectOffer: null },
   };
   pushFeed(state, 'important', `${charName(ctx, id)} has new partners from outside Sinaloa.`, home.id, null);
 }

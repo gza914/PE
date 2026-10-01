@@ -46,6 +46,8 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     reports: [],
     drones: [],
     informants: [],
+    outsiders: {},
+    outsideDeals: [],
     market: { armored: content.tuning.economy.armoredStartStock, veterans: content.tuning.forces.veterans.perWeek, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
     battles: {},
     requests: [],
@@ -162,6 +164,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
       lastVideoAt: null,
       lastClaimAt: null,
       foreignAlly: null,
+      outsider: content.factions.find((f) => f.kind === 'outside' && f.head === def.id)?.id ?? null,
     };
     state.characters[def.id] = ch;
 
@@ -207,6 +210,12 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
   for (const id of opts.neutrals ?? []) {
     const ch = state.characters[id];
     if (ch && ch.rank !== 'head') ch.faction = null;
+  }
+
+  for (const f of content.factions) {
+    if (f.kind !== 'outside') continue;
+    const cfg = tuning.outside.cartels[f.id];
+    state.outsiders[f.id] = { faction: f.id, ambition: cfg?.startAmbition ?? 0, attitude: {}, envoys: {}, promises: [], loans: [], payments: [], hostile: [], silentUntil: {}, declared: false };
   }
 
   for (const ch of Object.values(state.characters)) ch.baseTerritory = characterTerritory(state, content, ch.id);

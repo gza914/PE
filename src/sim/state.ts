@@ -30,6 +30,9 @@ export interface GameState {
   reports: Report[];
   drones: Drone[];
   informants: Informant[];
+  /** Outside cartels (CJNG, CdG), by faction id. */
+  outsiders: Record<Id, OutsiderState>;
+  outsideDeals: OutsideDeal[];
   market: Market;
   battles: Record<Id, Battle>;
   /** Faction requests from heads to their people (the player included). */
@@ -205,6 +208,8 @@ export interface CharacterState {
   lastClaimAt: number | null;
   /** An outside cartel working with this character. */
   foreignAlly: { since: number } | null;
+  /** Set for an outside cartel's boss: his cartel's faction id. Never a lieutenant of the side he backs. */
+  outsider: Id | null;
 }
 
 export type WarPlanMode = 'attack' | 'defend' | 'regroup';
@@ -382,6 +387,12 @@ export interface HiredTroops {
   loyalty: number;
   /** Weekly pay multiplier over the owner's own men. */
   payMultiplier: number;
+  /** Fixed weekly pay instead (contingents: set by their cartel's tier price). */
+  weekly: number | null;
+  /** Their boss called them home: they leave at this hour. */
+  recallAt: number | null;
+  /** Hour they offered to stay as your men, awaiting your answer. */
+  defectOffer: number | null;
 }
 
 export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom' | 'deals';
@@ -465,6 +476,62 @@ export interface Drone {
   until: number;
   /** Crews that already rolled to notice this drone. */
   rolled: Id[];
+}
+
+export type OutsideTier = 'carne' | 'sicarios' | 'elite';
+
+export type OutsideAsk =
+  | { kind: 'men'; tier: OutsideTier; men: number; node: Id }
+  | { kind: 'weapons'; crew: Id; gear: number }
+  | { kind: 'armored'; crew: Id; count: number }
+  | { kind: 'loan'; amount: number };
+
+export interface OutsideOffer {
+  cash: number;
+  /** Weekly retainer on top of the men's pay, for `retainerWeeks`. */
+  retainer: number;
+  retainerWeeks: number;
+  /** Share of your income for `incomeWeeks`. */
+  incomeShare: number;
+  incomeWeeks: number;
+  plazaNow: Id | null;
+  plazaLater: Id | null;
+}
+
+export interface OutsideDeal {
+  id: Id;
+  cartel: Id;
+  client: Id;
+  ask: OutsideAsk;
+  offer: OutsideOffer;
+  /** What they want instead, if they countered. */
+  counter: OutsideOffer | null;
+  round: number;
+  status: 'open' | 'agreed' | 'walked';
+  createdAt: number;
+  reason: string | null;
+  /** Their current asking price; it comes down as they counter. */
+  price: number;
+}
+
+export interface OutsiderState {
+  faction: Id;
+  /** 0–100: at the top they declare for themselves. */
+  ambition: number;
+  /** Their view of each boss who deals with them. */
+  attitude: Record<Id, number>;
+  /** Bosses with a way to reach them, until when (envoys). */
+  envoys: Record<Id, number>;
+  /** Plazas promised later: they come to collect. */
+  promises: { by: Id; node: Id; dueAt: number }[];
+  loans: { by: Id; owed: number; dueAt: number }[];
+  /** Weekly payments owed: retainers and income shares. */
+  payments: { by: Id; kind: 'retainer' | 'income_share'; amount: number; until: number }[];
+  /** Bosses who wronged them badly: they raid and back the other side. */
+  hostile: Id[];
+  /** Hour they are not talking to a boss until, after a walk-out. */
+  silentUntil: Record<Id, number>;
+  declared: boolean;
 }
 
 /** Someone planted in a town who reports what he sees (GDD "Intelligence as estimates"). */

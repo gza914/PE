@@ -368,7 +368,7 @@ describe('balance targets (GDD "Convoy trade-off")', () => {
 describe('AI traffic', () => {
   it('AI crews move and rival halcones report them; the AI never commands the player', () => {
     const c = tunedWithAi((t) => {
-      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: true, events: false, shadow: false, coalition: false };
+      t.ai.layers = { strategic: false, operational: false, tactical: false, economy: false, traffic: true, events: false, shadow: false, coalition: false, outside: false };
     });
     let s = newGame(c, { seed: 11, playerId: 'c_mazatlan' });
     const startLocs = new Map(Object.values(s.crews).map((x) => [x.id, JSON.stringify(x.location)]));

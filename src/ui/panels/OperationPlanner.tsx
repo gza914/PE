@@ -45,7 +45,7 @@ export function OperationPlanner({ kind, target }: { kind: OpKind; target: Id })
       .filter((x) => x.h !== null)
       .sort((a, b) => a.h! - b.h!);
     const allies = Object.values(game.characters)
-      .filter((ch) => ch.id !== me.id && ch.faction !== null && ch.faction === me.faction && ch.status === 'free')
+      .filter((ch) => ch.id !== me.id && ch.outsider === null && ch.faction !== null && ch.faction === me.faction && ch.status === 'free')
       .map((ch) => {
         const near = Object.values(game.crews)
           .filter((c) => c.owner === ch.id && usable(c) && c.location.kind === 'node')

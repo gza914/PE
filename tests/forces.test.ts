@@ -51,7 +51,7 @@ describe('pay by tier', () => {
     const a = addCrew(s, 'a', 'c_mazatlan', 'mazatlan', { men: 10, skill: 1 });
     const b = addCrew(s, 'b', 'c_mazatlan', 'mazatlan', { men: 10, skill: 4 });
     expect(crewPayPerWeek(t, b)).toBeGreaterThan(crewPayPerWeek(t, a));
-    b.hired = { kind: 'mercenary', from: null, loyalty: 100, payMultiplier: 2 };
+    b.hired = { kind: 'mercenary', from: null, loyalty: 100, payMultiplier: 2, weekly: null, recallAt: null, defectOffer: null };
     expect(crewPayPerWeek(t, b)).toBe(10 * t.economy.payrollPerManPerWeek * f.payBySkill[3]! * 2);
     expect(payrollDue(s, calm, 'c_mazatlan')).toBe(crewPayPerWeek(t, a) + crewPayPerWeek(t, b));
   });

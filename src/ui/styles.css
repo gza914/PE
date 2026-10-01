@@ -215,3 +215,23 @@ select { font-size: 13px; max-width: 100%; }
   padding-left: 6px;
   margin: 4px 0;
 }
+
+.outside .cartel {
+  border-bottom: 1px solid #2a2e36;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.outside .dealform .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin: 3px 0;
+}
+.outside .dealform input[type='number'] {
+  width: 80px;
+}
+.diplomacy-tabs button.on,
+.actions button.on {
+  background: #3a4150;
+}

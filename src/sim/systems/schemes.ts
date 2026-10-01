@@ -72,6 +72,7 @@ export function schemeBlocked(ctx: SimContext, owner: Id, type: SchemeType, targ
       if (!me.faction) return 'a neutral has no side to bring him to';
       if (!rival || t.faction === null) return 'flip a lieutenant from the other side';
       if (state.factions[t.faction]?.head === target) return 'a faction head will not switch sides';
+      if (t.outsider !== null) return 'an outside cartel is bought, not flipped';
       return null;
     case 'assassinate':
     case 'frame':

@@ -81,8 +81,20 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
           <>
             <dt>Hired</dt>
             <dd>
-              {crew.hired.kind === 'mercenary' ? 'Mercenaries' : `Lent by ${crew.hired.from ?? 'an outside cartel'}`} · loyalty {Math.round(crew.hired.loyalty)}
+              {crew.hired.kind === 'mercenary' ? 'Mercenaries' : `Lent by ${content.factions.find((f) => f.id === crew.hired!.from)?.name ?? 'an outside cartel'}`} · loyalty {Math.round(crew.hired.loyalty)}
+              {crew.hired.recallAt !== null && ` · called home in ${fmtHours(crew.hired.recallAt - game.hour)}`}
             </dd>
+            {crew.hired.defectOffer !== null && mine && (
+              <dd>
+                They offer to stay as your own men.{' '}
+                <button className="small" title="They become your crew; their cartel becomes your enemy" onClick={() => enqueue({ type: 'answer_defection', issuer: crew.owner, crew: crew.id, accept: true })}>
+                  Take them on
+                </button>{' '}
+                <button className="small" onClick={() => enqueue({ type: 'answer_defection', issuer: crew.owner, crew: crew.id, accept: false })}>
+                  Say no
+                </button>
+              </dd>
+            )}
           </>
         )}
         {crew.training && (

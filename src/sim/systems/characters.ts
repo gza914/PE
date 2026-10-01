@@ -81,7 +81,7 @@ function successorOf(ctx: SimContext, id: Id): Id | null {
   if (head && head !== id && (hs === 'free' || hs === 'captured' || hs === 'jailed')) return head;
   const RANK = { head: 5, inner_circle: 4, senior_lieutenant: 3, lieutenant: 2, associate: 1, crew_leader: 1 } as const;
   const member = Object.values(state.characters)
-    .filter((c) => c.id !== id && c.status === 'free' && ch.faction !== null && c.faction === ch.faction)
+    .filter((c) => c.id !== id && c.status === 'free' && c.outsider === null && ch.faction !== null && c.faction === ch.faction)
     .sort((a, b) => RANK[b.rank] - RANK[a.rank] || (a.id < b.id ? -1 : 1))[0];
   return member?.id ?? null;
 }

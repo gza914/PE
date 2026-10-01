@@ -44,7 +44,8 @@ export function ForcesPanel() {
                 <span className="muted small">
                   {locationName(content, x.location)} · morale {Math.round(x.morale)} · {money(crewPayPerWeek(content.tuning, x))}/wk
                   {x.training && ` · in camp ${Math.round(x.training.progress * 100)}%`}
-                  {x.hired && ` · ${x.hired.kind === 'mercenary' ? 'mercenaries' : 'lent troops'}, loyalty ${Math.round(x.hired.loyalty)}`}
+                  {x.hired && ` · ${x.hired.kind === 'mercenary' ? 'mercenaries' : `lent by ${content.factions.find((f) => f.id === x.hired!.from)?.name ?? 'outsiders'}`}, loyalty ${Math.round(x.hired.loyalty)}`}
+                  {x.hired?.defectOffer != null && ' · offer to stay with you'}
                   {x.battle && ' · fighting'}
                 </span>
               </button>

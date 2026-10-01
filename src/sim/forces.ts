@@ -32,6 +32,7 @@ export function tierLabel(tuning: Tuning, crew: Pick<CrewState, 'skill' | 'gear'
 
 /** One crew's weekly pay: more for better men, more again for hired troops. */
 export function crewPayPerWeek(tuning: Tuning, crew: CrewState): number {
+  if (crew.hired?.weekly != null) return crew.hired.weekly;
   const bySkill = tuning.forces.payBySkill[Math.max(1, Math.min(5, Math.round(crew.skill))) - 1]!;
   return crew.men * tuning.economy.payrollPerManPerWeek * bySkill * (crew.hired?.payMultiplier ?? 1);
 }
@@ -161,7 +162,7 @@ export function hireMercenaries(ctx: SimContext, issuer: Id, node: Id, men: numb
     battles: 0,
     establishment: men,
     training: null,
-    hired: { kind: 'mercenary', from: null, loyalty: 100, payMultiplier: m.payMultiplier },
+    hired: { kind: 'mercenary', from: null, loyalty: 100, payMultiplier: m.payMultiplier, weekly: null, recallAt: null, defectOffer: null },
   };
   return null;
 }

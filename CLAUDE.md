@@ -68,3 +68,10 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 
 - Joint operations (`operations.ts`) and pacts (`pacts.ts`) are proposed and answered through commands; the AI side is `ai/coalition.ts` (layer `coalition`). Refusing costs nothing; agreeing and not showing up is remembered.
 - Spoils: `plazaRecipient` in combat gives a captured plaza by the operation's agreed rule, else by contribution (men who fought + `contributionLossWeight` × losses, from `BattleSide.ownerMen`/`ownerLosses`).
+
+## Recruitment and outside cartels
+
+- Pay goes through `crewPayPerWeek` (`forces.ts`): tier multiplier, mercenary multiplier, or a contingent's fixed `hired.weekly`. Tier names come from `tuning.forces.skillNames`/`gearNames` via `tierLabel`.
+- `CrewState.hired` marks troops who are not the owner's own: mercenaries leave the week pay is missed; contingents (`kind: 'contingent'`, `from` a cartel) have loyalty, can be recalled, may defect, go home if their boss dies, and never count toward score.
+- CJNG and CdG are `kind: 'outside'` factions (`outside.ts`). Their boss characters carry `outsider` set to their cartel. While associated (after being handed a plaza) the boss sits in the partner faction, so his plazas count for that side; he is never a lieutenant there. Every faction-member loop (succession, acting head, offensives, requests, events, invites) must skip `outsider !== null`; `isAi` already does.
+- Only the player and faction heads deal with them (`dealerBlocked`). Contact: a port, a border road, or an envoy.

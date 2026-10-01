@@ -37,7 +37,8 @@ function force(state: GameState, content: Content, id: Id): number {
   return groupPower(
     state,
     content,
-    Object.values(state.crews).filter((c) => c.owner === id),
+    // Lent troops are their cartel's, never yours (GDD "Loaned, not owned").
+    Object.values(state.crews).filter((c) => c.owner === id && c.hired?.kind !== 'contingent'),
   );
 }
 
@@ -128,14 +129,14 @@ export function checkEndings(ctx: SimContext): void {
       continue;
     }
     // A head in enemy hands or in prison: the faction holds together while anyone could take over.
-    if (head && (head.status === 'captured' || head.status === 'jailed') && Object.values(state.characters).some((c) => c.faction === f && c.id !== head.id && c.status === 'free')) {
+    if (head && (head.status === 'captured' || head.status === 'jailed') && Object.values(state.characters).some((c) => c.faction === f && c.outsider === null && c.id !== head.id && c.status === 'free')) {
       fs.headlessDays = 0;
       continue;
     }
     fs.headlessDays += 1;
     if (!head || head.status === 'dead' || head.status === 'extradited') {
       const successor = Object.values(state.characters)
-        .filter((c) => c.faction === f && c.status === 'free')
+        .filter((c) => c.faction === f && c.outsider === null && c.status === 'free')
         .sort((x, y) => RANK_VALUE[y.rank] - RANK_VALUE[x.rank] || force(state, content, y.id) - force(state, content, x.id) || (x.id < y.id ? -1 : 1))[0];
       if (successor && chance(state.rng, t.successionChancePerDay)) {
         fs.head = successor.id;

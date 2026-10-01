@@ -563,6 +563,80 @@ export const TuningSchema = z.object({
     /** Percent of a full load restored per hour at a friendly plaza. */
     ammoResupplyPerHour: z.number().nonnegative(),
   }),
+  /** GDD "Outside cartels: CJNG and CdG". */
+  outside: z.object({
+    cartels: z.record(
+      z.string(),
+      z.object({
+        tiers: z.record(z.enum(['carne', 'sicarios', 'elite']), z.object({ skill: z.number().int().min(1).max(5), gear: z.number().int().min(1).max(5), pricePerMan: z.number().nonnegative(), weeklyPerMan: z.number().nonnegative(), maxMen: z.number().int().positive() })),
+        /** How much they value a plaza, cash, and a share of income. */
+        plazaValueMultiplier: z.number().nonnegative(),
+        cashValueMultiplier: z.number().nonnegative(),
+        routeValueMultiplier: z.number().nonnegative(),
+        startAmbition: z.number().min(0).max(100),
+        /** Multiplies how fast ambition grows. */
+        ambitionGrowth: z.number().nonnegative(),
+        recallChancePerWeek: pct,
+        envoyChancePerWeek: pct,
+        weaponsCostMultiplier: z.number().positive(),
+        armoredCost: z.number().nonnegative(),
+        armoredMax: z.number().int().nonnegative(),
+        loanMax: z.number().nonnegative(),
+      }),
+    ),
+    /** Holding a plaza of these types (or next to a border exit) gives contact. */
+    contactNodeTypes: z.array(z.string()),
+    envoyContactDays: z.number().positive(),
+    /** Neutrals pay this share of the price: they are more attractive partners. */
+    neutralDiscount: z.number().positive(),
+    /** Price falls this fraction per point of their attitude toward you. */
+    attitudePriceEffect: z.number().nonnegative(),
+    maxRounds: z.number().int().positive(),
+    walkAwayDays: z.number().nonnegative(),
+    /** In a counter they come down this share of the gap between their price and your offer. */
+    counterMeetShare: pct,
+    retainerWeeksValued: z.number().nonnegative(),
+    incomeShareWeeksValued: z.number().nonnegative(),
+    plazaDaysValued: z.number().nonnegative(),
+    plazaLaterDiscount: pct,
+    promiseDueDays: z.number().positive(),
+    plazaGarrison: z.object({ men: z.number().int().positive(), skill: z.number().int().min(1).max(5), gear: z.number().int().min(1).max(5) }),
+    loyalty: z.object({
+      start: z.number().min(0).max(100),
+      weeklyPaid: z.number(),
+      weeklyMissed: z.number(),
+      perWin: z.number(),
+      /** Times the share of the contingent lost in a battle. */
+      perLossShare: z.number(),
+      desertBelow: z.number(),
+      desertShareDaily: pct,
+      defectAbove: z.number(),
+      defectChancePerWeek: pct,
+      /** Their cartel's attitude toward you after you take its men. */
+      defectHostility: z.number(),
+    }),
+    recallWarningHours: z.number().nonnegative(),
+    loan: z.object({ interest: z.number().nonnegative(), weeks: z.number().positive(), defaultAttitude: z.number(), defaultAmbition: z.number() }),
+    attitude: z.object({ paidDeal: z.number(), brokenPromise: z.number(), keptPromise: z.number(), refusedDefection: z.number(), hostileBelow: z.number() }),
+    ambition: z.object({
+      declareAt: z.number().positive(),
+      /** Ambition grows while their partner coalition holds less than this share. */
+      partnerWeakShare: pct,
+      perDayWeak: z.number().nonnegative(),
+      perDayStrongPlaza: z.number().nonnegative(),
+      decayPerDay: z.number().nonnegative(),
+    }),
+    hostile: z.object({ raidChancePerWeek: pct, raidMen: z.number().int().positive() }),
+    ai: z.object({
+      /** A head hires when its side's strength is below this ratio of the enemy's. */
+      hireWhenRatioBelow: z.number().positive(),
+      dailyChance: pct,
+      reserveWeeks: z.number().nonnegative(),
+      tier: z.enum(['carne', 'sicarios', 'elite']),
+      men: z.number().int().positive(),
+      cashShareOfPrice: z.number().nonnegative(),
+    }),
+  }),
   /** GDD "Recruitment" and "Formations". */
   forces: z.object({
     /** Names the player sees for skill 1–5 and gear 1–5. */
@@ -1094,6 +1168,7 @@ export const TuningSchema = z.object({
       shadow: z.boolean(),
       /** AI joint operations and pacts. */
       coalition: z.boolean(),
+      outside: z.boolean(),
     }),
     /** Multipliers on AI action scores by goal (GDD "AI": goal weight). */
     goalWeights: z.record(Goal, z.partialRecord(AiAction, z.number().nonnegative())),

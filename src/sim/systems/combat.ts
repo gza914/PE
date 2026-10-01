@@ -16,6 +16,7 @@ import type { Battle, BattleSide, CrewOrder, CrewState, Id, NetworkId } from '..
 import { world } from '../world';
 import { captureCharacter, killCharacter } from './characters';
 import { addOpinion } from '../opinion';
+import { contingentLosses, contingentWon } from '../outside';
 import { mutualDefenseCalls, peaceBetween, settleDefenseCalls, truceBetween } from '../pacts';
 import { opForCapture } from '../operations';
 
@@ -405,6 +406,7 @@ function applyLosses(ctx: SimContext, b: Battle, k: SideKey, inflicted: number, 
     c.men -= loss;
     men += loss;
     if (loss > 0) b[k].ownerLosses[c.owner] = (b[k].ownerLosses[c.owner] ?? 0) + loss;
+    if (loss > 0) contingentLosses(c, loss / before, content);
     // Men who fought are at least those lost plus those still standing; this
     // also covers crews that changed hands, recruited, or joined by any path.
     const standing = list.filter((x) => x.owner === c.owner).reduce((n, x) => n + x.men, 0);
@@ -423,6 +425,11 @@ function applyLosses(ctx: SimContext, b: Battle, k: SideKey, inflicted: number, 
 function loseLeader(ctx: SimContext, b: Battle, c: CrewState, how: 'killed' | 'captured', captor: Id | null): void {
   const { state, content } = ctx;
   const leader = c.leader;
+  // An outside cartel's boss is never really in the field; his men just lose their nerve.
+  if (state.characters[leader]?.outsider != null || c.hired) {
+    c.morale = Math.max(0, c.morale - content.tuning.combat.leaderLossMorale);
+    return;
+  }
   b.log.push(`H${b.hours + 1}: ${leaderName(ctx, c)} was ${how}.`);
   if (how === 'killed') killCharacter(ctx, leader);
   else if (captor) captureCharacter(ctx, leader, captor);
@@ -548,6 +555,7 @@ function endBattle(ctx: SimContext, b: Battle, forcedWinner: SideKey | null = nu
   const where = placeName(ctx, b);
   if (winner) {
     for (const c of alive[winner]) {
+      contingentWon(c, content);
       c.battles += 1;
       if (c.battles % t.skillUpEveryBattles === 0 && c.skill < 5) c.skill += 1;
     }

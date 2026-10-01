@@ -142,7 +142,7 @@ export function actingHead(ctx: SimContext, faction: Id): Id | null {
   if (head && state.characters[head]?.status === 'free') return head;
   if (!head) return null;
   const members = Object.values(state.characters)
-    .filter((c) => c.faction === faction && c.status === 'free' && c.id !== head && c.id !== state.playerId)
+    .filter((c) => c.faction === faction && c.outsider === null && c.status === 'free' && c.id !== head && c.id !== state.playerId)
     .sort((a, b) => RANK_ORDER[b.rank] - RANK_ORDER[a.rank] || (a.id < b.id ? -1 : 1));
   return members[0]?.id ?? null;
 }
@@ -461,7 +461,7 @@ function levy(ctx: SimContext, fs: FactionState): Command[] {
   if (cashOf(state, head) >= s.levyCashWeeks * weeklyObligations(state, content, head)) return [];
   if (state.requests.some((r) => r.from === head && r.kind === 'levy' && state.hour - r.createdAt < 7 * 24)) return [];
   const rich = Object.values(state.characters)
-    .filter((c) => c.faction === fs.id && c.id !== head && c.status === 'free')
+    .filter((c) => c.faction === fs.id && c.outsider === null && c.id !== head && c.status === 'free')
     .map((c) => ({ id: c.id, cash: cashOf(state, c.id), bills: weeklyObligations(state, content, c.id) }))
     .filter((c) => c.cash > s.levyRichWeeks * Math.max(1, c.bills))
     .sort((a, b) => b.cash - a.cash || (a.id < b.id ? -1 : 1))[0];

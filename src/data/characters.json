@@ -1416,6 +1416,65 @@
           }
         }
       ]
+    },
+    {
+      "id": "o_cjng",
+      "name": "Abel Ríos Cárdenas",
+      "alias": "El Tapatío",
+      "age": 47,
+      "faction": "cjng",
+      "rank": "head",
+      "homePlaza": null,
+      "skills": {
+        "violencia": 15,
+        "astucia": 14,
+        "negocio": 13,
+        "palabra": 10
+      },
+      "traits": [
+        "ambicioso",
+        "calculador"
+      ],
+      "profile": 80,
+      "goal": "take_plaza",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "cjng",
+        "amount": 100
+      },
+      "startTier": null,
+      "cash": 4000000,
+      "crews": []
+    },
+    {
+      "id": "o_cdg",
+      "name": "Ramiro Treviño Salas",
+      "alias": "El Golfo",
+      "age": 47,
+      "faction": "cdg",
+      "rank": "head",
+      "homePlaza": null,
+      "skills": {
+        "violencia": 12,
+        "astucia": 11,
+        "negocio": 15,
+        "palabra": 12
+      },
+      "traits": [
+        "codicioso"
+      ],
+      "profile": 80,
+      "goal": "take_plaza",
+      "relations": [],
+      "heir": null,
+      "lean": {
+        "faction": "cdg",
+        "amount": 100
+      },
+      "startTier": null,
+      "cash": 4000000,
+      "crews": []
     }
   ]
 }

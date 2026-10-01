@@ -129,6 +129,7 @@ export function pactBlocked(state: GameState, content: Content, from: Id, spec: 
   const b = state.characters[spec.to];
   if (!a || !b || from === spec.to) return 'pick someone else';
   if (b.status !== 'free') return `${b.alias ?? b.name} is ${b.status}`;
+  if (a.outsider !== null || b.outsider !== null) return 'outside cartels deal through their own channel';
   const sameSide = a.faction !== null && a.faction === b.faction;
   if (pactBetween(state, from, spec.to, spec.pact)) return 'you already have that pact';
   if (state.pactOffers.some((o) => o.from === from && o.to === spec.to && o.type === spec.pact)) return 'that offer is already on the table';

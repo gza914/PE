@@ -121,6 +121,14 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     if (c.training && (c.location.kind !== 'node' || c.location.node !== c.training.node) && c.battle === null && c.order.type === 'garrison') p.push(`crew ${c.id}: training away from its camp`);
     if (c.hired && (c.hired.loyalty < 0 || c.hired.loyalty > 100)) p.push(`crew ${c.id}: loyalty ${c.hired.loyalty}`);
   }
+  for (const [id, o] of Object.entries(state.outsiders)) {
+    if (o.ambition < 0 || o.ambition > 100) p.push(`outsider ${id}: ambition ${o.ambition}`);
+    const head = state.characters[state.factions[id]?.head ?? ''];
+    if (!head || head.outsider !== id) p.push(`outsider ${id}: head is not marked as its outsider`);
+    else if (o.declared && head.faction !== id) p.push(`outsider ${id}: declared but its boss sits in ${head.faction}`);
+  }
+  for (const d of state.outsideDeals) if (d.status === 'open' && !state.outsiders[d.cartel]) p.push(`deal ${d.id}: unknown cartel`);
+  for (const c of Object.values(state.crews)) if (c.hired?.kind === 'contingent' && (!c.hired.from || !state.outsiders[c.hired.from])) p.push(`crew ${c.id}: contingent from unknown cartel`);
   for (const d of state.drones) if ((d.road === null) === (d.node === null)) p.push(`drone ${d.id}: needs exactly one of road or town`);
   for (const i of state.informants) {
     if (!state.nodes[i.node]) p.push(`informant ${i.id}: unknown town ${i.node}`);

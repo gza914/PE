@@ -223,6 +223,12 @@ export function crossReferenceProblems(c: Content): string[] {
   if (majors.length !== 2) p.push(`factions.json: expected exactly 2 major factions, found ${majors.length}`);
   for (const f of c.factions) {
     if (f.kind === 'major' && f.head === null) p.push(`factions.json: major faction "${f.id}" needs a head`);
+    if (f.kind === 'outside') {
+      if (f.head === null) p.push(`factions.json: outside cartel "${f.id}" needs a head`);
+      if (!c.tuning.outside.cartels[f.id]) p.push(`tuning.json: outside.cartels has no entry for "${f.id}"`);
+      const head = c.characters.find((ch) => ch.id === f.head);
+      if (head && (head.crews.length > 0 || head.startTier !== null)) p.push(`characters.json: outside cartel boss "${head.id}" starts with no crews and is not playable`);
+    }
     if (f.head !== null) {
       const head = c.characters.find((ch) => ch.id === f.head);
       if (!head) p.push(`factions.json: faction "${f.id}" has unknown head "${f.head}"`);
@@ -293,5 +299,6 @@ export function crossReferenceProblems(c: Content): string[] {
   const sum = w.territory + w.wealth + w.standing + w.reputation + w.force;
   if (Math.abs(sum - 1) > 1e-9) p.push(`tuning.json: endings.scoreWeights sum to ${sum}, expected 1`);
 
+  for (const id of Object.keys(c.tuning.outside.cartels)) if (!c.factions.some((f) => f.id === id && f.kind === 'outside')) p.push(`tuning.json: outside.cartels "${id}" is not an outside faction`);
   return p;
 }

@@ -8,6 +8,7 @@ import { onDuty } from '../../sim/requests';
 import { travelHours } from '../../sim/routing';
 import type { Id, JointOp, OpInvite, PactType } from '../../sim/state';
 import { useGame } from '../store';
+import { OutsidePanel } from './OutsidePanel';
 import { charLabel, fmtHours, playerNetwork } from '../util';
 import { Opinion } from './FactionPanel';
 
@@ -26,6 +27,24 @@ const STATUS: Record<OpInvite['status'], string> = {
  * invited to or running, pact offers, your pacts, and a form to offer one.
  */
 export function DiplomacyPanel() {
+  const [view, setView] = useState<'side' | 'outside'>('side');
+  const outsideCount = useGame((s) => (s.game ? s.game.outsideDeals.filter((d) => d.client === s.game!.playerId && d.status === 'open' && d.counter).length : 0));
+  return (
+    <>
+      <div className="actions">
+        <button className={`small ${view === 'side' ? 'on' : ''}`} onClick={() => setView('side')}>
+          Bosses
+        </button>
+        <button className={`small ${view === 'outside' ? 'on' : ''}`} onClick={() => setView('outside')}>
+          Outside cartels{outsideCount > 0 && <span className="badge">{outsideCount}</span>}
+        </button>
+      </div>
+      {view === 'side' ? <Peers /> : <OutsidePanel />}
+    </>
+  );
+}
+
+function Peers() {
   const { content, game, enqueue, queue, select } = useGame();
   if (!game) return null;
   const me = game.playerId;

@@ -37,12 +37,12 @@ export function preferenceFor(ctx: SimContext, leader: Id): RoutePreference {
 /** Does the AI decide for this character right now? (Everyone but the player, unless on autoplay.) */
 export function isAi(state: GameState, id: Id): boolean {
   const ch = state.characters[id];
-  return !!ch && (id !== state.playerId || state.autoplay) && ch.status === 'free';
+  return !!ch && ch.outsider === null && (id !== state.playerId || state.autoplay) && ch.status === 'free';
 }
 
 /** Does the AI run this character's affairs (economy, idle crews), even while they are held? */
 export function aiManaged(state: GameState, id: Id): boolean {
-  return (id !== state.playerId || state.autoplay) && !['dead', 'extradited'].includes(state.characters[id]?.status ?? 'dead');
+  return (id !== state.playerId || state.autoplay) && state.characters[id]?.outsider == null && !['dead', 'extradited'].includes(state.characters[id]?.status ?? 'dead');
 }
 
 export function majorFactions(content: Content): Id[] {

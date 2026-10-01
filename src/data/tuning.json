@@ -926,7 +926,8 @@
       "traffic": true,
       "events": true,
       "shadow": true,
-      "coalition": true
+      "coalition": true,
+      "outside": true
     },
     "economyReserveWeeks": 0.5,
     "forces": {
@@ -965,6 +966,146 @@
         "flip": 0.35,
         "buyHalcones": 0.4
       }
+    }
+  },
+  "outside": {
+    "cartels": {
+      "cjng": {
+        "tiers": {
+          "carne": {
+            "skill": 1,
+            "gear": 2,
+            "pricePerMan": 4000,
+            "weeklyPerMan": 450,
+            "maxMen": 30
+          },
+          "sicarios": {
+            "skill": 3,
+            "gear": 4,
+            "pricePerMan": 12000,
+            "weeklyPerMan": 1000,
+            "maxMen": 25
+          },
+          "elite": {
+            "skill": 5,
+            "gear": 5,
+            "pricePerMan": 40000,
+            "weeklyPerMan": 2500,
+            "maxMen": 12
+          }
+        },
+        "plazaValueMultiplier": 1.5,
+        "cashValueMultiplier": 1,
+        "routeValueMultiplier": 1.3,
+        "startAmbition": 10,
+        "ambitionGrowth": 1.5,
+        "recallChancePerWeek": 0.05,
+        "envoyChancePerWeek": 0.15,
+        "weaponsCostMultiplier": 0.9,
+        "armoredCost": 450000,
+        "armoredMax": 2,
+        "loanMax": 400000
+      },
+      "cdg": {
+        "tiers": {
+          "carne": {
+            "skill": 1,
+            "gear": 2,
+            "pricePerMan": 2500,
+            "weeklyPerMan": 350,
+            "maxMen": 40
+          },
+          "sicarios": {
+            "skill": 3,
+            "gear": 3,
+            "pricePerMan": 8000,
+            "weeklyPerMan": 800,
+            "maxMen": 30
+          },
+          "elite": {
+            "skill": 5,
+            "gear": 4,
+            "pricePerMan": 30000,
+            "weeklyPerMan": 2200,
+            "maxMen": 15
+          }
+        },
+        "plazaValueMultiplier": 0.8,
+        "cashValueMultiplier": 1.15,
+        "routeValueMultiplier": 1.1,
+        "startAmbition": 5,
+        "ambitionGrowth": 0.5,
+        "recallChancePerWeek": 0.03,
+        "envoyChancePerWeek": 0.2,
+        "weaponsCostMultiplier": 0.8,
+        "armoredCost": 420000,
+        "armoredMax": 3,
+        "loanMax": 600000
+      }
+    },
+    "contactNodeTypes": [
+      "port"
+    ],
+    "envoyContactDays": 21,
+    "neutralDiscount": 0.8,
+    "attitudePriceEffect": 0.003,
+    "maxRounds": 3,
+    "walkAwayDays": 7,
+    "counterMeetShare": 0.5,
+    "retainerWeeksValued": 6,
+    "incomeShareWeeksValued": 8,
+    "plazaDaysValued": 30,
+    "plazaLaterDiscount": 0.5,
+    "promiseDueDays": 60,
+    "plazaGarrison": {
+      "men": 12,
+      "skill": 3,
+      "gear": 4
+    },
+    "loyalty": {
+      "start": 70,
+      "weeklyPaid": 3,
+      "weeklyMissed": -25,
+      "perWin": 6,
+      "perLossShare": -40,
+      "desertBelow": 30,
+      "desertShareDaily": 0.08,
+      "defectAbove": 85,
+      "defectChancePerWeek": 0.15,
+      "defectHostility": -60
+    },
+    "recallWarningHours": 48,
+    "loan": {
+      "interest": 0.3,
+      "weeks": 6,
+      "defaultAttitude": -40,
+      "defaultAmbition": 15
+    },
+    "attitude": {
+      "paidDeal": 5,
+      "brokenPromise": -50,
+      "keptPromise": 15,
+      "refusedDefection": 0,
+      "hostileBelow": -40
+    },
+    "ambition": {
+      "declareAt": 100,
+      "partnerWeakShare": 0.4,
+      "perDayWeak": 1.2,
+      "perDayStrongPlaza": 0.15,
+      "decayPerDay": 0.4
+    },
+    "hostile": {
+      "raidChancePerWeek": 0.35,
+      "raidMen": 15
+    },
+    "ai": {
+      "hireWhenRatioBelow": 0.85,
+      "dailyChance": 0.08,
+      "reserveWeeks": 6,
+      "tier": "sicarios",
+      "men": 20,
+      "cashShareOfPrice": 1
     }
   }
 }

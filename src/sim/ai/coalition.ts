@@ -202,7 +202,7 @@ function propose(ctx: SimContext, intel: Intel, id: Id): Command | null {
   if (state.operations.some((o) => o.status === 'planning' && o.proposer === id)) return null;
   const peers = Object.keys(state.characters)
     .sort()
-    .filter((p) => p !== id && state.characters[p]!.faction === me.faction && state.characters[p]!.status === 'free');
+    .filter((p) => p !== id && state.characters[p]!.faction === me.faction && state.characters[p]!.outsider === null && state.characters[p]!.status === 'free');
 
   // Ask for help holding a threatened plaza.
   const threat = threats(ctx, intel, net).find((x) => state.nodes[x.node]?.owner === id);

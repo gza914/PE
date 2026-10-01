@@ -1,8 +1,41 @@
 {
   "_comment": "Working names. Real vs lightly fictionalized faction names is an open question.",
   "factions": [
-    { "id": "chapitos", "name": "Chapitos", "kind": "major", "playable": true, "color": "#d64545", "head": "chapitos_head", "description": "Younger, aggressive, media-savvy, stronger on firepower." },
-    { "id": "mayos", "name": "Mayos", "kind": "major", "playable": true, "color": "#3f7fd6", "head": "mayos_head", "description": "Older, patient, deep local ties, stronger on halcones and politics." },
-    { "id": "outside", "name": "Outside cartel", "kind": "outside", "playable": false, "color": "#d6a13f", "head": null, "description": "CJNG-type opportunists. Offer alliances, then pursue their own agenda." }
+    {
+      "id": "chapitos",
+      "name": "Chapitos",
+      "kind": "major",
+      "playable": true,
+      "color": "#d64545",
+      "head": "chapitos_head",
+      "description": "Younger, aggressive, media-savvy, stronger on firepower."
+    },
+    {
+      "id": "mayos",
+      "name": "Mayos",
+      "kind": "major",
+      "playable": true,
+      "color": "#3f7fd6",
+      "head": "mayos_head",
+      "description": "Older, patient, deep local ties, stronger on halcones and politics."
+    },
+    {
+      "id": "cjng",
+      "name": "CJNG",
+      "kind": "outside",
+      "playable": false,
+      "color": "#c9a227",
+      "head": "o_cjng",
+      "description": "From Jalisco. Better trained and equipped, fewer men on offer. Wants plazas and routes: a foothold in Sinaloa. Will come for you if you grow weak."
+    },
+    {
+      "id": "cdg",
+      "name": "Cártel del Golfo",
+      "kind": "outside",
+      "playable": false,
+      "color": "#3fb6a8",
+      "head": "o_cdg",
+      "description": "From Tamaulipas. More men, cheaper, rougher. Wants cash and the eastern routes. More purely mercenary."
+    }
   ]
 }
