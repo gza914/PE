@@ -5,11 +5,12 @@ import { FactionPanel } from './panels/FactionPanel';
 import { ShadowPanel } from './panels/ShadowPanel';
 import { DiplomacyPanel } from './panels/DiplomacyPanel';
 import { IntelPanel } from './panels/IntelPanel';
+import { ForcesPanel } from './panels/ForcesPanel';
 import { useGame } from './store';
 import { playerNetwork } from './util';
 
 export function Feed() {
-  const [tab, setTab] = useState<'feed' | 'intel' | 'money' | 'faction' | 'shadow' | 'diplomacy'>('feed');
+  const [tab, setTab] = useState<'feed' | 'intel' | 'forces' | 'money' | 'faction' | 'shadow' | 'diplomacy'>('feed');
   const diplomacyCount = useGame((s) =>
     s.game
       ? s.game.operations.filter((o) => o.status === 'planning' && o.invites.some((i) => i.to === s.game!.playerId && i.status === 'pending')).length +
@@ -27,6 +28,9 @@ export function Feed() {
         <button className={tab === 'intel' ? 'on' : ''} onClick={() => setTab('intel')}>
           Intel
         </button>
+        <button className={tab === 'forces' ? 'on' : ''} onClick={() => setTab('forces')}>
+          Forces
+        </button>
         <button className={tab === 'money' ? 'on' : ''} onClick={() => setTab('money')}>
           Economy
         </button>
@@ -40,7 +44,7 @@ export function Feed() {
           Shadows
         </button>
       </div>
-      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelPanel /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : tab === 'diplomacy' ? <DiplomacyPanel /> : <ShadowPanel />}
+      {tab === 'feed' ? <ReportFeed /> : tab === 'intel' ? <IntelPanel /> : tab === 'forces' ? <ForcesPanel /> : tab === 'money' ? <EconomyPanel /> : tab === 'faction' ? <FactionPanel /> : tab === 'diplomacy' ? <DiplomacyPanel /> : <ShadowPanel />}
     </div>
   );
 }

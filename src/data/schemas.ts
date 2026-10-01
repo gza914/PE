@@ -563,6 +563,46 @@ export const TuningSchema = z.object({
     /** Percent of a full load restored per hour at a friendly plaza. */
     ammoResupplyPerHour: z.number().nonnegative(),
   }),
+  /** GDD "Recruitment" and "Formations". */
+  forces: z.object({
+    /** Names the player sees for skill 1–5 and gear 1–5. */
+    skillNames: z.array(z.string()).length(5),
+    gearNames: z.array(z.string()).length(5),
+    /** Weekly pay multiplier by skill 1–5. */
+    payBySkill: z.array(z.number().positive()).length(5),
+    column: z.object({ maxCrews: z.number().int().min(1), maxMen: z.number().int().positive() }),
+    weapons: z.object({
+      /** Cost to arm one man at gear 1–5; upgrading pays the difference. */
+      costPerManByGear: z.array(z.number().nonnegative()).length(5),
+    }),
+    training: z.object({
+      costPerManPerDay: z.number().nonnegative(),
+      sierraCostMultiplier: z.number().positive(),
+      sierraRegions: z.array(z.string()),
+      /** Days to go from skill n to n+1, for n = 1..4. */
+      daysPerLevel: z.array(z.number().positive()).length(4),
+      maxSkill: z.number().int().min(1).max(5),
+      calenturaPerDay: z.number().nonnegative(),
+      /** Daily chance each rival side hears about a camp. */
+      discoveryChancePerDay: pct,
+    }),
+    veterans: z.object({
+      costPerMan: z.number().nonnegative(),
+      skill: z.number().int().min(1).max(5),
+      gear: z.number().int().min(1).max(5),
+      /** Statewide: how many come on the market each week, and the most there can be. */
+      perWeek: z.number().int().nonnegative(),
+      max: z.number().int().nonnegative(),
+    }),
+    mercenaries: z.object({
+      costPerMan: z.number().nonnegative(),
+      skill: z.number().int().min(1).max(5),
+      gear: z.number().int().min(1).max(5),
+      payMultiplier: z.number().positive(),
+      minMen: z.number().int().positive(),
+      maxMen: z.number().int().positive(),
+    }),
+  }),
   combat: z.object({
     casualtyRatePerHour: pct,
     randomFactorMin: z.number().positive(),
@@ -1027,6 +1067,20 @@ export const TuningSchema = z.object({
     }),
     /** Weeks of bills an AI keeps in reserve before spending on recruits. */
     economyReserveWeeks: z.number().nonnegative(),
+    /** Training, weapons, veterans, and mercenaries: weeks of bills kept back before each. */
+    forces: z.object({
+      trainReserveWeeks: z.number().nonnegative(),
+      trainBudgetDays: z.number().positive(),
+      weaponsTargetGear: z.number().int().min(1).max(5),
+      weaponsReserveWeeks: z.number().nonnegative(),
+      veteransReserveWeeks: z.number().nonnegative(),
+      mercReserveWeeks: z.number().nonnegative(),
+      /** Hire mercenaries when a plaza of theirs saw fighting this recently. */
+      mercAfterBattleDays: z.number().nonnegative(),
+      mercMen: z.number().int().positive(),
+      /** New weekly pay is taken on only if last week's income covers bills plus this multiple of it. */
+      payCover: z.number().nonnegative(),
+    }),
     /** Switch AI layers off (tests, debugging). */
     layers: z.object({
       strategic: z.boolean(),

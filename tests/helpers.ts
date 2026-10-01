@@ -64,6 +64,8 @@ export function addCrew(state: GameState, id: string, owner: string, node: strin
     colonia: null,
     battles: 0,
     establishment: extra.men ?? 12,
+    training: null,
+    hired: null,
     ...extra,
   };
   state.crews[id] = crew;

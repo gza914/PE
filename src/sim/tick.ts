@@ -11,6 +11,7 @@ import { pruneOpinions } from './opinion';
 import { prunePacts, runPactsDaily } from './pacts';
 import { runOperationsDaily, updateOperations } from './operations';
 import { runInformants, runInformantsDaily } from './intel';
+import { runTrainingDaily } from './forces';
 import { updateRequests } from './requests';
 import { runAi } from './systems/ai';
 import { runCharactersDaily } from './systems/characters';
@@ -76,6 +77,7 @@ export function advance(state: GameState, commands: readonly Command[], content:
     runOperationsDaily(ctx);
     runPactsDaily(ctx);
     runInformantsDaily(ctx);
+    runTrainingDaily(ctx);
     pruneOpinions(state);
     prunePacts(state);
   }

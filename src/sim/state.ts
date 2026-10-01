@@ -368,6 +368,20 @@ export interface CrewState {
   battles: number;
   /** Full strength: the AI recruits back up to this. */
   establishment: number;
+  /** In a training camp at its plaza (GDD "Recruitment"). */
+  training: { node: Id; since: number; progress: number } | null;
+  /** Hired troops who are not the owner's own people: paid more, and loyal only so far. */
+  hired: HiredTroops | null;
+}
+
+export interface HiredTroops {
+  kind: 'mercenary' | 'contingent';
+  /** Outside cartel that lent them (contingents), else null. */
+  from: Id | null;
+  /** 0–100; they leave or turn when it runs out. */
+  loyalty: number;
+  /** Weekly pay multiplier over the owner's own men. */
+  payMultiplier: number;
 }
 
 export type IncomeStream = 'trafficking' | 'tolls' | 'extortion' | 'labs' | 'rackets' | 'tribute' | 'aid' | 'ransom' | 'deals';
@@ -381,6 +395,9 @@ export type CostStream =
   | 'recruits'
   | 'drones'
   | 'informants'
+  | 'weapons'
+  | 'training'
+  | 'mercenaries'
   | 'ransom'
   | 'bribes'
   | 'messages'
@@ -398,6 +415,8 @@ export interface LedgerDay {
 export interface Market {
   /** Armored trucks for sale statewide. */
   armored: number;
+  /** Ex-soldiers and ex-police looking for work, statewide. */
+  veterans: number;
   nextRestockAt: number;
 }
 

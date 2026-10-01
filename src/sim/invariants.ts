@@ -114,6 +114,13 @@ export function checkInvariants(state: GameState, content: Content): string[] {
     for (const inv of op.invites) if (!state.characters[inv.to]) p.push(`operation ${op.id}: unknown invitee ${inv.to}`);
   }
   for (const o of state.pactOffers) if (!state.characters[o.from] || !state.characters[o.to]) p.push(`pact offer ${o.id}: unknown character`);
+  const escorts = new Map<string, number>();
+  for (const c of Object.values(state.crews)) if (c.order.type === 'escort') escorts.set(c.order.crew, (escorts.get(c.order.crew) ?? 0) + 1);
+  for (const [id, n] of escorts) if (n + 1 > content.tuning.forces.column.maxCrews) p.push(`crew ${id}: column of ${n + 1} crews`);
+  for (const c of Object.values(state.crews)) {
+    if (c.training && (c.location.kind !== 'node' || c.location.node !== c.training.node) && c.battle === null && c.order.type === 'garrison') p.push(`crew ${c.id}: training away from its camp`);
+    if (c.hired && (c.hired.loyalty < 0 || c.hired.loyalty > 100)) p.push(`crew ${c.id}: loyalty ${c.hired.loyalty}`);
+  }
   for (const d of state.drones) if ((d.road === null) === (d.node === null)) p.push(`drone ${d.id}: needs exactly one of road or town`);
   for (const i of state.informants) {
     if (!state.nodes[i.node]) p.push(`informant ${i.id}: unknown town ${i.node}`);

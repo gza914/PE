@@ -750,6 +750,8 @@ function foreignAlliance(ctx: SimContext, id: Id): void {
     colonia: null,
     battles: 0,
     establishment: f.men,
+    training: null,
+    hired: null,
   };
   pushFeed(state, 'important', `${charName(ctx, id)} has new partners from outside Sinaloa.`, home.id, null);
 }

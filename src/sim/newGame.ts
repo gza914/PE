@@ -46,7 +46,7 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
     reports: [],
     drones: [],
     informants: [],
-    market: { armored: content.tuning.economy.armoredStartStock, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
+    market: { armored: content.tuning.economy.armoredStartStock, veterans: content.tuning.forces.veterans.perWeek, nextRestockAt: content.tuning.economy.armoredRestockDays * 24 },
     battles: {},
     requests: [],
     offensives: [],
@@ -187,6 +187,8 @@ export function newGame(content: Content, opts: NewGameOptions): GameState {
         colonia: c.colonia ?? null,
         battles: 0,
         establishment: c.men,
+        training: null,
+        hired: null,
       };
       state.crews[id] = crew;
     }

@@ -185,7 +185,7 @@
   },
   "crews": {
     "minMen": 4,
-    "maxMen": 40,
+    "maxMen": 50,
     "moraleBreakThreshold": 30,
     "ammoHoursOfFighting": 6,
     "startingMorale": 70,
@@ -193,6 +193,73 @@
     "moraleBaseline": 70,
     "moraleRecoveryPerHour": 0.5,
     "ammoResupplyPerHour": 25
+  },
+  "forces": {
+    "skillNames": [
+      "Carne de cañón",
+      "Puntero",
+      "Sicario",
+      "Veterano",
+      "Élite"
+    ],
+    "gearNames": [
+      "Pistols",
+      "Old rifles",
+      "AR-15s",
+      "Military rifles",
+      "Heavy weapons"
+    ],
+    "payBySkill": [
+      0.8,
+      1,
+      1.25,
+      1.6,
+      2.2
+    ],
+    "column": {
+      "maxCrews": 2,
+      "maxMen": 100
+    },
+    "weapons": {
+      "costPerManByGear": [
+        0,
+        600,
+        1500,
+        3000,
+        6000
+      ]
+    },
+    "training": {
+      "costPerManPerDay": 60,
+      "sierraCostMultiplier": 0.6,
+      "sierraRegions": [
+        "sierra"
+      ],
+      "daysPerLevel": [
+        4,
+        7,
+        12,
+        20
+      ],
+      "maxSkill": 4,
+      "calenturaPerDay": 0.5,
+      "discoveryChancePerDay": 0.1
+    },
+    "veterans": {
+      "costPerMan": 6000,
+      "skill": 4,
+      "gear": 3,
+      "perWeek": 12,
+      "max": 24
+    },
+    "mercenaries": {
+      "costPerMan": 9000,
+      "skill": 3,
+      "gear": 4,
+      "payMultiplier": 2.5,
+      "minMen": 6,
+      "maxMen": 30
+    }
   },
   "combat": {
     "casualtyRatePerHour": 0.04,
@@ -862,6 +929,17 @@
       "coalition": true
     },
     "economyReserveWeeks": 0.5,
+    "forces": {
+      "trainReserveWeeks": 4,
+      "trainBudgetDays": 7,
+      "weaponsTargetGear": 3,
+      "weaponsReserveWeeks": 4,
+      "veteransReserveWeeks": 6,
+      "mercReserveWeeks": 8,
+      "mercAfterBattleDays": 3,
+      "mercMen": 15,
+      "payCover": 1.5
+    },
     "forceGrowth": {
       "startDay": 90,
       "min": 0.85,

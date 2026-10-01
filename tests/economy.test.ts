@@ -104,12 +104,13 @@ describe('income', () => {
 });
 
 describe('weekly bills', () => {
-  it('payroll is due Sunday: men × rate', () => {
+  it('payroll is due Sunday: men × rate × tier', () => {
     let s = empty();
-    addCrew(s, 'x', 'c_mazatlan', 'mazatlan', { men: 10 });
-    expect(payrollDue(s, calm, 'c_mazatlan')).toBe(10 * e.payrollPerManPerWeek);
+    addCrew(s, 'x', 'c_mazatlan', 'mazatlan', { men: 10, skill: 2 });
+    const due = 10 * e.payrollPerManPerWeek * calm.tuning.forces.payBySkill[1]!;
+    expect(payrollDue(s, calm, 'c_mazatlan')).toBe(due);
     s = runTo(s, FIRST_PAYDAY);
-    expect(s.characters.c_mazatlan!.ledger.at(-1)!.costs.payroll).toBe(10 * e.payrollPerManPerWeek);
+    expect(s.characters.c_mazatlan!.ledger.at(-1)!.costs.payroll).toBe(due);
     expect(s.characters.c_mazatlan!.missedPayrollWeeks).toBe(0);
   });
 

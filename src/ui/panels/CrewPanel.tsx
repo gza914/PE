@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { OrderRequest } from '../../sim/commands';
+import { newContext } from '../../sim/context';
 import { escortsOf, sameLocation } from '../../sim/crews';
+import { crewPayPerWeek, gearName, skillName, tierLabel, trainingBlocked, trainingCostPerDay, weaponsCost } from '../../sim/forces';
 import { crewNetwork } from '../../sim/network';
 import { seats, VEHICLE_TYPES } from '../../sim/signature';
 import type { CrewState } from '../../sim/state';
@@ -28,7 +30,7 @@ function orderText(game: ReturnType<typeof useGame.getState>['game'], content: R
     case 'reinforce':
       return 'Riding to reinforce a battle';
     case 'escort':
-      return `Escorting ${charLabel(game!, game!.crews[o.crew]?.leader ?? '')}`;
+      return `In a column with ${charLabel(game!, game!.crews[o.crew]?.leader ?? '')}'s crew`;
     case 'lie_low':
       return 'Lying low (invisible, cannot act)';
     default:
@@ -44,6 +46,8 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
   const [recruitN, setRecruitN] = useState(4);
   const [buyN, setBuyN] = useState(1);
   const [buyType, setBuyType] = useState<VehicleType>('pickup');
+  const [gearTo, setGearTo] = useState(Math.min(5, crew.gear + 1));
+  const [vetN, setVetN] = useState(4);
   if (!game) return null;
   const mine = crewNetwork(game, crew) === playerNetwork(game) && crew.owner === game.playerId;
   const order = (o: OrderRequest) => enqueue({ type: 'order_crew', issuer: crew.owner, crew: crew.id, order: o });
@@ -55,6 +59,9 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
   const ownPlaza = crew.location.kind === 'node' ? game.nodes[crew.location.node] : undefined;
   const atOwnPlaza = !!ownPlaza && ownPlaza.owner === crew.owner && crew.battle === null;
   const pool = ownPlaza?.recruits ?? 0;
+  const gearPick = gearTo > crew.gear ? gearTo : Math.min(5, crew.gear + 1);
+  const trainBlock = atOwnPlaza ? trainingBlocked(newContext(game, content), crew.owner, crew) : 'not in your plaza';
+  const trainCost = crew.location.kind === 'node' ? trainingCostPerDay(newContext(game, content), crew, crew.location.node) : 0;
   const roads = crew.location.kind === 'node' ? w.neighbors(crew.location.node).map((n) => n.road) : [w.road(crew.location.road)];
 
   return (
@@ -67,9 +74,23 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
         <dt>Men</dt>
         <dd>{crew.men}</dd>
         <dt>Skill / Gear</dt>
-        <dd>
-          {crew.skill} / {crew.gear}
-        </dd>
+        <dd title={`skill ${crew.skill}, gear ${crew.gear}`}>{tierLabel(content.tuning, crew)}</dd>
+        <dt>Pay</dt>
+        <dd>${Math.round(crewPayPerWeek(content.tuning, crew)).toLocaleString()}/week</dd>
+        {crew.hired && (
+          <>
+            <dt>Hired</dt>
+            <dd>
+              {crew.hired.kind === 'mercenary' ? 'Mercenaries' : `Lent by ${crew.hired.from ?? 'an outside cartel'}`} · loyalty {Math.round(crew.hired.loyalty)}
+            </dd>
+          </>
+        )}
+        {crew.training && (
+          <>
+            <dt>Training</dt>
+            <dd>{Math.round(crew.training.progress * 100)}% toward {skillName(content.tuning, crew.skill + 1)}</dd>
+          </>
+        )}
         <dt>Vehicles</dt>
         <dd>{vehicleSummary(crew.vehicles)}</dd>
         <dt>Morale</dt>
@@ -150,8 +171,8 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
                   <div key={c.id} className="row small">
                     <span className="grow">{crewLabel(game, c)}</span>
                     {c.order.type !== 'escort' && (
-                      <button className="small" onClick={() => order({ type: 'escort', crew: c.id })} title="This crew escorts that one">
-                        Escort
+                      <button className="small" onClick={() => order({ type: 'escort', crew: c.id })} title={`Join that crew as a column (at most ${content.tuning.forces.column.maxCrews} crews, ${content.tuning.forces.column.maxMen} men): one unit that moves and fights together`}>
+                        Form column
                       </button>
                     )}
                     {crew.location.kind === 'node' && (
@@ -194,6 +215,42 @@ export function CrewPanel({ crew }: { crew: CrewState }) {
                 </button>
               </div>
               {buyType === 'armored' && <p className="muted small">{game.market.armored} armored trucks for sale statewide.</p>}
+              <h3>Better men</h3>
+              <div className="row small">
+                Arm with
+                <select value={gearPick} onChange={(e) => setGearTo(Number(e.target.value))}>
+                  {[1, 2, 3, 4, 5]
+                    .filter((g) => g > crew.gear)
+                    .map((g) => (
+                      <option key={g} value={g}>
+                        {gearName(content.tuning, g)} (${weaponsCost(content.tuning, crew, g).toLocaleString()})
+                      </option>
+                    ))}
+                </select>
+                <button className="small" disabled={crew.gear >= 5} onClick={() => enqueue({ type: 'buy_weapons', issuer: crew.owner, crew: crew.id, gear: gearPick })}>
+                  Buy weapons
+                </button>
+              </div>
+              <div className="row small">
+                {crew.training ? (
+                  <button className="small" onClick={() => enqueue({ type: 'stop_training', issuer: crew.owner, crew: crew.id })}>
+                    Leave the camp
+                  </button>
+                ) : (
+                  <button className="small" disabled={!!trainBlock} title={trainBlock ?? `$${Math.round(trainCost).toLocaleString()}/day; raises calentura; rivals may hear of it`} onClick={() => enqueue({ type: 'train_crew', issuer: crew.owner, crew: crew.id })}>
+                    Training camp (${Math.round(trainCost).toLocaleString()}/day)
+                  </button>
+                )}
+              </div>
+              <div className="row small">
+                Hire
+                <input type="number" min={1} max={Math.max(1, game.market.veterans)} value={vetN} onChange={(e) => setVetN(Number(e.target.value))} />
+                veterans
+                <button className="small" disabled={game.market.veterans < 1} onClick={() => enqueue({ type: 'hire_veterans', issuer: crew.owner, crew: crew.id, men: vetN })}>
+                  Hire (${(vetN * content.tuning.forces.veterans.costPerMan).toLocaleString()})
+                </button>
+              </div>
+              <p className="muted small">{game.market.veterans} ex-soldiers and ex-police looking for work this week.</p>
             </>
           )}
           {crew.location.kind === 'node' && (

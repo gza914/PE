@@ -4,6 +4,7 @@
  * Also runs the recruit pools, the armored-truck market, and the effect of
  * extortion and fighting on businesses and support. GDD: "Economy".
  */
+import { crewPayPerWeek, mercenariesLeave, restockVeterans } from '../forces';
 import type { Content } from '../../data/content';
 import { pushFeed, type SimContext } from '../context';
 import { cashOf, deposit, spend, spendUpTo } from '../money';
@@ -181,7 +182,7 @@ export function settleDailyIncome(ctx: SimContext): void {
 export function payrollDue(state: GameState, content: Content, id: Id): number {
   return Object.values(state.crews)
     .filter((c) => c.owner === id)
-    .reduce((n, c) => n + c.men * content.tuning.economy.payrollPerManPerWeek, 0);
+    .reduce((n, c) => n + crewPayPerWeek(content.tuning, c), 0);
 }
 
 export function halconesDue(state: GameState, content: Content, id: Id): number {
@@ -205,6 +206,7 @@ export function payWeeklyPayroll(ctx: SimContext): void {
     payCrews(ctx, id);
     payHalcones(ctx, id);
   }
+  restockVeterans(state, content.tuning);
   // Extortion's weekly toll on support and businesses; quiet towns slowly reopen.
   for (const n of content.nodes) {
     const plaza = state.nodes[n.id]!;
@@ -229,6 +231,7 @@ function payCrews(ctx: SimContext, id: Id): void {
     return;
   }
   ch.missedPayrollWeeks += 1;
+  mercenariesLeave(ctx, id);
   for (const c of Object.values(state.crews)) {
     if (c.owner !== id) continue;
     c.morale = Math.max(0, c.morale - e.missedPayroll.moraleLoss);

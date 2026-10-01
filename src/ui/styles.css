@@ -209,3 +209,9 @@ select { font-size: 13px; max-width: 100%; }
 .intel .actions button.on {
   background: #3a4150;
 }
+
+.forces .forcerow.column {
+  border-left: 2px solid #4a5568;
+  padding-left: 6px;
+  margin: 4px 0;
+}

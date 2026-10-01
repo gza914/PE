@@ -7,6 +7,7 @@
 import type { ExtortionRate, SchemeType, VehicleType } from '../data/schemas';
 import { declare } from './diplomacy';
 import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
+import { buyWeapons, columnBlocked, hireMercenaries, hireVeterans, stopTraining, trainCrew } from './forces';
 import { launchDrone, plantInformant, pullInformant } from './intel';
 import { breakPact, proposePact, respondPact, type PactSpec } from './pacts';
 import { chooseOption } from './systems/events';
@@ -59,6 +60,11 @@ export type Command =
   | (Base & { type: 'merge_crews'; crew: Id; into: Id })
   | (Base & { type: 'launch_drone'; road?: Id; node?: Id })
   | (Base & { type: 'plant_informant'; node: Id })
+  | (Base & { type: 'train_crew'; crew: Id })
+  | (Base & { type: 'stop_training'; crew: Id })
+  | (Base & { type: 'buy_weapons'; crew: Id; gear: number })
+  | (Base & { type: 'hire_veterans'; crew: Id; men: number })
+  | (Base & { type: 'hire_mercenaries'; node: Id; men: number })
   | (Base & { type: 'pull_informant'; informant: Id })
   | (Base & { type: 'recruit'; crew: Id; men: number })
   | (Base & { type: 'form_crew'; node: Id; men: number; leader?: Id })
@@ -186,6 +192,16 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
       return launchDrone(ctx, issuer.id, cmd.road ?? null, cmd.node ?? null);
     case 'plant_informant':
       return plantInformant(ctx, issuer.id, cmd.node);
+    case 'train_crew':
+      return trainCrew(ctx, issuer.id, cmd.crew);
+    case 'stop_training':
+      return stopTraining(ctx, issuer.id, cmd.crew);
+    case 'buy_weapons':
+      return buyWeapons(ctx, issuer.id, cmd.crew, cmd.gear);
+    case 'hire_veterans':
+      return hireVeterans(ctx, issuer.id, cmd.crew, cmd.men);
+    case 'hire_mercenaries':
+      return hireMercenaries(ctx, issuer.id, cmd.node, cmd.men);
     case 'pull_informant':
       return pullInformant(ctx, issuer.id, cmd.informant);
     case 'choose_event_option':
@@ -312,6 +328,8 @@ function buildOrder(ctx: SimContext, crew: CrewState, req: OrderRequest): CrewOr
       if (target.order.type === 'escort') return 'that crew is itself an escort';
       if (escortsOf(state, crew).length) return 'this crew has escorts of its own';
       if (!sameLocation(content, loc, target.location)) return 'the crews must be in the same place';
+      const column = columnBlocked(state, content.tuning, crew, target);
+      if (column) return column;
       return { type: 'escort', crew: target.id };
     }
   }
@@ -351,6 +369,7 @@ function split(ctx: SimContext, cmd: Extract<Command, { type: 'split_crew' }>): 
     armorDamage: taken.armored ? crew.armorDamage : 0,
     order: crew.order.type === 'garrison' || crew.order.type === 'lie_low' ? { type: crew.order.type } : { type: 'idle' },
     transit: newTransit(),
+    training: null,
   };
   crew.men -= cmd.men;
   crew.vehicles = kept;
@@ -484,6 +503,8 @@ function economyCommand(ctx: SimContext, cmd: EconomyCommand): string | null {
         colonia: null,
         battles: 0,
         establishment: cmd.men,
+        training: null,
+        hired: null,
       };
       return null;
     }
