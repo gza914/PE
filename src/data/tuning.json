@@ -1225,5 +1225,57 @@
     "labFloor": 0.3,
     "labProtection": 0.6,
     "roadTintMinInfluence": 30
+  },
+  "battle": {
+    "decisionEveryHours": 3,
+    "stances": {
+      "assault": {
+        "dealt": 1.3,
+        "taken": 1.25
+      },
+      "hold": {
+        "dealt": 0.75,
+        "taken": 0.65
+      },
+      "flank": {
+        "dealt": 1,
+        "taken": 1
+      },
+      "probe": {
+        "dealt": 0.5,
+        "taken": 0.5
+      }
+    },
+    "flank": {
+      "minCrews": 2,
+      "baseChance": 0.4,
+      "perSkill": 0.05,
+      "perAstucia": 0.01,
+      "successDealt": 1.8,
+      "failTaken": 1.5,
+      "badTerrain": [
+        "urban"
+      ]
+    },
+    "digIn": {
+      "dealt": 0.5,
+      "maxFortification": 3
+    },
+    "droneRevealHours": 8,
+    "terms": {
+      "acceptRatio": 0.6,
+      "acceptMorale": 35
+    },
+    "executePrisoners": {
+      "fear": 15,
+      "calentura": 20,
+      "supportLoss": 10,
+      "windowHours": 48
+    },
+    "ai": {
+      "assaultRatio": 1.6,
+      "holdRatio": 0.75,
+      "flankChance": 0.35
+    }
   }
 }

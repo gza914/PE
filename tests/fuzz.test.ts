@@ -39,6 +39,8 @@ function randomCommand(s: GameState, r: RngState): Command {
     { type: 'ambush', road: pick(r, roads) },
     { type: 'patrol', road: pick(r, roads) },
     { type: 'escort', crew: crews.length ? pick(r, crews) : 'nope' },
+    { type: 'camp' },
+    { type: 'move', destination: node, preference: 'safest', waypoints: [], onArrive: 'camp' },
   ] as const;
   const pe = s.pendingEvents[0];
   const all: Command[] = [
@@ -73,6 +75,15 @@ function randomCommand(s: GameState, r: RngState): Command {
     { type: 'outside_accept', issuer, deal: s.outsideDeals.length ? pick(r, s.outsideDeals).id : 'x' },
     { type: 'outside_walk', issuer, deal: s.outsideDeals.length ? pick(r, s.outsideDeals).id : 'x' },
     { type: 'answer_defection', issuer, crew, accept: rand(r) < 0.5 },
+    { type: 'sweep', issuer, crew },
+    { type: 'captive', issuer, captive: pick(r, chars), option: pick(r, ['ransom', 'trade', 'interrogate', 'turn', 'leverage', 'hand_over', 'execute', 'release'] as const), trade: rand(r) < 0.5 ? pick(r, chars) : null },
+    { type: 'lost_everything', issuer, choice: pick(r, ['ground', 'serve', 'neutral', 'defect'] as const), boss: rand(r) < 0.5 ? pick(r, chars) : null },
+    { type: 'battle_stance', issuer, battle, stance: pick(r, ['assault', 'hold', 'flank', 'probe'] as const) },
+    { type: 'battle_dig_in', issuer, battle },
+    { type: 'battle_drone', issuer, battle },
+    { type: 'battle_relief', issuer, battle, crew, target: crews.length ? pick(r, crews) : 'nope' },
+    { type: 'battle_terms', issuer, battle },
+    { type: 'battle_execute', issuer, battle },
     { type: 'pull_informant', issuer, informant: pick(r, s.informants.length ? s.informants.map((i) => i.id) : ['x']) },
     { type: 'recruit', issuer, crew, men: n(-2, 20) },
     { type: 'form_crew', issuer, node, men: n(0, 50) },

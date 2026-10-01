@@ -572,6 +572,8 @@ export interface Informant {
 // Combat, diplomacy, schemes, events
 // ---------------------------------------------------------------------------
 
+export type Stance = 'assault' | 'hold' | 'flank' | 'probe';
+
 export type EngagementType = 'ambush' | 'road_clash' | 'raid' | 'siege' | 'urban_skirmish' | 'military_clash' | 'sweep';
 
 export interface BattleSide {
@@ -611,6 +613,16 @@ export interface Battle {
   capture: boolean;
   /** Roads the attackers came in by: two or more cut off escape. */
   approaches: Id[];
+  /** Each owner's stance for the current stretch, and whether a flank came off. */
+  stances: Record<Id, Stance>;
+  flank: Record<Id, boolean>;
+  /** Next hour the player is asked to pick a stance. */
+  nextDecisionAt: number;
+  /** Owners digging in this hour. */
+  digging: Id[];
+  /** Men taken prisoner, by the network holding them. */
+  prisoners: Record<NetworkId, number>;
+  prisonersExecuted: boolean;
   /** Player's crews withdrawing in good order this hour. */
   withdrawing: Id[];
   /** Player's crews pushing their armored trucks forward this hour. */

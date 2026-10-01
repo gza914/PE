@@ -16,6 +16,7 @@ import type { Battle, BattleSide, CrewOrder, CrewState, Id, NetworkId } from '..
 import { world } from '../world';
 import { captureCharacter, killCharacter } from './characters';
 import { addOpinion } from '../opinion';
+import { afterHour, dealtMultiplier, takenMultiplier } from '../battleActions';
 import { captureChance, type CaptureSituation } from '../capture';
 import { contingentLosses, contingentWon } from '../outside';
 import { mutualDefenseCalls, peaceBetween, settleDefenseCalls, truceBetween } from '../pacts';
@@ -127,6 +128,12 @@ export function startBattle(ctx: SimContext, e: Engagement, colonia: Id | null =
     siegeProgress: 0,
     capture: e.capture,
     approaches: approachesOf(att),
+    stances: {},
+    flank: {},
+    nextDecisionAt: state.hour + content.tuning.battle.decisionEveryHours,
+    digging: [],
+    prisoners: {},
+    prisonersExecuted: false,
     withdrawing: [],
     armorPush: [],
     prompted: [],
@@ -313,6 +320,7 @@ export function sidePower(ctx: SimContext, b: Battle, k: SideKey): number {
     let cp = crewPower(state, content, c, b.armorPush.includes(c.id) ? t.armorPushPowerMultiplier : 1);
     if (k === 'attackers' && b.type === 'ambush') cp *= leaderModifier(state, content, c, 'ambushPower');
     if (k === 'attackers' && b.type === 'siege') cp *= leaderModifier(state, content, c, 'siegePower');
+    cp *= dealtMultiplier(content, b, c.owner);
     p += cp;
   }
   if (k === 'attackers' && b.type === 'ambush' && b.hours === 0) p *= t.ambushFirstHourMultiplier;
@@ -337,7 +345,9 @@ function resolveHour(ctx: SimContext, b: Battle): void {
   const roll = { attackers: randRange(state.rng, t.randomFactorMin, t.randomFactorMax), defenders: randRange(state.rng, t.randomFactorMin, t.randomFactorMax) };
   const lost = { attackers: 0, defenders: 0 };
   for (const k of SIDES) {
-    const inflicted = power[other(k)] * t.casualtyRatePerHour * scale.casualty * roll[other(k)];
+    const side = crews(ctx, b[k].crews);
+    const taken = side.reduce((n, c) => n + c.men * takenMultiplier(content, b, c.owner), 0) / Math.max(1, side.reduce((n, c) => n + c.men, 0));
+    const inflicted = power[other(k)] * t.casualtyRatePerHour * scale.casualty * roll[other(k)] * taken;
     lost[k] = applyLosses(ctx, b, k, inflicted, scale);
     b[k].casualties += lost[k];
   }
@@ -387,6 +397,7 @@ function resolveHour(ctx: SimContext, b: Battle): void {
   if (b.log.length > 60) b.log.splice(0, b.log.length - 60);
 
   for (const k of SIDES) checkCrews(ctx, b, k);
+  afterHour(ctx, b);
   promptPlayer(ctx, b);
   b.withdrawing = [];
   b.armorPush = [];
@@ -412,7 +423,7 @@ function applyLosses(ctx: SimContext, b: Battle, k: SideKey, inflicted: number, 
     }
     if (c.vehicles.armored === 0) c.armorDamage = 0;
   }
-  const weight = (c: CrewState) => c.men * (b.withdrawing.includes(c.id) ? t.withdrawLossMultiplier : 1);
+  const weight = (c: CrewState) => c.men * (b.withdrawing.includes(c.id) ? t.withdrawLossMultiplier : 1) * takenMultiplier(content, b, c.owner);
   const total = list.reduce((n, c) => n + weight(c), 0);
   let men = 0;
   for (const c of list) {
@@ -494,6 +505,8 @@ function checkCrews(ctx: SimContext, b: Battle, k: SideKey): void {
       leave(ctx, b, k, c);
     } else if (c.morale < t.routMorale) {
       const captured = Math.round(c.men * t.routCaptureShare);
+      const holder = b[other(k)].network;
+      b.prisoners[holder] = (b.prisoners[holder] ?? 0) + captured;
       const scattered = Math.round(c.men * t.routScatterShare);
       c.men = Math.max(0, c.men - captured - scattered);
       b.log.push(`H${b.hours}: ${name}'s crew routed (${captured} captured, ${scattered} scattered).`);

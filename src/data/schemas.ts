@@ -563,6 +563,27 @@ export const TuningSchema = z.object({
     /** Percent of a full load restored per hour at a friendly plaza. */
     ammoResupplyPerHour: z.number().nonnegative(),
   }),
+  /** GDD "Battles": stances chosen every few hours, and one-off actions. */
+  battle: z.object({
+    decisionEveryHours: z.number().int().positive(),
+    stances: z.record(z.enum(['assault', 'hold', 'flank', 'probe']), z.object({ dealt: z.number().nonnegative(), taken: z.number().nonnegative() })),
+    flank: z.object({
+      minCrews: z.number().int().min(1),
+      baseChance: pct,
+      perSkill: z.number().nonnegative(),
+      perAstucia: z.number().nonnegative(),
+      successDealt: z.number().nonnegative(),
+      failTaken: z.number().nonnegative(),
+      /** Terrain (combat.terrain keys) where flanking cannot work. */
+      badTerrain: z.array(z.string()),
+    }),
+    digIn: z.object({ dealt: z.number().nonnegative(), maxFortification: z.number().int().min(0) }),
+    droneRevealHours: z.number().nonnegative(),
+    /** The other side takes terms to leave when it is this weak relative to you, or its morale this low. */
+    terms: z.object({ acceptRatio: z.number().positive(), acceptMorale: z.number().min(0).max(100) }),
+    executePrisoners: z.object({ fear: z.number().nonnegative(), calentura: z.number().nonnegative(), supportLoss: z.number().nonnegative(), windowHours: z.number().nonnegative() }),
+    ai: z.object({ assaultRatio: z.number().positive(), holdRatio: z.number().positive(), flankChance: pct }),
+  }),
   /** GDD "Capturing bosses". */
   capture: z.object({
     rankBase: z.record(Rank, pct),

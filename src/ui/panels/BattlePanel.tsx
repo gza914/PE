@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { STANCES, stanceBlocked } from '../../sim/battleActions';
 import { groupOf } from '../../sim/crews';
-import { battleEnemies } from '../../sim/knowledge';
+import { battleEnemies, lastSeen } from '../../sim/knowledge';
 import { crewNetwork } from '../../sim/network';
 import { travelHours } from '../../sim/routing';
-import type { Battle, CrewState } from '../../sim/state';
+import type { Battle, CrewState, Stance } from '../../sim/state';
 import { world } from '../../sim/world';
 import { useGame } from '../store';
 import { charLabel, fmtHours, playerNetwork } from '../util';
@@ -34,8 +35,17 @@ function CrewRow({ c, detail }: { c: CrewState; detail: boolean }) {
   );
 }
 
+const STANCE_TIP: Record<Stance, string> = {
+  assault: 'More damage dealt and taken; best when you outnumber them',
+  hold: 'Less damage both ways; buys time for reinforcements',
+  flank: 'Needs two crews and room to move: a large bonus if it works, exposed if it fails',
+  probe: 'Low losses; shows their true strength',
+};
+
 export function BattlePanel({ battle }: { battle: Battle }) {
   const { content, game, enqueue, queue, select } = useGame();
+  const [reliefTarget, setReliefTarget] = useState('');
+  const [reliefCrew, setReliefCrew] = useState('');
   const net = game ? playerNetwork(game) : '';
   const mySide = battle.attackers.network === net ? 'attackers' : battle.defenders.network === net ? 'defenders' : null;
   const reserves = useMemo(() => {
@@ -90,7 +100,9 @@ export function BattlePanel({ battle }: { battle: Battle }) {
 
   const mine = mySide ? battle[mySide].crews.map((id) => game.crews[id]).filter((c): c is CrewState => !!c && c.owner === game.playerId) : [];
   const queued = (type: string) => queue.some((q) => q.type === type && 'battle' in q && q.battle === battle.id);
-  const cmd = (type: 'battle_withdraw' | 'battle_armor_forward' | 'battle_call_help' | 'battle_accept_surrender') =>
+  const node = battle.where.kind === 'node' ? battle.where.node : null;
+  const relief = node ? lastSeen(game, content, net).filter((r) => r.where.kind === 'road' && r.where.to === node && r.ageHours <= 2 && game.crews[r.crew]?.battle === null) : [];
+  const cmd = (type: 'battle_withdraw' | 'battle_armor_forward' | 'battle_call_help' | 'battle_accept_surrender' | 'battle_dig_in' | 'battle_drone' | 'battle_terms' | 'battle_execute') =>
     enqueue({ type, issuer: game.playerId, battle: battle.id });
   const total = battle.attackers.power + battle.defenders.power;
 
@@ -121,6 +133,55 @@ export function BattlePanel({ battle }: { battle: Battle }) {
 
       {mySide && battle.endedAt === null && mine.length > 0 && (
         <>
+          <h3>Stance</h3>
+          <p className="muted small">Next decision in {Math.max(0, battle.nextDecisionAt - game.hour)}h. Yours: {battle.stances[game.playerId] ?? 'none set'}{battle.stances[game.playerId] === 'flank' ? (battle.flank[game.playerId] ? ' (it worked)' : ' (they saw it coming)') : ''}.</p>
+          <div className="actions">
+            {STANCES.map((st) => {
+              const why = stanceBlocked(game, content, battle, game.playerId, st);
+              return (
+                <button key={st} className={`small ${battle.stances[game.playerId] === st ? 'on' : ''}`} disabled={why !== null || queue.some((q) => q.type === 'battle_stance' && q.battle === battle.id)} title={why ?? STANCE_TIP[st]} onClick={() => enqueue({ type: 'battle_stance', issuer: game.playerId, battle: battle.id, stance: st })}>
+                  {st[0]!.toUpperCase() + st.slice(1)}
+                </button>
+              );
+            })}
+          </div>
+          <h3>Actions</h3>
+          <div className="actions">
+            {mySide === 'defenders' && battle.where.kind === 'node' && (
+              <button className="small" disabled={queued('battle_dig_in') || battle.fortification >= content.tuning.battle.digIn.maxFortification} title="Spend an hour fortifying: less damage dealt this hour, +1 fortification after" onClick={() => cmd('battle_dig_in')}>
+                Dig in
+              </button>
+            )}
+            <button className="small" disabled={queued('battle_drone')} title={`$${content.tuning.detection.droneCost.toLocaleString()}: see who is coming to help them`} onClick={() => cmd('battle_drone')}>
+              Drone overhead
+            </button>
+            <button className="small" disabled={queued('battle_terms')} title="Let them leave: they take it if they are losing badly" onClick={() => cmd('battle_terms')}>
+              Offer terms
+            </button>
+          </div>
+          {relief.length > 0 && reserves.length > 0 && (
+            <div className="row small">
+              Hit the relief column:
+              <select value={reliefTarget} onChange={(e) => setReliefTarget(e.target.value)}>
+                {relief.map((r) => (
+                  <option key={r.crew} value={r.crew}>
+                    {charLabel(game, r.owner)}'s {r.men} men
+                  </option>
+                ))}
+              </select>
+              with
+              <select value={reliefCrew} onChange={(e) => setReliefCrew(e.target.value)}>
+                {reserves.map(({ c }) => (
+                  <option key={c.id} value={c.id}>
+                    {charLabel(game, c.leader)} · {c.men}
+                  </option>
+                ))}
+              </select>
+              <button className="small" onClick={() => enqueue({ type: 'battle_relief', issuer: game.playerId, battle: battle.id, crew: reliefCrew || reserves[0]!.c.id, target: reliefTarget || relief[0]!.crew })}>
+                Ambush them
+              </button>
+            </div>
+          )}
           <h3>Decisions</h3>
           <div className="btns col">
             <button disabled={queued('battle_withdraw')} onClick={() => cmd('battle_withdraw')}>
@@ -161,6 +222,15 @@ export function BattlePanel({ battle }: { battle: Battle }) {
               </li>
             ))}
           </ul>
+        </>
+      )}
+      {mySide && battle.endedAt !== null && battle.winner === mySide && (battle.prisoners[net] ?? 0) > 0 && !battle.prisonersExecuted && game.hour - battle.endedAt <= content.tuning.battle.executePrisoners.windowHours && (
+        <>
+          <h3>Prisoners</h3>
+          <p className="small">Your people hold {battle.prisoners[net]} of their men.</p>
+          <button className="small" title="Fear rises, calentura spikes, and families in the region turn against you" onClick={() => cmd('battle_execute')}>
+            Execute the prisoners
+          </button>
         </>
       )}
       <h3>Battle log</h3>

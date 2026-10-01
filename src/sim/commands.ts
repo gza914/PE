@@ -9,6 +9,7 @@ import { declare } from './diplomacy';
 import { acceptCounter, cancelOperation, proposeOperation, respondOperation, withdrawFromOperation, type ProposeSpec, type RespondSpec } from './operations';
 import { buyWeapons, columnBlocked, hireMercenaries, hireVeterans, stopTraining, trainCrew } from './forces';
 import { acceptCounter as acceptOutsideCounter, answerDefection, proposeDeal, walkAway } from './outside';
+import { battleDrone, digIn, executePrisoners, hitRelief, offerTerms, setStance } from './battleActions';
 import { decideCaptive, type CaptiveOption } from './capture';
 import { campBlocked, sweep } from './countryside';
 import { chooseLost, type LostChoice } from './remnants';
@@ -25,7 +26,7 @@ import { cashOf, deposit, moveCash, spend } from './money';
 import { newTransit } from './newGame';
 import { nearestNode, planRoute } from './routing';
 import { allowedRoadTypes, seats, VEHICLE_TYPES } from './signature';
-import type { CrewOrder, CrewState, Id, OutsideAsk, OutsideOffer, RoutePreference } from './state';
+import type { CrewOrder, CrewState, Id, OutsideAsk, OutsideOffer, RoutePreference, Stance } from './state';
 import { respondToRequest } from './requests';
 import { acceptSurrender, callForHelp, reinforceOrder, sideOf } from './systems/combat';
 import { endGame } from './systems/endings';
@@ -91,6 +92,12 @@ export type Command =
   | (Base & { type: 'battle_call_help'; battle: Id })
   | (Base & { type: 'battle_commit'; battle: Id; crew: Id })
   | (Base & { type: 'battle_accept_surrender'; battle: Id })
+  | (Base & { type: 'battle_stance'; battle: Id; stance: Stance })
+  | (Base & { type: 'battle_dig_in'; battle: Id })
+  | (Base & { type: 'battle_drone'; battle: Id })
+  | (Base & { type: 'battle_relief'; battle: Id; crew: Id; target: Id })
+  | (Base & { type: 'battle_terms'; battle: Id })
+  | (Base & { type: 'battle_execute'; battle: Id })
   | (Base & { type: 'choose_event_option'; instance: Id; option: number })
   | (Base & { type: 'start_scheme'; scheme: SchemeType; target: Id })
   | (Base & { type: 'cancel_scheme'; scheme: Id })
@@ -165,6 +172,12 @@ export function applyCommand(ctx: SimContext, cmd: Command): string | null {
     case 'battle_call_help':
     case 'battle_commit':
     case 'battle_accept_surrender':
+    case 'battle_stance':
+    case 'battle_dig_in':
+    case 'battle_drone':
+    case 'battle_relief':
+    case 'battle_terms':
+    case 'battle_execute':
       return battleCommand(ctx, cmd);
     case 'respond_request':
       return respondToRequest(ctx, cmd.issuer, cmd.request, cmd.accept, cmd.amount);
@@ -434,12 +447,16 @@ function merge(ctx: SimContext, cmd: Extract<Command, { type: 'merge_crews' }>):
   return null;
 }
 
-type BattleCommand = Extract<Command, { type: 'battle_withdraw' | 'battle_armor_forward' | 'battle_call_help' | 'battle_commit' | 'battle_accept_surrender' }>;
+type BattleCommand = Extract<
+  Command,
+  { type: 'battle_withdraw' | 'battle_armor_forward' | 'battle_call_help' | 'battle_commit' | 'battle_accept_surrender' | 'battle_stance' | 'battle_dig_in' | 'battle_drone' | 'battle_relief' | 'battle_terms' | 'battle_execute' }
+>;
 
 /** The player's decisions during a battle (GDD "Player decisions mid-battle"). */
 function battleCommand(ctx: SimContext, cmd: BattleCommand): string | null {
   const { state } = ctx;
   const b = state.battles[cmd.battle];
+  if (cmd.type === 'battle_execute') return b ? executePrisoners(ctx, b, cmd.issuer) : 'no such battle';
   if (!b || b.endedAt !== null) return 'that battle is over';
   const k = sideOf(b, networkOf(state, cmd.issuer));
   if (!k) return 'your side is not in this battle';
@@ -469,6 +486,16 @@ function battleCommand(ctx: SimContext, cmd: BattleCommand): string | null {
     }
     case 'battle_accept_surrender':
       return acceptSurrender(ctx, b, cmd.issuer);
+    case 'battle_stance':
+      return setStance(ctx, b, cmd.issuer, cmd.stance);
+    case 'battle_dig_in':
+      return digIn(ctx, b, cmd.issuer);
+    case 'battle_drone':
+      return battleDrone(ctx, b, cmd.issuer);
+    case 'battle_relief':
+      return hitRelief(ctx, b, cmd.issuer, cmd.crew, cmd.target);
+    case 'battle_terms':
+      return offerTerms(ctx, b, cmd.issuer);
   }
 }
 

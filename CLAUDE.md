@@ -82,3 +82,9 @@ The design document is `docs/GDD.md`. Read the relevant section before building 
 - A boss who loses his last plaza chooses in `remnants.ts` (AI by traits; the player from the Shadows tab). The player is never eliminated for losing plazas; `flee` ends the game as `player_fled`. Gone characters are `isGone(status)` (dead, extradited, fled).
 - `state.countryside[node][network]` is 0–100 influence in a plaza's hills (`countryside.ts`). Crews with order `camp` are in the hills: they stay out of town fights, presence sightings, informants, and drones over town; they fight `sweep` battles with the terrain. The hills count toward `territoryShares` at `countryside.shareWeight`.
 - Countryside step two: `watchersOf` adds rural lookouts for whoever dominates a plaza's hills (`ruralWatcher`); route income through a plaza is cut by the rivals' share of its hills; `ruralIncome` pays each zone's rural economy by influence; labs in `labsOutsideTypes` produce by the holder's share of the hills (`labFactor`), and army lab raids are rarer where he holds them.
+
+## Battle stances and actions
+
+- Each owner in a battle has a stance (`Battle.stances`): assault, hold, flank (rolled once when ordered, `Battle.flank`), or probe. `dealtMultiplier`/`takenMultiplier` (`battleActions.ts`) feed `sidePower` and loss allocation. The player is prompted every `battle.decisionEveryHours`; AI owners choose in the tactical layer (`aiStance`).
+- Find an owner's side by his crews in the battle (`sideOfOwner`), not by network: networks can change mid-fight.
+- One-off actions: dig in (defenders in a plaza), drone overhead, hit the relief column, offer terms, and execute prisoners (after a win, from `Battle.prisoners`).

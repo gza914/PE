@@ -9,6 +9,7 @@ import type { Command } from '../commands';
 import type { SimContext } from '../context';
 import type { Battle, Id } from '../state';
 import { networkOf } from '../network';
+import { aiStance } from '../battleActions';
 import { sidePower } from '../systems/combat';
 import { world } from '../world';
 import { actionWeight, cautionOf, isAi } from './util';
@@ -28,6 +29,11 @@ export function runTactical(ctx: SimContext): Command[] {
       const owners = [...new Set(b[side].crews.map((c) => state.crews[c]?.owner).filter((o): o is Id => !!o))].sort();
       for (const owner of owners) {
         if (!isAi(state, owner)) continue;
+        // A stance for the next stretch, at the start and at each decision point.
+        if (b.stances[owner] === undefined || b.nextDecisionAt - state.hour === content.tuning.battle.decisionEveryHours) {
+          const stance = aiStance(state, content, b, owner);
+          if (stance !== b.stances[owner]) cmds.push({ type: 'battle_stance', issuer: owner, battle: b.id, stance });
+        }
         const crews = b[side].crews.map((c) => state.crews[c]!).filter((c) => c && c.owner === owner);
         if (!crews.length) continue;
         // Enemy breaking: take the surrender.
