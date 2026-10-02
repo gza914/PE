@@ -366,3 +366,11 @@ class Ending(Model):
     title: str
     text: str
     memoir: Memoir
+
+
+class Headline(Model):
+    """A story in the Herald, the public view of what happened."""
+
+    month: int
+    text: str
+    family: bool = False  # a story about the family's business, rather than the city's

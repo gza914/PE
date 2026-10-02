@@ -86,8 +86,10 @@ def recruit(state: WorldState, rng: GameRNG, profile_id: str) -> str:
 # ---- succession in your family ----
 
 def crew_size(state: WorldState) -> int:
+    """Living capos and underboss: the men who could run a racket, or the family."""
     family = state.player_family
-    return sum(1 for m in state.members(family.id) if m.alive and m.id not in (family.don_id, state.player_id))
+    return sum(1 for m in state.members(family.id)
+               if m.alive and m.id != family.don_id and m.role in (Role.CAPO, Role.UNDERBOSS))
 
 
 def install_successor(state: WorldState, rng: GameRNG, candidates: list[str], backed: str | None,

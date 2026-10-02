@@ -13,6 +13,7 @@ options:
     outcomes:
       - tone: good
         text: The Don's name goes on a small brass plaque by the school door. He pretends not to care, and goes to look at it twice.
+        headline: "Parish School Gets New Roof From Anonymous Donor"
         effects:
           - treasury: -3000
           - don_mood: 6

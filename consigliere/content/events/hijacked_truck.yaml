@@ -25,6 +25,7 @@ options:
           - when: [[secret.owner_connected, "==", 1]]
             mult: 0
         text: Two hundred sets go out the back doors of six stores by Friday.
+        headline: "Television Truck Hijacked on Expressway"
         effects:
           - treasury: 5000
       - tone: bad

@@ -16,12 +16,14 @@ options:
       - weight: 3
         tone: good
         text: Hask wins by eleven hundred votes. He sends a Christmas card with no return address.
+        headline: "Hask Re-elected by Narrow Margin"
         effects:
           - treasury: -5000
           - standing: {influence: 6}
       - weight: 1
         tone: bad
         text: Hask loses. The money is gone, and the man who won knows who backed the other fellow.
+        headline: "Hask Loses Council Seat in Upset"
         effects:
           - treasury: -5000
           - standing: {exposure: 2}

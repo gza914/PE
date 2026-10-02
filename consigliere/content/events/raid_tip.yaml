@@ -22,6 +22,7 @@ options:
           - when: [[secret.raid_real, "==", 0]]
             mult: 0
         text: On Friday night the vice squad finds an empty room and a bowl of peanuts.
+        headline: "Vice Raid on Social Club Finds Nothing"
         effects:
           - treasury: -3000
       - tone: neutral
@@ -46,6 +47,7 @@ options:
           - when: [[secret.raid_real, "==", 0]]
             mult: 0
         text: The vice squad takes eleven men, the table and the cash box. Mr. Fessler spends the weekend in night court.
+        headline: "Vice Squad Raids Eastside Social Club, Eleven Held"
         effects:
           - treasury: -5000
           - standing: {exposure: 3}

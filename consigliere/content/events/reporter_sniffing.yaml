@@ -30,6 +30,7 @@ options:
       - weight: 1
         tone: bad
         text: Hartigan takes the meetings, and then prints a long piece with details that only someone in the family could have given her. People wonder who.
+        headline: "Herald Exclusive: Inside the Social Club"
         effects:
           - add_source: {id: hartigan, name: Ellen Hartigan of the Herald, kind: press, reliability: 0.8, believed: 0.5}
           - standing: {exposure: 5, dons_trust: -3}
@@ -64,6 +65,7 @@ options:
             mult: 0
         tone: bad
         text: Hartigan's piece runs on a Sunday. It describes the back room of the social club, and who sits where.
+        headline: "Herald Exclusive: Inside the Social Club"
         effects:
           - standing: {exposure: 4}
           - don_mood: -4

@@ -216,6 +216,24 @@ class RecruitEffect(Model):
     bind: str
 
 
+class AddRacket(Model):
+    """A new racket for your family, in the district bound to `district`, bound as `bind`."""
+
+    id: str
+    name: str
+    kind: str
+    district: str
+    capo: str | None = None
+    income: int
+    heat_per_month: int
+    bind: str
+
+
+class Promote(Model):
+    who: str
+    role: Role
+
+
 class Effect(Model):
     """Exactly one field is set."""
 
@@ -252,6 +270,9 @@ class Effect(Model):
     kill: str | None = None  # off the page, always
     succession: SuccessionEffect | None = None
     recruit: RecruitEffect | None = None
+    add_racket: AddRacket | None = None
+    remove_racket: str | None = None
+    promote: Promote | None = None
 
     @model_validator(mode="after")
     def exactly_one(self) -> Effect:
@@ -277,6 +298,7 @@ class Outcome(Model):
     weight_if: list[WeightMod] = Field(default_factory=list)
     tone: Literal["good", "bad", "neutral"]
     text: str
+    headline: str | None = None  # what the Herald prints, if it gets out
     effects: list[Effect] = Field(default_factory=list)
 
 
@@ -327,6 +349,7 @@ class EventDef(Model):
     carries: list[str] = Field(default_factory=list)  # binding names a follow-up inherits from earlier events
     even_if_gone: bool = False  # news that still runs when the people it names are out of play
     rare: bool = False  # a fallback that may legitimately never fire in a balance run
+    headline: str | None = None  # for news: what the Herald prints
     you_decide: bool = False  # no Don to ask: your choice is the decision
     default_option: str | None = None  # what happens if you say nothing, when you decide
 

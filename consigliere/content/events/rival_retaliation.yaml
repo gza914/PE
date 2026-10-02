@@ -26,6 +26,7 @@ options:
             mult: 0.4
         tone: good
         text: Two of {boss}'s trucks do not finish their routes that week. {rival} gets the message, and so does everyone else.
+        headline: "Two Trucks Torched in the River Wards"
         effects:
           - strength: {who: rival, delta: -6}
           - rivalry: {who: rival, stage: 1, tension: 10}
@@ -34,6 +35,7 @@ options:
       - weight: 1
         tone: bad
         text: The reply goes wrong. One of ours is arrested with a can of gasoline in his hand, and {boss} is laughing about it in the River Wards.
+        headline: "Man Held With Gasoline Can Near River Wards Garage"
         effects:
           - strength: {who: family, delta: -4}
           - heat: {who: family, delta: 8}

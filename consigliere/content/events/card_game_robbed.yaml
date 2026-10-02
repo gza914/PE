@@ -47,6 +47,7 @@ options:
           - when: [[secret.inside_job, "==", 1]]
             mult: 0
         text: The street gives up two brothers from out of town within the week. They will not be robbing card games again.
+        headline: "Two Brothers Found Beaten Near Rail Yard"
         effects:
           - treasury: 3000
           - stat: {who: capo, stat: respect, delta: 3}

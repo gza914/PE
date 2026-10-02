@@ -23,6 +23,7 @@ options:
       - weight: 1
         tone: bad
         text: "{rat} goes to Arizona and keeps talking from there. In the spring the grand jury hears from him by telephone."
+        headline: "Grand Jury Hears Secret Testimony by Telephone"
         effects:
           - retire: rat
           - clear_flag: rat_active
@@ -42,6 +43,7 @@ options:
       - weight: 1
         tone: bad
         text: "{rat} works out that he has been made. He walks into the federal building on a Monday morning and does not walk out."
+        headline: "Mob Figure Turns Government Witness"
         effects:
           - retire: rat
           - clear_flag: rat_active
@@ -55,6 +57,7 @@ options:
       - weight: 2
         tone: neutral
         text: "{rat} goes fishing on a Sunday and does not come back. Nobody at the club mentions him. Everybody at the club understands."
+        headline: "Fisherman Missing Off Pier 9"
         effects:
           - retire: rat
           - clear_flag: rat_active

@@ -22,6 +22,7 @@ options:
       - weight: 1
         tone: good
         text: "{boss} does not come home from Mass. Within a week the capos of {rival} ask, through the Commission, for peace."
+        headline: "{boss} Slain Leaving Church"
         effects:
           - kill: boss
           - rivalry: {who: rival, set_stage: 0, tension: -50}
@@ -30,6 +31,7 @@ options:
       - weight: 1
         tone: bad
         text: "{boss} comes home from Mass with his coat torn and his driver dead. By Monday it is open war."
+        headline: "Driver Killed in Attempt on {boss}"
         effects:
           - rivalry: {who: rival, set_stage: 5, tension: 20}
           - heat: {who: family, delta: 10}
@@ -39,6 +41,7 @@ options:
     outcomes:
       - tone: neutral
         text: The mattresses come out. Men sleep in apartments that are not theirs, and the family goes to war with {rival}.
+        headline: "Police Brace for Gang War"
         effects:
           - rivalry: {who: rival, set_stage: 5}
   - id: table

@@ -3,6 +3,7 @@ kind: news
 followup_only: true
 even_if_gone: true
 title: "{man} is indicted"
+headline: "Federal Grand Jury Indicts {man}"
 text: |-
   {man} was arraigned this morning in federal court. Mr. Fessler says the government's case is good, and Mr. Fessler does not say that lightly.
 

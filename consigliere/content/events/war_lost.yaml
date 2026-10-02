@@ -2,6 +2,7 @@ id: war_lost
 kind: news
 followup_only: true
 title: The war with {rival} is over
+headline: "Gang War Ends; Police Count the Cost"
 text: |-
   The family could not go on. Through the Commission, {district} goes to {rival}, and the men who worked there will have to find other work.
 

@@ -29,6 +29,7 @@ options:
           - when: [[secret.wired, "==", 0]]
             mult: 0
         text: Corrigan's first envelope is photographed from across the street. {capo}'s collector is arrested before he reaches the corner.
+        headline: "Patrolman's Sting Nets Numbers Collector"
         effects:
           - standing: {exposure: 6}
           - stat: {who: capo, stat: respect, delta: -5}

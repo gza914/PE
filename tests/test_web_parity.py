@@ -24,7 +24,7 @@ RUNNER = """
 const E = require(process.argv[1]);
 const input = JSON.parse(require("fs").readFileSync(0, "utf8"));
 let state, rng;
-if (input.fresh) ({ state, rng } = E.newGame(input.content, input.seed));
+if (input.fresh) ({ state, rng } = E.newGame(input.content, input.seed, "default", input.options || {}));
 else { state = input.state; rng = new E.GameRNG(input.seed); }
 const PLANS = [["concede"], ["hold", "concede", "threaten", "concede", "concede", "concede"], ["walk"]];
 for (let i = 0; i < input.months; i++) {
@@ -65,9 +65,9 @@ def bot_choice(state: WorldState, matter, index: int):
     return choices[(state.month * 7 + index * 3) % len(choices)]
 
 
-def run_js(state: dict | None, seed: int, months: int, content: dict, style: str = "cycle") -> dict:
+def run_js(state: dict | None, seed: int, months: int, content: dict, style: str = "cycle", **options) -> dict:
     payload = json.dumps({"state": state, "fresh": state is None, "seed": seed, "months": months,
-                          "content": content, "style": style})
+                          "content": content, "style": style, "options": options})
     out = subprocess.run(
         [NODE, "-e", RUNNER, str(ROOT / "web" / "engine.js")],
         input=payload, capture_output=True, text=True, check=True,
@@ -75,11 +75,11 @@ def run_js(state: dict | None, seed: int, months: int, content: dict, style: str
     return json.loads(out.stdout)
 
 
-def run_py(state: dict | None, seed: int, months: int, style: str = "cycle") -> dict:
+def run_py(state: dict | None, seed: int, months: int, style: str = "cycle", **options) -> dict:
     """style "cycle" gives every kind of advice in turn; "silent" never advises; "faithful" advises what
     the Don already leans toward, so the game runs long."""
     if state is None:
-        world, rng = new_game(seed)
+        world, rng = new_game(seed, **options)
     else:
         world, rng = WorldState.model_validate(state), GameRNG(seed)
     plans = [["concede"], ["hold", "concede", "threaten", "concede", "concede", "concede"], ["walk"]]
@@ -181,11 +181,19 @@ def test_every_event_and_effect_kind_is_exercised_somewhere(content):
             state = run_py(None, seed, 60 if seed % 2 else 180, "cycle" if seed % 2 else "faithful")["state"]
         seen.update(d["matter_id"].rsplit("-", 1)[0] for d in state["knowledge"]["decisions"])
         seen.update(state["event_log"])
-    rare = {"succession_pair"}  # only when the Don dies with exactly two men left; unit-tested on its own
+    rare = {e["id"] for e in content["events"] if e.get("rare")}  # fallbacks and tutorial-only, tested on their own
     matters = {e["id"] for e in content["events"] if e["kind"] == "matter" and not e.get("followup_only")}
     assert matters - rare <= seen
 
 
 def test_a_silent_advisor_matches_too(content):
     js, py = run_js(None, 11, 180, content, "silent"), run_py(None, 11, 180, "silent")
+    assert js == py
+
+
+@pytest.mark.parametrize("difficulty", ["easy", "hard"])
+def test_difficulty_and_tutorial_match(difficulty, content):
+    js = run_js(None, 21, 120, content, "faithful", difficulty=difficulty, tutorial=True)
+    py = run_py(None, 21, 120, "faithful", difficulty=difficulty, tutorial=True)
+    assert py["state"]["difficulty"] == difficulty and "first_morning" in py["state"]["event_log"]
     assert js == py

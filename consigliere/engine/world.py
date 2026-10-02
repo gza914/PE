@@ -5,13 +5,14 @@ Mirrored step for step in web/engine.js. Keep the order of every rng call identi
 
 from __future__ import annotations
 
-from .content import Balance, balance, sitdown_lines
+from .content import Balance, balance, difficulties, papers, sitdown_lines
 from .mathutil import clamp
 from .models import (
     Allegiance,
     Character,
     Decision,
     Expense,
+    Headline,
     Investigation,
     InvestigationStage,
     KnownInvestigation,
@@ -149,7 +150,8 @@ def run_law(state: WorldState, rng: GameRNG, bal: Balance) -> None:
 
     for target_id in list(state.investigations):
         inv = state.investigations[target_id]
-        step = lb.base_progress + pressure(state, target_id) / lb.pressure_divisor - lb.decay
+        speed = difficulties()[state.difficulty].law_speed
+        step = (lb.base_progress + pressure(state, target_id) / lb.pressure_divisor) * speed - lb.decay
         if "rat_active" in state.flags:
             step += lb.rat_bonus
         if "rat_turned" in state.flags:
@@ -348,3 +350,4 @@ def run(state: WorldState, rng: GameRNG, bal: Balance | None = None) -> None:
     run_heat(state, rng, bal)
     run_law(state, rng, bal)
     run_rivals(state, rng, bal)
+    state.knowledge.papers.append(Headline(month=state.month, text=rng.choice(papers())))

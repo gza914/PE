@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from .content import load_yaml
+from .content import difficulties, load_yaml
+from .mathutil import clamp
+from .models import Scheduled
 from .matters import begin_month
 from .rng import GameRNG
 from .state import WorldState
@@ -30,8 +32,21 @@ def load_scenario(name: str, seed: int) -> WorldState:
     return state
 
 
-def new_game(seed: int, scenario: str = "default") -> tuple[WorldState, GameRNG]:
+def apply_difficulty(state: WorldState, difficulty: str, tutorial: bool) -> None:
+    spec = difficulties()[difficulty]
+    state.difficulty = difficulty
+    state.player_family.treasury += spec.treasury
+    state.standing.dons_trust = int(clamp(state.standing.dons_trust + spec.dons_trust))
+    state.standing.influence = int(clamp(state.standing.influence + spec.influence))
+    if tutorial:
+        state.flags["tutorial"] = 0
+        state.scheduled.append(Scheduled(event_id="first_morning", month=0))
+
+
+def new_game(seed: int, scenario: str = "default", difficulty: str = "normal",
+             tutorial: bool = False) -> tuple[WorldState, GameRNG]:
     """The starting state is the same for every seed; the first month's matters are not."""
     state, rng = load_scenario(scenario, seed), GameRNG(seed)
+    apply_difficulty(state, difficulty, tutorial)
     begin_month(state, rng)
     return state, rng

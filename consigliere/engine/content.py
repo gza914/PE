@@ -246,6 +246,7 @@ def check_event_references(events: dict[str, EventDef]) -> None:
         if any(e.kind == "succession" for e in all_effects):
             names.add("winner")
         names |= {e.recruit.bind for e in all_effects if e.kind == "recruit"}
+        names |= {e.add_racket.bind for e in all_effects if e.kind == "add_racket"}
         for intel in event.intel:
             if intel.about is not None and intel.about not in names:
                 raise ContentError(f"{event.id}: intel about unknown {intel.about}")
@@ -266,7 +267,7 @@ def check_event_references(events: dict[str, EventDef]) -> None:
                 raise ContentError(f"{event.id}: effect on unknown {who}")
             if effect.kind == "succession":
                 names.add("winner")
-            if effect.kind == "recruit":
+            if effect.kind in ("recruit", "add_racket"):
                 names.add(value.bind)
             if effect.kind == "assign_roles":
                 names |= set(value.roles)
@@ -322,3 +323,23 @@ class Recruits(Model):
 @lru_cache
 def recruits() -> Recruits:
     return Recruits.model_validate(load_yaml("recruits.yaml"))
+
+
+class DifficultySpec(Model):
+    label: str
+    blurb: str
+    treasury: int
+    dons_trust: int
+    influence: int
+    follow_bonus: float
+    law_speed: float
+
+
+@lru_cache
+def difficulties() -> dict[str, DifficultySpec]:
+    return {k: DifficultySpec.model_validate(v) for k, v in load_yaml("difficulty.yaml").items()}
+
+
+@lru_cache
+def papers() -> list[str]:
+    return list(load_yaml("papers.yaml")["filler"])

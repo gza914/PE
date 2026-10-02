@@ -8,12 +8,14 @@ from __future__ import annotations
 from typing import Any
 
 from .calendar import year_of
-from .content import Balance, ContentError, balance, events
+from .content import Balance, ContentError, balance, difficulties, events
 from .eventdefs import STATS, Condition, Effect, EventDef, OptionDef
 from .mathutil import clamp
 from .eventdefs import IntelDef
 from .models import (
     Allegiance,
+    Headline,
+    Racket,
     Role,
     Character,
     Decision,
@@ -351,6 +353,17 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
     elif kind == "succession":
         backed = bindings[value.backed] if value.backed else None
         bindings["winner"] = install_successor(state, rng, [bindings[c] for c in value.candidates], backed)
+    elif kind == "add_racket":
+        racket_id = value.id if value.id not in state.rackets else f"{value.id}_{state.month}"
+        state.rackets[racket_id] = Racket(
+            id=racket_id, name=fill(value.name, state, bindings), kind=value.kind, family_id=family.id,
+            capo_id=bindings[value.capo] if value.capo else None, district_id=bindings[value.district],
+            income=value.income, heat_per_month=value.heat_per_month)
+        bindings[value.bind] = racket_id
+    elif kind == "remove_racket":
+        state.rackets.pop(bindings.get(value, ""), None)
+    elif kind == "promote":
+        state.characters[resolve_id(state, bindings, value.who)].role = value.role
     elif kind == "recruit":
         bindings[value.bind] = recruit(state, rng, value.profile)
     elif kind == "unassign":
@@ -485,6 +498,11 @@ def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rn
     )
 
 
+def print_headline(state: WorldState, text: str | None, bindings: dict[str, str], lists=None) -> None:
+    if text:
+        state.knowledge.papers.append(Headline(month=state.month, text=fill(text, state, bindings, lists), family=True))
+
+
 def fire_news(state: WorldState, rng: GameRNG, event: EventDef, bindings: dict[str, str]) -> None:
     state.event_log[event.id] = state.month
     roll_secrets(event, bindings, rng)
@@ -493,6 +511,7 @@ def fire_news(state: WorldState, rng: GameRNG, event: EventDef, bindings: dict[s
         apply_effect(state, effect, bindings, rng, event, title)
     text = fill(event.text, state, bindings, event.lists)
     state.knowledge.news.append(NewsItem(month=state.month, title=title, text=text))
+    print_headline(state, event.headline, bindings, event.lists)
 
 
 def run_scheduled(state: WorldState, rng: GameRNG, evs: dict[str, EventDef]) -> None:
@@ -547,6 +566,7 @@ def follow_chance(state: WorldState, don: Character, bal: Balance) -> float:
     adv = bal.advice
     p = adv.follow_base + adv.follow_trust_weight * state.standing.dons_trust / 100 + adv.follow_mood_weight * (state.don_mood - 50) / 50
     p += sum(adv.follow_traits.get(t, 0.0) for t in don.traits)
+    p += difficulties()[state.difficulty].follow_bonus
     return clamp(p, adv.follow_min, adv.follow_max)
 
 
@@ -627,6 +647,7 @@ def resolve(state: WorldState, matter: Matter, rng: GameRNG, bal: Balance, evs: 
         text=fill(outcome.text, state, matter.bindings, event.lists), trust_delta=trust,
         revealed=reveal(state, rng, matter, event, bal),
     ))
+    print_headline(state, outcome.headline, matter.bindings, event.lists)
     return False
 
 

@@ -14,6 +14,7 @@ from .models import (
     Decision,
     District,
     Ending,
+    Headline,
     Family,
     Investigation,
     KnownInvestigation,
@@ -36,7 +37,7 @@ from .models import (
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -110,9 +111,16 @@ def _v6_to_v7(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v7_to_v8(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 11: difficulty and the papers."""
+    data.setdefault("difficulty", "normal")
+    data.setdefault("knowledge", {}).setdefault("papers", [])
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
 MIGRATIONS: dict[int, Migration] = {
-    1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7,
+    1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7, 7: _v7_to_v8,
 }
 
 
@@ -132,6 +140,7 @@ class PlayerKnowledge(Model):
     notes: dict[str, str] = Field(default_factory=dict)  # your own notes, by character id
     pinned: list[str] = Field(default_factory=list)  # dossiers you keep on top
     flagged: dict[str, int] = Field(default_factory=dict)  # capo id -> month you last flagged his books
+    papers: list[Headline] = Field(default_factory=list)
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]
@@ -155,6 +164,7 @@ class WorldState(Model):
     rivalries: dict[str, Rivalry] = Field(default_factory=dict)  # by rival family id
     sitdown: SitDown | None = None
     ending: Ending | None = None  # set once the story is over
+    difficulty: str = "normal"
     sources: dict[str, Source] = Field(default_factory=dict)
     standing: Standing = Field(default_factory=Standing)
     don_mood: Score = 50

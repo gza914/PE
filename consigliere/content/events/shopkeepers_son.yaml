@@ -23,6 +23,7 @@ options:
       - weight: 1
         tone: bad
         text: The family pays, and the druggist talks anyway. A short item runs on page eleven. Nobody is named yet.
+        headline: "Druggist's Son Beaten Over Debt, Family Says"
         effects:
           - treasury: -3000
           - standing: {exposure: 3}
@@ -51,6 +52,7 @@ options:
       - weight: 1
         tone: bad
         text: The Herald runs the story with a photograph of the boy. The precinct captain asks for a larger envelope this month.
+        headline: "Teen Beaten on Fulton Avenue; Police Silent"
         effects:
           - standing: {exposure: 4}
           - treasury: -2000

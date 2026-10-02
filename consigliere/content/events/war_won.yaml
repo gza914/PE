@@ -2,6 +2,7 @@ id: war_won
 kind: news
 followup_only: true
 title: The war with {rival} is over
+headline: "Gang War Ends; Police Count the Cost"
 text: |-
   {rival} has asked for peace, through the Commission, on the Commission's terms. {district} is ours now.
 

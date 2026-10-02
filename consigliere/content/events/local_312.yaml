@@ -25,6 +25,7 @@ options:
       - weight: 1
         tone: bad
         text: The contractor goes to the district attorney instead. The business agent is suddenly hard to find, and so is the ten thousand.
+        headline: "Contractor Accuses Union of Shakedown"
         effects:
           - treasury: -10000
           - standing: {exposure: 4}

@@ -46,6 +46,7 @@ options:
       - weight: 1
         tone: bad
         text: "{boss}'s men push back harder than anyone expected. Two of ours are in the hospital, and {district} is now a place where people get hurt."
+        headline: "Brawl on {district} Sends Two to Hospital"
         effects:
           - rivalry: {who: rival, stage: 2, tension: 15}
           - strength: {who: family, delta: -5}

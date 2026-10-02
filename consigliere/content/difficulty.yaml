@@ -1,0 +1,25 @@
+# Difficulty levels. Starting adjustments, how readily the Don listens, how fast the law moves.
+easy:
+  label: Easy
+  blurb: The family starts richer, the Don listens more readily, and the government is slower.
+  treasury: 20000
+  dons_trust: 10
+  influence: 10
+  follow_bonus: 0.10
+  law_speed: 0.75
+normal:
+  label: Normal
+  blurb: The game as designed.
+  treasury: 0
+  dons_trust: 0
+  influence: 0
+  follow_bonus: 0.0
+  law_speed: 1.0
+hard:
+  label: Hard
+  blurb: Less money, a Don slower to trust you, and a government in more of a hurry.
+  treasury: -15000
+  dons_trust: -10
+  influence: -10
+  follow_bonus: -0.10
+  law_speed: 1.3

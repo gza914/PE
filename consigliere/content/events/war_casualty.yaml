@@ -1,6 +1,7 @@
 id: war_casualty
 kind: news
 title: "{capo}"
+headline: "Body Found in Car on Side Street"
 text: |-
   {capo} was found on Sunday morning in his car, on a side street nobody uses. The war with {rival} has a price, and this month it was him.
 

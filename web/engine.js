@@ -561,6 +561,18 @@
         break;
       }
       case "recruit": bindings[v.bind] = recruit(state, rng, v.profile, CURRENT); break;
+      case "add_racket": {
+        const racketId = v.id in state.rackets ? `${v.id}_${state.month}` : v.id;
+        state.rackets[racketId] = {
+          id: racketId, name: fill(v.name, state, bindings), kind: v.kind, family_id: family.id,
+          capo_id: v.capo ? bindings[v.capo] : null, district_id: bindings[v.district],
+          income: v.income, heat_per_month: v.heat_per_month, heat: 0,
+        };
+        bindings[v.bind] = racketId;
+        break;
+      }
+      case "remove_racket": delete state.rackets[bindings[v] ?? ""]; break;
+      case "promote": state.characters[resolveId(state, bindings, v.who)].role = v.role; break;
       case "unassign": {
         const target = resolveId(state, bindings, v);
         for (const r of Object.values(state.rackets)) if (r.capo_id === target) r.capo_id = null;
@@ -669,6 +681,10 @@
     };
   }
 
+  function printHeadline(state, text, bindings, lists) {
+    if (text) state.knowledge.papers.push({ month: state.month, text: fill(text, state, bindings, lists), family: true });
+  }
+
   function fireNews(state, rng, event, bindings) {
     state.event_log[event.id] = state.month;
     rollSecrets(event, bindings, rng);
@@ -676,6 +692,7 @@
     for (const effect of event.effects) applyEffect(state, effect, bindings, rng, event, title);
     const text = fill(event.text, state, bindings, event.lists);
     state.knowledge.news.push({ month: state.month, title, text });
+    printHeadline(state, event.headline, bindings, event.lists);
   }
 
   function runScheduled(state, rng, evs) {
@@ -725,6 +742,7 @@
     const adv = bal.advice;
     let p = adv.follow_base + adv.follow_trust_weight * state.standing.dons_trust / 100 + adv.follow_mood_weight * (state.don_mood - 50) / 50;
     p += sum(don.traits.map((t) => adv.follow_traits[t] ?? 0.0));
+    p += CURRENT.difficulty[state.difficulty].follow_bonus;
     return clamp(p, adv.follow_min, adv.follow_max);
   }
 
@@ -802,6 +820,7 @@
       text: fill(outcome.text, state, matter.bindings, event.lists), trust_delta: trust,
       revealed: reveal(state, rng, matter, event, bal),
     });
+    printHeadline(state, outcome.headline, matter.bindings, event.lists);
     return false;
   }
 
@@ -939,7 +958,8 @@
     }
     for (const targetId of Object.keys(state.investigations)) {
       const inv = state.investigations[targetId];
-      let step = lb.base_progress + pressure(state, targetId) / lb.pressure_divisor - lb.decay;
+      const speed = CURRENT.difficulty[state.difficulty].law_speed;
+      let step = (lb.base_progress + pressure(state, targetId) / lb.pressure_divisor) * speed - lb.decay;
       if ("rat_active" in state.flags) step += lb.rat_bonus;
       if ("rat_turned" in state.flags) step -= lb.turned_relief;
       const progress = inv.progress + rng.roundStochastic(step);
@@ -1121,6 +1141,7 @@
     runHeat(state, rng, bal);
     runLaw(state, rng, bal);
     runRivals(state, rng, bal);
+    state.knowledge.papers.push({ month: state.month, text: rng.choice(content.papers), family: false });
   }
 
   // ---- matters you put on the desk yourself (engine/matters.py) ----
@@ -1240,7 +1261,7 @@
 
   function crewSize(state) {
     const family = playerFamily(state);
-    return members(state, family.id).filter((m) => m.alive && m.id !== family.don_id && m.id !== state.player_id).length;
+    return members(state, family.id).filter((m) => m.alive && m.id !== family.don_id && (m.role === "capo" || m.role === "underboss")).length;
   }
 
   function installSuccessor(state, rng, candidates, backed, content) {
@@ -1335,10 +1356,20 @@
     beginMonth(state, rng, content);
   }
 
-  function newGame(content, seed, scenario = "default") {
+  function newGame(content, seed, scenario = "default", options = {}) {
     CURRENT = content;
     const state = JSON.parse(JSON.stringify(content.scenarios[scenario]));
     state.seed = seed;
+    const difficulty = options.difficulty || "normal";
+    const spec = content.difficulty[difficulty];
+    state.difficulty = difficulty;
+    playerFamily(state).treasury += spec.treasury;
+    state.standing.dons_trust = Math.trunc(clamp(state.standing.dons_trust + spec.dons_trust));
+    state.standing.influence = Math.trunc(clamp(state.standing.influence + spec.influence));
+    if (options.tutorial) {
+      state.flags.tutorial = 0;
+      state.scheduled.push({ event_id: "first_morning", month: 0, bindings: {}, when: [] });
+    }
     const rng = new GameRNG(seed);
     beginMonth(state, rng, content);
     return { state, rng };

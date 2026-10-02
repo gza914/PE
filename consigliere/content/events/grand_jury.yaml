@@ -33,6 +33,7 @@ options:
     outcomes:
       - tone: neutral
         text: "{target} boards a ship on a Wednesday night and does not say where it is going. The government is left holding a subpoena with nobody's name on it."
+        headline: "Subpoenaed Witness Vanishes Before Testimony"
         effects:
           - treasury: -5000
           - retire: target
@@ -49,6 +50,7 @@ options:
       - weight: 1
         tone: bad
         text: One witness goes straight to the prosecutor with a story about a visit from two men in good coats.
+        headline: "Witness Tells Prosecutor of Threats"
         effects:
           - standing: {exposure: 8}
           - investigation: {who: target, progress: 25}

@@ -19,9 +19,11 @@ sys.path.insert(0, str(ROOT))
 from consigliere.engine.content import (  # noqa: E402
     CONTENT_DIR,
     balance,
+    difficulties,
     endings,
     events,
     observations,
+    papers,
     recruits,
     sitdown_lines,
 )
@@ -40,6 +42,8 @@ def content_bundle() -> dict:
         "sitdown_lines": sitdown_lines(),
         "endings": {k: v.model_dump(mode="json") for k, v in endings().items()},
         "recruits": recruits().model_dump(mode="json"),
+        "difficulty": {k: v.model_dump(mode="json") for k, v in difficulties().items()},
+        "papers": papers(),
         "scenarios": {name: load_scenario(name, seed=0).model_dump(mode="json") for name in scenarios},
     }
 

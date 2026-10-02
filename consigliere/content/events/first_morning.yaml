@@ -1,0 +1,45 @@
+id: first_morning
+title: Your first morning
+text: |-
+  The Don's coffee is on your desk, and so is his first question of the year. It is a small one. He likes to begin the year with small ones.
+
+  Mr. Pastore, the baker on the corner of the Don's street, has been robbed twice since Christmas. He asks whether the family might keep an eye on his shop. He cannot pay much.
+followup_only: true  # scheduled at the start of a game with the tutorial on
+rare: true
+secrets: {neighborhood_boys: 0.7}
+intel:
+  - claim: The robbers are boys from the neighborhood, not professionals.
+    denial: The robbers are professionals from across the river.
+    truth: [[secret.neighborhood_boys, "==", 1]]
+    sources: [street]
+    reveal: 1.0
+options:
+  - id: watch
+    label: Keep an eye on the shop, and ask nothing for it
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.neighborhood_boys, "==", 0]]
+            mult: 0.3
+        text: Two boys from Carver Street are found and spoken to, kindly but clearly. Mr. Pastore's bread arrives at the Don's door every Sunday for a year.
+        headline: Corner Bakery Thieves Return Stolen Cash, Apologize
+        effects:
+          - don_mood: 3
+          - cohesion: 1
+      - tone: neutral
+        text: The men watching the shop see nothing. Whoever robbed it was better at this than they are.
+  - id: charge
+    label: Offer protection at the usual rate
+    don: {base: 0, greedy: 1}
+    outcomes:
+      - tone: neutral
+        text: Mr. Pastore pays the usual rate without complaint, and without warmth.
+        effects:
+          - treasury: 100
+  - id: police
+    label: It's a matter for the police
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The police take a report. Mr. Pastore takes the hint, and stops saying good morning.

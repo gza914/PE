@@ -49,6 +49,8 @@ def test_event_placeholders_all_resolve():
         texts = [event.title, event.text] + [o.label for o in event.options]
         texts += [out.text for o in event.options for out in o.outcomes]
         texts += [t for i in event.intel for t in (i.claim, i.denial)]
+        texts += [out.headline for o in event.options for out in o.outcomes if out.headline]
+        texts += [event.headline] if event.headline else []
         for text in texts:
             for found in re.findall(r"\{(\w+)\}", text):
                 assert found in names, f"{event.id}: {{{found}}} is not in its cast"
