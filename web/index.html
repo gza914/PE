@@ -173,6 +173,37 @@ main { padding-block: 26px 64px; }
 .memoir-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
 @media (max-width: 760px) { .memoir-grid { grid-template-columns: minmax(0, 1fr); } .memoir { padding: 20px; } }
 
+/* Dossiers */
+.dossiers { display: grid; grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .dossiers { grid-template-columns: minmax(0, 1fr); } }
+.dossier-list ul { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 2px; }
+.dossier-pick { width: 100%; text-align: left; background: transparent; border: 0; border-left: 3px solid transparent; padding: 7px 10px; cursor: pointer; display: grid; }
+.dossier-pick small { font: 0.74rem var(--typed); color: var(--muted); }
+.dossier-pick:hover { background: var(--sheet); }
+.dossier-pick.on { background: var(--sheet); border-left-color: var(--brass); font-weight: 600; }
+.dossier-pick.gone span { text-decoration: line-through; color: var(--muted); }
+.dossier { display: grid; gap: 8px; }
+.dossier-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; flex-wrap: wrap; }
+.dossier h2 { font-size: 1.8rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 0.72rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--ink); padding: 3px 8px; }
+.belief { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.note-text { width: 100%; font: 0.95rem var(--typed); background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 10px; resize: vertical; }
+.note-text:focus-visible { outline: 3px solid var(--brass); outline-offset: 1px; }
+.pin[aria-pressed="true"] { background: var(--brass-soft); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Ledger and moves */
+table.expect td small { display: block; font-size: 0.72rem; color: var(--muted); white-space: normal; }
+table.expect td:last-child { text-align: right; }
+.earn { font: 0.82rem var(--typed); color: var(--muted); }
+.moves { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.moves li { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--sheet); border: 1px solid var(--rule); padding: 8px 14px; }
+.moves li > span:first-child { display: grid; }
+.moves small { font: 0.75rem var(--typed); color: var(--muted); }
+.move-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.move-form select { font: 0.88rem var(--body); padding: 5px 8px; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); }
+
 /* Sources */
 .lede { max-width: 70ch; }
 .source { background: var(--sheet); border: 1px solid var(--rule); padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
@@ -280,6 +311,7 @@ kbd { font: 0.75rem var(--typed); border: 1px solid var(--rule); padding: 0 4px;
     <nav class="tabs" role="tablist">
       <button id="tab-office" role="tab" aria-selected="true" data-tab="office">Office</button>
       <button id="tab-family" role="tab" aria-selected="false" data-tab="family">Family</button>
+      <button id="tab-dossiers" role="tab" aria-selected="false" data-tab="dossiers">Dossiers</button>
       <button id="tab-city" role="tab" aria-selected="false" data-tab="city">City</button>
       <button id="tab-sources" role="tab" aria-selected="false" data-tab="sources">Sources</button>
       <button id="tab-books" role="tab" aria-selected="false" data-tab="books">Books</button>

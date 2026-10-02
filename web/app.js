@@ -4,18 +4,19 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 5;
+  const SAVE_VERSION = 6;
   const BAND_RANK = { estranged: 1, restless: 2, cooling: 3, steady: 4, devoted: 5 };
   const TONE_LABEL = { good: "Went well", bad: "Went badly", neutral: "No harm done", waiting: "Put off" };
 
   let game = null; // { state, rng }
   let tab = "office";
   let confirmingNewGame = false;
+  let dossier = null; // the character whose dossier is open
 
   // ---- persistence (per-browser convenience; the game still runs without it) ----
   function save() {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, state: game.state, rng: game.rng.getState(), tab }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_VERSION, state: game.state, rng: game.rng.getState(), tab, dossier }));
     } catch (e) { /* storage unavailable: play on without saving */ }
   }
 
@@ -322,6 +323,7 @@
           ${readingHtml(st.knowledge.impressions[m.id])}
           ${inv ? `<div class="law-flag">Under investigation: ${esc(titleCase(inv.stage))}</div>` : ""}
           ${rackets.length ? `<ul class="rackets">${rackets.map((r) => `<li>${esc(r.name)}</li>`).join("")}</ul>` : `<p class="quiet">Runs no rackets of his own.</p>`}
+          ${(() => { const b = capoBooks(st, m); return b.rackets.length && b.average !== null ? `<div class="earn">Envelopes: ${money(b.average)} a month on average, ${b.short > 0 ? `${b.short}% under what they should be` : "in full"}</div>` : ""; })()}
           ${note ? `<div class="lastnote">${esc(shortMonth(note.month))}: ${esc(note.claim)}</div>` : ""}
         </article>`;
     }).join("");
@@ -336,6 +338,7 @@
         <div class="col-head"><h2>His people</h2><small>your read on each man, as of today</small></div>
         <div class="people">${people}</div>
         ${unattended.length ? `<p class="quiet">Nobody is running: ${unattended.map((r) => esc(r.name)).join(", ")}.</p>` : ""}
+        ${movesHtml(st)}
       </div>`;
   }
 
@@ -421,6 +424,132 @@
     </div>`;
   }
 
+  // ---- what each capo should bring, and what he does ----
+  function capoBooks(st, man) {
+    const share = CONTENT.balance.economy.capo_share;
+    const rackets = Object.values(st.rackets).filter((r) => r.capo_id === man.id && r.family_id === E.playerFamily(st).id);
+    const ids = new Set(rackets.map((r) => r.id));
+    const expected = Math.round(rackets.reduce((t, r) => t + r.income * (1 - share), 0));
+    let total = 0, months = 0, last = null;
+    for (const entry of st.knowledge.ledger.slice(-6)) {
+      const lines = entry.kickups.filter((l) => ids.has(l.racket_id) && l.label.endsWith(`(${man.name})`));
+      if (!lines.length) continue;
+      const sum = lines.reduce((t, l) => t + l.amount, 0);
+      total += sum; months += 1; last = sum;
+    }
+    const average = months ? Math.round(total / months) : null;
+    const short = average !== null && expected ? Math.round((1 - average / expected) * 100) : null;
+    return { rackets, expected, average, last, short, months };
+  }
+
+  function ledgerHtml(st) {
+    const fam = E.playerFamily(st);
+    const men = E.members(st, fam.id).filter((m) => m.alive && (m.role === "capo" || m.role === "underboss"));
+    const rows = men.map((m) => {
+      const b = capoBooks(st, m);
+      if (!b.rackets.length) return "";
+      const can = E.canFlag(st, m.id);
+      const flagged = st.knowledge.flagged[m.id];
+      const shortCell = b.short === null ? "—" : b.short > 0 ? `${b.short}% short` : "in full";
+      return `<tr>
+        <td>${esc(m.name)}<small>${b.rackets.map((r) => esc(r.name)).join(", ")}</small></td>
+        <td>${money(b.expected)}</td>
+        <td>${b.average === null ? "—" : money(b.average)}</td>
+        <td class="${b.short !== null && b.short >= 15 ? "flag" : ""}">${shortCell}</td>
+        <td><button class="verify flag-books" data-capo="${esc(m.id)}" ${can ? "" : `disabled title="${flagged !== undefined ? `Brought to the Don in ${esc(shortMonth(flagged))}` : "Not now"}"`}>Show the Don</button></td>
+      </tr>`;
+    }).join("");
+    return `<article class="sheet fresh">
+      <h2>Envelopes against expectations</h2>
+      <p class="stamp">What each man's rackets ought to bring a month, against his last six envelopes</p>
+      <div class="table-wrap"><table class="expect">
+        <thead><tr><th>Capo</th><th>Should bring</th><th>Has brought</th><th>Difference</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p class="quiet">A light envelope can mean a slow season, a weak capo, or a thief. Bringing the Don a man's numbers puts the question on the desk, and the man will hear about it.</p>
+    </article>`;
+  }
+
+  function movesHtml(st) {
+    const fam = E.playerFamily(st);
+    const men = E.members(st, fam.id).filter((m) => m.alive && (m.role === "capo" || m.role === "underboss"));
+    const rows = Object.values(st.rackets).filter((r) => r.family_id === fam.id).map((r) => {
+      const runner = r.capo_id ? st.characters[r.capo_id].name : "nobody";
+      const options = men.filter((m) => E.canPropose(st, r.id, m.id));
+      const pending = st.matters.some((x) => ["reassignment", "assignment"].includes(x.event_id) && x.bindings.racket === r.id);
+      return `<li><span><b>${esc(r.name)}</b><small>run by ${esc(runner)}</small></span>
+        ${pending ? `<span class="quiet">On the Don's desk</span>` : options.length ? `<span class="move-form">
+          <label class="visually-hidden" for="move-${esc(r.id)}">Move ${esc(r.name)} to</label>
+          <select id="move-${esc(r.id)}">${options.map((m) => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join("")}</select>
+          <button class="verify propose" data-racket="${esc(r.id)}">Put it to the Don</button></span>` : ""}</li>`;
+    }).join("");
+    return `<div class="col-head"><h2>Who runs what</h2><small>propose a move; the Don decides at the end of the month</small></div>
+      <ul class="moves">${rows}</ul>`;
+  }
+
+  // ---- dossiers ----
+  function dossierPeople(st) {
+    const fam = E.playerFamily(st);
+    const ours = E.members(st, fam.id).filter((m) => m.id !== st.player_id);
+    const rivals = Object.values(st.families).filter((f) => f.id !== fam.id).flatMap((f) => E.members(st, f.id));
+    const all = ours.concat(rivals);
+    const pinned = st.knowledge.pinned.map((id) => st.characters[id]).filter(Boolean);
+    return { pinned, rest: all.filter((m) => !st.knowledge.pinned.includes(m.id)) };
+  }
+
+  function dossierDetail(st, m) {
+    const fam = E.playerFamily(st);
+    const ours = m.family_id === fam.id;
+    const age = 1958 + Math.floor(st.month / 12) - m.hidden.birth_year;
+    const reports = st.knowledge.reports.filter((r) => r.subject_id === m.id).slice().reverse();
+    const news = st.knowledge.news.filter((n) => n.title.includes(m.name) || n.text.includes(m.name)).slice().reverse();
+    const inv = st.knowledge.investigations[m.id];
+    const band = st.knowledge.impressions[m.id];
+    const lastRead = reports[0];
+    const b = ours && m.alive ? capoBooks(st, m) : null;
+    const pinned = st.knowledge.pinned.includes(m.id);
+    const FATE = { jailed: "In prison", killed: "Killed", gone: "Gone", died: "Died" };
+    return `<article class="sheet dossier fresh">
+      <div class="dossier-head">
+        <div><div class="role">${esc(titleCase(m.role))} · ${esc(st.families[m.family_id].name)}${m.alive ? "" : ` · ${FATE[m.fate] || "Gone"}`}</div>
+        <h2>${esc(m.name)}</h2><p class="stamp">About ${age} years old</p></div>
+        <button class="btn-quiet pin" data-id="${esc(m.id)}" aria-pressed="${pinned}">${pinned ? "Unpin" : "Pin to the top"}</button>
+      </div>
+      <div class="chips">${m.traits.map((t) => `<span class="chip">${esc(titleCase(t))}</span>`).join("")}</div>
+      <p class="quiet">His reputation. What a man is known for is not always what he is.</p>
+      ${ours && m.role !== "don" ? `<div class="section-head">What you believe</div>
+        <div class="belief">${readingHtml(band)}<span class="quiet">${lastRead ? `last noticed ${esc(shortMonth(lastRead.month))}, ${Math.round(lastRead.confidence * 100)}% sure` : "your read since the start"}</span></div>` : ""}
+      ${b && b.rackets.length ? `<div class="section-head">His envelopes</div>
+        <div class="rows">
+          <div class="row"><span>Should bring</span><span class="num">${money(b.expected)}</span></div>
+          <div class="row"><span>Last envelope</span><span class="num">${b.last === null ? "—" : money(b.last)}</span></div>
+          <div class="row"><span>Six-month average</span><span class="num">${b.average === null ? "—" : money(b.average)}</span></div>
+        </div>` : ""}
+      ${inv ? `<div class="section-head">The law</div><div class="law-flag">Under investigation: ${esc(titleCase(inv.stage))}, known since ${esc(shortMonth(inv.since))}</div>` : ""}
+      <div class="section-head">What you have noticed</div>
+      ${reports.length ? `<ul class="notes">${reports.map((r) => `<li class="note">${esc(r.claim)}<span class="meta">${esc(shortMonth(r.month))} · ${Math.round(r.confidence * 100)}% sure</span></li>`).join("")}</ul>` : `<p class="quiet">Nothing on record.</p>`}
+      ${news.length ? `<div class="section-head">In the news on your desk</div><ul class="notes">${news.slice(0, 6).map((n) => `<li class="note">${esc(n.title)}<span class="meta">${esc(shortMonth(n.month))}</span></li>`).join("")}</ul>` : ""}
+      <div class="section-head"><label for="note-${esc(m.id)}">Your notes</label></div>
+      <textarea class="note-text" id="note-${esc(m.id)}" data-id="${esc(m.id)}" rows="4" maxlength="500" placeholder="Only you will read this.">${esc(st.knowledge.notes[m.id] || "")}</textarea>
+    </article>`;
+  }
+
+  function renderDossiers() {
+    const st = game.state;
+    const { pinned, rest } = dossierPeople(st);
+    const everyone = pinned.concat(rest);
+    if (!dossier || !st.characters[dossier]) dossier = everyone[0] ? everyone[0].id : null;
+    const item = (m) => `<li><button class="dossier-pick${m.id === dossier ? " on" : ""}${m.alive ? "" : " gone"}" data-id="${esc(m.id)}">
+      <span>${esc(m.name)}</span><small>${esc(titleCase(m.role))}${st.knowledge.notes[m.id] ? " · noted" : ""}</small></button></li>`;
+    return `<div class="dossiers">
+      <nav class="dossier-list" aria-label="People">
+        ${pinned.length ? `<div class="section-head">Pinned</div><ul>${pinned.map(item).join("")}</ul>` : ""}
+        <div class="section-head">Everyone you know</div><ul>${rest.map(item).join("")}</ul>
+      </nav>
+      ${dossier ? dossierDetail(st, st.characters[dossier]) : ""}
+    </div>`;
+  }
+
   // ---- books ----
   function treasuryChart(ledger) {
     const W = 640, H = 180, L = 10, R = 10, T = 18, B = 22;
@@ -478,6 +607,7 @@
           </table></div>
           ${ledger.some((e) => e.expenses.some((l) => l.note === "unpaid")) ? `<p class="quiet">* Some bills went unpaid that month.</p>` : ""}
         </article>
+        ${ledgerHtml(st)}
         <section class="col">
           <article class="sheet fresh">
             <h2>Your record</h2>
@@ -549,7 +679,8 @@
       return;
     }
     view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
-      : tab === "sources" ? renderSources() : tab === "city" ? renderCity() : renderOffice();
+      : tab === "sources" ? renderSources() : tab === "city" ? renderCity()
+      : tab === "dossiers" ? renderDossiers() : renderOffice();
     const on = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
     on("new-game", () => { confirmingNewGame = true; render(); });
     on("cancel-new", () => { confirmingNewGame = false; render(); });
@@ -570,7 +701,20 @@
     const check = event.target.closest(".verify");
     const btn = event.target.closest(".choice");
     const move = event.target.closest(".move");
-    if (move) {
+    const flag = event.target.closest(".flag-books");
+    const prop = event.target.closest(".propose");
+    const pick = event.target.closest(".dossier-pick");
+    const pinBtn = event.target.closest(".pin");
+    if (flag && !flag.disabled) {
+      E.flagBooks(game.state, game.rng, flag.dataset.capo, CONTENT);
+      tab = "office";
+    } else if (prop) {
+      E.propose(game.state, game.rng, prop.dataset.racket, byId(`move-${prop.dataset.racket}`).value, CONTENT);
+    } else if (pick) {
+      dossier = pick.dataset.id;
+    } else if (pinBtn) {
+      E.pin(game.state, pinBtn.dataset.id, pinBtn.getAttribute("aria-pressed") !== "true");
+    } else if (move) {
       E.sitdownAct(game.state, move.dataset.move, CONTENT);
     } else if (check && !check.disabled) {
       E.verify(game.state, game.rng, check.dataset.matter, Number(check.dataset.intel), CONTENT);
@@ -591,6 +735,7 @@
     if (saved) {
       game = { state: saved.state, rng: E.GameRNG.fromState(saved.rng) };
       tab = saved.tab || "office";
+      dossier = saved.dossier || null;
     } else {
       startNewGame();
     }
@@ -599,6 +744,10 @@
     }
     byId("end-month").addEventListener("click", endMonth);
     byId("view").addEventListener("click", onViewClick);
+    byId("view").addEventListener("change", (event) => {
+      const area = event.target.closest(".note-text");
+      if (area) { E.note(game.state, area.dataset.id, area.value); save(); }
+    });
     document.addEventListener("keydown", (e) => {
       if (e.key.toLowerCase() === "n" && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target instanceof HTMLInputElement)) endMonth();
     });
