@@ -1,26 +1,33 @@
 # Progress
 
 ## Current milestone
-1. Skeleton: **done**. Next up: Milestone 2 (Economy and characters).
+2. Economy and characters: **done**. Next up: Milestone 3 (The advisory loop).
 
-## Done
-- docs/DESIGN.md (from the design document PDF) and CLAUDE.md.
-- Decisions: target Python 3.11 (DESIGN.md said 3.12); saves store the RNG state rather than replaying from seed.
-- `consigliere/engine/`
-  - `rng.py`: `GameRNG`, the only module that touches `random`; state is JSON-friendly.
-  - `models.py`: Character (role, 3 to 5 traits, stats, hidden state, memory), Relationship (directed edge), Family, Racket, Investigation, Report, EventDef stub, Standing. Bounded fields are validated, including on assignment; unknown fields are rejected.
-  - `state.py`: `WorldState`, `PlayerKnowledge`, JSON save/load with `SCHEMA_VERSION = 1` and a stepwise `migrate()` (`MIGRATIONS[n]` upgrades n to n + 1).
-  - `turn.py` + `systems/`: `tick()` runs `SYSTEMS` in order (empty for now), then advances the month.
-  - `commands.py`: `EndMonth` and `apply()`.
-  - `scenario.py` + `content/scenarios/default.yaml`: one family (Ferrante), the Don, an underboss, and you (Thomas Corvo).
-  - `calendar.py`: month 0 = January 1958.
-- `consigliere/cli.py`: plain-text loop (`n`ext, `s`ave, `l`oad, `q`uit); `python -m consigliere --seed N` or `--load PATH`.
-- Tests (31, `pytest -q`): RNG determinism and state round trip, model validation, scenario consistency, save/load round trip and migrations, tick ordering, a 24-month golden-seed determinism check, CLI loop, and architecture rules (engine never imports ui/llm/cli; no `random` outside rng.py).
+## Milestone 2
+- **Cast** (`content/scenarios/default.yaml`): the Ferrante family. Don Aurelio Ferrante, underboss Sal Lauro, you (Thomas Corvo), and four capos with distinct profiles:
+  - Vito Amaro: loyal old hand.
+  - Frank Tessaro: ambitious, greedy top earner running two rackets.
+  - Leo Marchetti: quiet, hard to read.
+  - Augie Sabella: hothead with no discretion, running two rackets.
+- Six rackets, four monthly expenses (one of them crew stipends).
+- **Economy** (`engine/systems/economy.py`): each racket's gross = typical income × random swing × the capo's competence. The capo keeps his crew's share, then skims part of what he owes based on greed × disloyalty plus trait modifiers. The skim goes to his hidden `stash`. The family pays expenses in order and skips any it can't afford. A missed stipend leaves a remembered slight on every member.
+- **Characters** (`engine/systems/characters.py`): memories decay and are forgotten. Each month loyalty closes 10% of the gap to a target set by the Don's respect, family cohesion, traits, and remembered favors and slights (capped), plus a little noise. Cohesion follows the crew's mean loyalty.
+- **Observation** (`engine/systems/observation.py`): when a man's loyalty crosses into a new band, you may notice. Low discretion makes it likelier. Noticing produces a `Report` with a line from `content/observations.yaml` and updates your impression of him. Unnoticed shifts leave your impression stale.
+- **Tuning** lives in `content/balance.yaml`; flavor text lives in `content/observations.yaml`.
+- **Text loop**: after each month it prints the books (envelopes, expenses, treasury) and what you noticed. `f` shows the family tree with your reading of each man; `r` reprints the last report.
+- **Saves**: schema version 2, with a migration from version 1.
+- **Tests**: 60, covering economy math, skim bounds, missed stipends, memory decay, loyalty convergence, observation, content validity, migration, CLI, and a seed-1234 golden run.
+
+## Observations from a 10-year headless run (5 seeds)
+- Loyalty is stable: men settle near their trait-driven targets (Amaro around 90, Tessaro around 50).
+- Tessaro skims about 20% of what he owes (about $270k over 10 years); Sabella about $100k; Marchetti a little; Amaro nothing.
+- The treasury nets about +$3k a month and never runs short, so the missed-stipend path never fires in normal play. Nothing to spend on yet; Milestone 3 decisions should create that pressure.
 
 ## Known issues
-- Nothing happens each month yet; the loop only advances the calendar.
-- Content lives in `consigliere/content/` (inside the package so it ships with it), not a top-level `content/`.
-- pytest is not installed in a fresh container: `pip install -e .[dev]` or `pip install pytest`.
+- No decisions yet: you watch. Racket `heat` is defined but not accumulated (Milestone 6).
+- The CLI reads names, roles and racket assignments from `WorldState` (treated as public knowledge); stats come only via `PlayerKnowledge`.
+- The golden test in `tests/test_golden.py` must be updated whenever balance or content changes on purpose.
+- pytest is not installed in a fresh container: `pip install -e .[dev]`.
 
 ## Next step
-- Milestone 2: one family, the Don, 4 capos, 6 rackets, skimming, loyalty drift, plain-text monthly reports. Start with a plan for the economy system and the extra scenario content.
+- Milestone 3: matters, recommendations, Don's Trust, the Don's decision logic, 15 events. Start with a plan for the event YAML schema and the Don's decision model.

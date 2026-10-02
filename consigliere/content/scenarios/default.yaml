@@ -1,22 +1,30 @@
 # Starting scenario: one family, January 1958. Fictional names only.
 player_id: you
+
 families:
   - id: ferrante
     name: The Ferrante Family
     don_id: don_ferrante
-    member_ids: [don_ferrante, underboss_lauro, you]
+    member_ids: [don_ferrante, underboss_lauro, you, capo_amaro, capo_tessaro, capo_marchetti, capo_sabella]
     strength: 60
     wealth: 55
     cohesion: 65
     treasury: 40000
+    expenses:
+      - {id: lawyers, label: Lawyers on retainer, amount: 3000}
+      - {id: payoffs, label: "Envelopes at the precinct and City Hall", amount: 6000}
+      - {id: house, label: The Don's household, amount: 3500}
+      - {id: stipends, label: Stipends for the crews, amount: 3500, stipend: true}
+
 characters:
   - id: don_ferrante
     name: Aurelio Ferrante
     role: don
     family_id: ferrante
     traits: [cautious, sentimental, paranoid]
-    stats: {loyalty: 100, fear: 70, respect: 85, competence: 70, greed: 40, discretion: 80}
+    stats: {loyalty: 100, fear: 70, respect: 75, competence: 70, greed: 40, discretion: 80}
     hidden: {health: 80, birth_year: 1896}
+
   - id: underboss_lauro
     name: Sal Lauro
     role: underboss
@@ -24,6 +32,7 @@ characters:
     traits: [ambitious, hothead, loyal]
     stats: {loyalty: 70, fear: 60, respect: 65, competence: 60, greed: 55, discretion: 40}
     hidden: {health: 95, birth_year: 1917}
+
   - id: you
     name: Thomas Corvo
     role: consigliere
@@ -31,11 +40,60 @@ characters:
     traits: [cautious, loyal, vain]
     stats: {loyalty: 80, fear: 20, respect: 60, competence: 75, greed: 30, discretion: 85}
     hidden: {health: 100, birth_year: 1912}
+
+  # The steady old hand: loyal, careful, earns less than he could.
+  - id: capo_amaro
+    name: Vito Amaro
+    role: capo
+    family_id: ferrante
+    traits: [loyal, pious, cautious]
+    stats: {loyalty: 82, fear: 40, respect: 70, competence: 55, greed: 25, discretion: 75}
+    hidden: {health: 75, birth_year: 1899, vices: [horses]}
+
+  # The top earner, and he knows it.
+  - id: capo_tessaro
+    name: Frank Tessaro
+    role: capo
+    family_id: ferrante
+    traits: [ambitious, greedy, vain]
+    stats: {loyalty: 55, fear: 55, respect: 60, competence: 80, greed: 75, discretion: 50}
+    hidden: {health: 90, birth_year: 1921}
+
+  # Solid, quiet, hard to read.
+  - id: capo_marchetti
+    name: Leo Marchetti
+    role: capo
+    family_id: ferrante
+    traits: [cautious, paranoid, loyal]
+    stats: {loyalty: 68, fear: 50, respect: 55, competence: 65, greed: 45, discretion: 85}
+    hidden: {health: 85, birth_year: 1910}
+
+  # Muscle with a temper; good on the docks, bad with money.
+  - id: capo_sabella
+    name: Augie Sabella
+    role: capo
+    family_id: ferrante
+    traits: [hothead, greedy, sentimental]
+    stats: {loyalty: 62, fear: 70, respect: 45, competence: 50, greed: 65, discretion: 25}
+    hidden: {health: 90, birth_year: 1915, vices: [cards, drink]}
+
 relationships:
   - {src: don_ferrante, dst: you, trust: 50, affection: 40}
   - {src: you, dst: don_ferrante, trust: 60, affection: 50, fear: 30}
   - {src: underboss_lauro, dst: you, trust: 10, affection: -10}
   - {src: you, dst: underboss_lauro, trust: 20, fear: 20}
+  - {src: capo_tessaro, dst: underboss_lauro, trust: 20, affection: 30}
+  - {src: capo_amaro, dst: don_ferrante, trust: 80, affection: 70}
+  - {src: capo_sabella, dst: capo_tessaro, trust: -20, affection: -30}
+
+rackets:
+  - {id: numbers_eastside, name: Eastside numbers, kind: numbers, family_id: ferrante, capo_id: capo_amaro, income: 7000, heat_per_month: 2}
+  - {id: loans_garment, name: Garment district loans, kind: loansharking, family_id: ferrante, capo_id: capo_tessaro, income: 8000, heat_per_month: 3}
+  - {id: gambling_social_clubs, name: Social club card games, kind: gambling, family_id: ferrante, capo_id: capo_tessaro, income: 9000, heat_per_month: 3}
+  - {id: construction_bids, name: Construction bids, kind: construction, family_id: ferrante, capo_id: capo_marchetti, income: 7000, heat_per_month: 2}
+  - {id: docks_pier_9, name: Pier 9, kind: docks, family_id: ferrante, capo_id: capo_sabella, income: 6500, heat_per_month: 4}
+  - {id: protection_fulton, name: Fulton Avenue shops, kind: protection, family_id: ferrante, capo_id: capo_sabella, income: 3500, heat_per_month: 3}
+
 standing:
   dons_trust: 50
   influence: 20

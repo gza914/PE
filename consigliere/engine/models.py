@@ -84,6 +84,7 @@ class HiddenState(Model):
     vices: list[str] = Field(default_factory=list)
     health: Score = 100
     birth_year: int
+    stash: int = 0  # money skimmed and kept; the family never sees this
 
 
 class Memory(Model):
@@ -117,6 +118,15 @@ class Relationship(Model):
     debt: int = 0  # favors src owes dst
 
 
+class Expense(Model):
+    """A recurring monthly cost paid from the family treasury."""
+
+    id: str
+    label: str
+    amount: int = Field(ge=0)
+    stipend: bool = False  # missing a stipend payment costs loyalty
+
+
 class Family(Model):
     id: str
     name: str
@@ -126,14 +136,16 @@ class Family(Model):
     wealth: Score = 50
     cohesion: Score = 50
     treasury: int = 0
+    expenses: list[Expense] = Field(default_factory=list)
 
 
 class Racket(Model):
     id: str
+    name: str
     kind: RacketKind
     family_id: str
     capo_id: str | None = None
-    income: int = 0  # per month
+    income: int = 0  # typical gross per month, before the capo's share
     heat_per_month: int = 0
     heat: int = 0
 
@@ -145,6 +157,30 @@ class Investigation(Model):
     stage: InvestigationStage = InvestigationStage.SURVEILLANCE
     progress: Score = 0
     opened_month: int
+
+
+class LedgerLine(Model):
+    label: str
+    amount: int
+    note: str = ""
+
+
+class LedgerEntry(Model):
+    """One month of the family's books, as the family sees them."""
+
+    month: int
+    kickups: list[LedgerLine] = Field(default_factory=list)
+    expenses: list[LedgerLine] = Field(default_factory=list)
+    treasury_start: int
+    treasury_end: int
+
+    @property
+    def total_in(self) -> int:
+        return sum(line.amount for line in self.kickups)
+
+    @property
+    def total_out(self) -> int:
+        return sum(line.amount for line in self.expenses if not line.note)
 
 
 class Report(Model):

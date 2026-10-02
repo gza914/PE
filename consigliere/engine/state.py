@@ -13,6 +13,7 @@ from .models import (
     Character,
     Family,
     Investigation,
+    LedgerEntry,
     Model,
     Racket,
     Relationship,
@@ -21,18 +22,39 @@ from .models import (
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
+
+
+def _v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 2: ledger and impressions in PlayerKnowledge, racket names."""
+    knowledge = data.setdefault("knowledge", {})
+    knowledge.setdefault("ledger", [])
+    knowledge.setdefault("impressions", {})
+    for racket in data.get("rackets", {}).values():
+        racket.setdefault("name", racket["kind"].replace("_", " ").title())
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {}
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2}
 
 
 class PlayerKnowledge(Model):
     """What the player believes. The UI reads only this, never the truth."""
 
     reports: list[Report] = Field(default_factory=list)
+    ledger: list[LedgerEntry] = Field(default_factory=list)
+    # character id -> loyalty band id the player currently believes
+    impressions: dict[str, str] = Field(default_factory=dict)
+
+    def reports_for(self, month: int) -> list[Report]:
+        return [r for r in self.reports if r.month == month]
+
+    def ledger_for(self, month: int) -> LedgerEntry | None:
+        return next((e for e in reversed(self.ledger) if e.month == month), None)
 
 
 class WorldState(Model):
@@ -57,6 +79,9 @@ class WorldState(Model):
     def player_family(self) -> Family:
         return self.families[self.player.family_id]
 
+    def members(self, family_id: str) -> list[Character]:
+        return [self.characters[i] for i in self.families[family_id].member_ids]
+
 
 class SaveError(Exception):
     pass
@@ -69,7 +94,7 @@ def migrate(
 ) -> dict[str, Any]:
     """Upgrade raw save data one version at a time until it reaches target."""
     migrations = MIGRATIONS if migrations is None else migrations
-    data = dict(data)
+    data = json.loads(json.dumps(data))  # deep copy; migrations may edit in place
     version = data.get("schema_version", 0)
     if version > target:
         raise SaveError(f"Save is from a newer version ({version} > {target}).")

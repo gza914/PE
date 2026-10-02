@@ -1,0 +1,39 @@
+# What you notice when a man's loyalty shifts. {name} is replaced with his name.
+# Restrained and indirect: the player learns to read these.
+
+loyalty_bands:
+  - id: devoted
+    label: devoted
+    min: 80
+    lines:
+      - "{name} lit a candle for the Don's late wife at St. Anselm's. Nobody asked him to."
+      - "{name} turned down a seat at the head of the table on Sunday. He said it wasn't his."
+      - "{name} brought his envelope to the house himself, in the rain, a day early."
+  - id: steady
+    label: steady
+    min: 60
+    lines:
+      - "{name} was at the club Thursday, the same as every Thursday."
+      - "{name} asked after the Don's health. He seemed to want the answer."
+      - "{name} settled a dispute between two of his men without bothering anyone upstairs."
+  - id: cooling
+    label: cooling
+    min: 40
+    lines:
+      - "{name} has been busy lately. Too busy for Sunday dinner, twice now."
+      - "{name} laughed at something the Don said, a beat late."
+      - "{name} has started calling the Don \"sir\" again, the way a stranger would."
+  - id: restless
+    label: restless
+    min: 20
+    lines:
+      - "{name} was seen having coffee with men you don't know, on the wrong side of the river."
+      - "{name} asked, very casually, what the Don's doctors have been saying."
+      - "{name}'s envelopes arrive on time and exactly right. He used to round up."
+  - id: estranged
+    label: estranged
+    min: 0
+    lines:
+      - "{name} has stopped coming to the house. His wife still sends a cake at Easter."
+      - "{name} kissed the Don's cheek at the christening. Everyone watched him do it."
+      - "{name} has bought a new car, and a second one for his brother."

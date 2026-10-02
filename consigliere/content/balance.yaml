@@ -1,0 +1,40 @@
+# Tuning numbers. Change these freely; no code changes needed.
+
+economy:
+  income_variance: 0.2        # a racket's month swings up to ±20% around its typical income
+  competence_floor: 0.7       # income x0.7 at competence 0, x1.3 at competence 100
+  capo_share: 0.5             # the capo keeps half for himself and his crew; the rest goes up
+  max_skim: 0.4               # nobody dares hold back more than 40% of what he owes
+  skim_trait_bonus:           # added to skim tendency (0..1), which is greed x disloyalty
+    greedy: 0.15
+    ambitious: 0.05
+    loyal: -0.08
+    pious: -0.05
+  skim_noise: 0.5             # skim fraction varies ±50% month to month
+
+loyalty:
+  base: 50
+  don_respect_weight: 0.4     # each point of the Don's respect above 50 adds 0.4 to a man's target
+  cohesion_weight: 0.3
+  trait_targets:
+    loyal: 20
+    sentimental: 5
+    pious: 5
+    ambitious: -10
+    greedy: -5
+    hothead: -5
+    paranoid: -5
+  memory_cap: 20              # remembered favors and slights move the target by at most ±20
+  drift_rate: 0.1             # loyalty closes 10% of the gap to its target each month
+  noise: 2.0                  # plus or minus up to 2 points of plain human weather
+  cohesion_drift_rate: 0.1
+  forget_below: 0.5           # memories weaker than this are forgotten
+
+stipends:
+  missed_memory_weight: -8    # a missed stipend is remembered as a slight against the family
+  missed_decay_rate: 0.03
+
+observation:
+  base_notice: 0.35           # chance you notice a man's shift in a given month...
+  indiscretion_weight: 0.5    # ...plus up to 50% more if he has no discretion at all
+  confidence: 0.6

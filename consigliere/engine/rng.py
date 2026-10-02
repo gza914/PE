@@ -40,6 +40,11 @@ class GameRNG:
     def weighted_choice(self, items: Sequence[T], weights: Sequence[float]) -> T:
         return self._random.choices(items, weights=weights, k=1)[0]
 
+    def round_stochastic(self, value: float) -> int:
+        """Round so that small deltas still add up: 0.3 becomes 1 thirty percent of the time."""
+        whole = int(value // 1)
+        return whole + (1 if self._random.random() < value - whole else 0)
+
     def get_state(self) -> RNGState:
         version, internal, gauss_next = self._random.getstate()
         return [version, list(internal), gauss_next]

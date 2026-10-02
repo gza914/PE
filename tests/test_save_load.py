@@ -77,3 +77,23 @@ def test_newer_save_rejected(game):
 def test_garbage_rejected():
     with pytest.raises(SaveError):
         from_json("not json")
+
+
+def test_version_1_save_upgrades(game):
+    state, rng = game
+    data = json.loads(to_json(state, rng))
+    data["schema_version"] = 1
+    del data["knowledge"]["ledger"]
+    del data["knowledge"]["impressions"]
+    for racket in data["rackets"].values():
+        del racket["name"]
+    loaded, _ = from_json(json.dumps(data))
+    assert loaded.schema_version == SCHEMA_VERSION
+    assert loaded.knowledge.ledger == []
+    assert loaded.rackets["docks_pier_9"].name == "Docks"
+
+
+def test_migrate_does_not_mutate_input():
+    data = {"schema_version": 1, "knowledge": {}, "rackets": {}}
+    migrate(data)
+    assert data == {"schema_version": 1, "knowledge": {}, "rackets": {}}

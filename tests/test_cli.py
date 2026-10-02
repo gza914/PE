@@ -35,3 +35,35 @@ def test_main_with_seed(monkeypatch, capsys):
     monkeypatch.setattr("builtins.input", scripted(["n", "q"]))
     main(["--seed", "5"])
     assert "February 1958" in capsys.readouterr().out
+
+
+def test_next_month_prints_report(game):
+    out = []
+    run(*game, scripted(["n", "q"]), out.append)
+    text = "\n".join(out)
+    assert "=== January 1958" in text
+    assert "Pier 9 (Augie Sabella)" in text
+    assert "Total in" in text and "Total out" in text
+
+
+def test_report_shows_what_you_noticed(game):
+    from consigliere.cli import monthly_report
+    from consigliere.engine.commands import EndMonth, apply
+    from consigliere.engine.models import Report
+
+    state, rng = game
+    apply(state, rng, EndMonth())
+    state.knowledge.reports.append(
+        Report(id="r", subject_id="capo_amaro", claim="Vito Amaro was at Mass.", source_id="you", month=0, confidence=0.6)
+    )
+    assert "  - Vito Amaro was at Mass." in monthly_report(state, 0)
+
+
+def test_family_view_shows_readings_not_numbers(game):
+    from consigliere.cli import family_view
+
+    state, _ = game
+    text = "\n".join(family_view(state))
+    assert "Capo Frank Tessaro (cooling)" in text
+    assert "Social club card games" in text
+    assert str(state.characters["capo_tessaro"].stats.loyalty) not in text

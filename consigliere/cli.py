@@ -8,12 +8,64 @@ from pathlib import Path
 
 from .engine.calendar import month_label
 from .engine.commands import EndMonth, apply
+from .engine.content import observations
+from .engine.models import Role
 from .engine.rng import GameRNG, fresh_seed
 from .engine.scenario import new_game
 from .engine.state import SaveError, WorldState, load_game, save_game
 
 DEFAULT_SAVE = Path("saves/save.json")
-HELP = "[n]ext month  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
+HELP = "[n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
+WIDTH = 60
+
+
+def money(amount: int) -> str:
+    return f"${amount:,}"
+
+
+def ledger_row(label: str, amount: str) -> str:
+    return f"  {label:<{WIDTH - len(amount) - 3}} {amount}"
+
+
+def monthly_report(state: WorldState, month: int) -> list[str]:
+    """The month's books and what you noticed. Reads only PlayerKnowledge."""
+    knowledge = state.knowledge
+    entry = knowledge.ledger_for(month)
+    if entry is None:
+        return [f"No report for {month_label(month)}."]
+    lines = [f"=== {month_label(month)} ".ljust(WIDTH, "="), "Envelopes"]
+    for line in entry.kickups:
+        label = f"{line.label} [{line.note}]" if line.note else line.label
+        lines.append(ledger_row(label, money(line.amount)))
+    lines.append(ledger_row("Total in", money(entry.total_in)))
+    lines.append("Expenses")
+    for line in entry.expenses:
+        amount = "UNPAID" if line.note == "unpaid" else money(line.amount)
+        lines.append(ledger_row(line.label, amount))
+    lines.append(ledger_row("Total out", money(entry.total_out)))
+    change = entry.treasury_end - entry.treasury_start
+    lines.append(f"Treasury {money(entry.treasury_start)} -> {money(entry.treasury_end)} ({change:+,})")
+    noticed = knowledge.reports_for(month)
+    if noticed:
+        lines.append("Around the family")
+        lines.extend(f"  - {report.claim}" for report in noticed)
+    return lines
+
+
+def family_view(state: WorldState) -> list[str]:
+    """Who runs what, and how you read each man. No hidden stats."""
+    family = state.player_family
+    obs = observations()
+    lines = [family.name, f"  Don: {state.characters[family.don_id].name}"]
+    for member in state.members(family.id):
+        if member.role not in (Role.UNDERBOSS, Role.CAPO):
+            continue
+        band = state.knowledge.impressions.get(member.id)
+        reading = obs.band(band).label if band else "unknown"
+        rackets = [r.name for r in state.rackets.values() if r.capo_id == member.id]
+        lines.append(f"  {member.role.value.title()} {member.name} ({reading})")
+        lines.extend(f"      {name}" for name in rackets)
+    return lines
 
 
 def status_line(state: WorldState) -> str:
@@ -46,6 +98,14 @@ def run(
         path = Path(arg.strip()) if arg.strip() else DEFAULT_SAVE
         if verb in ("n", "next", ""):
             apply(state, rng, EndMonth())
+            for out in monthly_report(state, state.month - 1):
+                write(out)
+        elif verb in ("r", "report"):
+            for out in monthly_report(state, state.month - 1):
+                write(out)
+        elif verb in ("f", "family"):
+            for out in family_view(state):
+                write(out)
         elif verb in ("s", "save"):
             save_game(state, rng, path)
             write(f"Saved to {path}.")
