@@ -4,7 +4,7 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 3;
+  const SAVE_VERSION = 4;
   const BAND_RANK = { estranged: 1, restless: 2, cooling: 3, steady: 4, devoted: 5 };
   const TONE_LABEL = { good: "Went well", bad: "Went badly", neutral: "No harm done", waiting: "Put off" };
 
@@ -75,6 +75,7 @@
       { label: "Don's trust", value: s.dons_trust, warn: s.dons_trust <= 25 },
       { label: "Influence", value: s.influence },
       { label: "Exposure", value: s.exposure, warn: s.exposure >= 60 },
+      { label: "Heat", value: fam.heat, warn: fam.heat >= 60 },
       { label: "Don's mood", word: moodWord(st.don_mood), warn: st.don_mood < 25 },
     ];
     byId("meters").innerHTML = meters.map((m) => {
@@ -157,10 +158,39 @@
     return `<article class="news fresh"><div class="kicker">Word came this month</div><h3>${esc(n.title)}</h3>${paras(n.text)}</article>`;
   }
 
+  function patienceWord(p) {
+    if (p >= 3) return "Steady";
+    if (p === 2) return "Wearing thin";
+    return "Nearly gone";
+  }
+
+  function sitdownCard(sd) {
+    const cost = CONTENT.balance.sitdown.concession;
+    return `
+      <article class="sitdown fresh">
+        <div class="kicker">At the table · round ${sd.round} of ${sd.max_rounds}</div>
+        <h3>Sit-down with ${esc(sd.rival_name)}</h3>
+        <div class="terms">
+          <div><span class="label">They ask</span><b>${money(sd.ask)}</b><small>a month</small></div>
+          <div><span class="label">You offer</span><b>${money(sd.offer)}</b><small>a month</small></div>
+          <div><span class="label">Their patience</span><b class="${sd.patience <= 1 ? "warn" : ""}">${patienceWord(sd.patience)}</b></div>
+        </div>
+        <ol class="table-log">${sd.log.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>
+        <div class="table-moves">
+          <button class="move" data-move="concede">Offer ${money(cost)} more</button>
+          <button class="move" data-move="hold">Hold firm</button>
+          <button class="move" data-move="threaten">Threaten</button>
+          <button class="move quiet-move" data-move="walk">Walk away</button>
+        </div>
+        <p class="advice-status">You speak for the family at this table; the Don is not here. If you leave it unfinished at the end of the month, they will take that as an answer.</p>
+      </article>`;
+  }
+
   function renderDesk() {
     const st = game.state;
     const news = st.knowledge.news.filter((n) => n.month === st.month);
-    const items = news.map(newsCard).concat(st.matters.map(matterCard));
+    const items = (st.knowledge.sitdown ? [sitdownCard(st.knowledge.sitdown)] : [])
+      .concat(news.map(newsCard), st.matters.map(matterCard));
     return `
       <section class="col" aria-label="Your desk">
         <div class="col-head"><h2>On your desk</h2><small>${esc(E.monthLabel(st.month))}</small></div>
@@ -257,14 +287,20 @@
       const notes = st.knowledge.reports.filter((r) => r.subject_id === id);
       return notes.length ? notes[notes.length - 1] : null;
     };
+    const FATE = { jailed: "In prison", killed: "Killed", gone: "Gone", died: "Died" };
     const people = crew.map((m) => {
       const rackets = Object.values(st.rackets).filter((r) => r.capo_id === m.id);
       const note = lastNote(m.id);
+      const inv = st.knowledge.investigations[m.id];
+      if (!m.alive) {
+        return `<article class="person gone fresh"><div class="role">${esc(titleCase(m.role))} · ${FATE[m.fate] || "Gone"}</div><h3>${esc(m.name)}</h3></article>`;
+      }
       return `
         <article class="person fresh">
           <div class="role">${esc(titleCase(m.role))}</div>
           <h3>${esc(m.name)}</h3>
           ${readingHtml(st.knowledge.impressions[m.id])}
+          ${inv ? `<div class="law-flag">Under investigation: ${esc(titleCase(inv.stage))}</div>` : ""}
           ${rackets.length ? `<ul class="rackets">${rackets.map((r) => `<li>${esc(r.name)}</li>`).join("")}</ul>` : `<p class="quiet">Runs no rackets of his own.</p>`}
           ${note ? `<div class="lastnote">${esc(shortMonth(note.month))}: ${esc(note.claim)}</div>` : ""}
         </article>`;
@@ -280,6 +316,67 @@
         <div class="people">${people}</div>
         ${unattended.length ? `<p class="quiet">Nobody is running: ${unattended.map((r) => esc(r.name)).join(", ")}.</p>` : ""}
       </div>`;
+  }
+
+  // ---- the city ----
+  function tensionWord(t) {
+    if (t < 20) return "Cordial";
+    if (t < 40) return "Cool";
+    if (t < 60) return "Strained";
+    if (t < 80) return "Hostile";
+    return "Murderous";
+  }
+
+  function strengthWord(theirs, ours) {
+    const d = theirs - ours;
+    if (d > 12) return "Stronger than us";
+    if (d < -12) return "Weaker than us";
+    return "About our size";
+  }
+
+  function ladder(stage) {
+    return `<ol class="ladder" aria-label="From peace to war: ${esc(E.STAGES[stage])}">${E.STAGES.map((name, i) =>
+      `<li class="${i === stage ? "now" : i < stage ? "past" : ""}${i === 5 ? " war" : ""}">${esc(titleCase(name))}</li>`).join("")}</ol>`;
+  }
+
+  function districtsOf(st, familyId) {
+    return Object.values(st.districts).filter((d) => d.family_id === familyId).map((d) => {
+      const h = E.districtHeat(st, d.id);
+      return `<li><span>${esc(d.name)}</span><span class="heat-chip" title="Heat">${h}<span class="trust-bar" aria-hidden="true"><i style="width:${h}%"></i></span></span></li>`;
+    }).join("");
+  }
+
+  function renderCity() {
+    const st = game.state;
+    const fam = E.playerFamily(st);
+    const ours = `<article class="house fresh ours">
+        <div class="role">Your family</div><h3>${esc(fam.name)}</h3>
+        <div class="house-line">Heat ${fam.heat} · ${fam.heat >= 60 ? "the papers are interested" : fam.heat >= 35 ? "the precincts are watching" : "quiet"}</div>
+        <ul class="districts">${districtsOf(st, fam.id)}</ul>
+      </article>`;
+    const rivals = Object.values(st.rivalries).map((rv) => {
+      const them = st.families[rv.family_id];
+      const boss = st.characters[them.don_id];
+      return `<article class="house fresh">
+        <div class="role">${esc(boss.alive ? "Boss: " + boss.name : "Leaderless")}</div><h3>${esc(them.name)}</h3>
+        ${ladder(rv.stage)}
+        <div class="house-line">${tensionWord(rv.tension)} · ${strengthWord(them.strength, fam.strength)}${rv.stage === 5 ? ` · at war ${rv.war_months} month${rv.war_months === 1 ? "" : "s"}` : ""}</div>
+        <ul class="districts">${districtsOf(st, them.id) || `<li class="quiet">No districts left</li>`}</ul>
+      </article>`;
+    }).join("");
+    const known = Object.values(st.knowledge.investigations);
+    const law = known.length ? `<ul class="law">${known.map((k) => {
+      const i = E.INV_STAGES.indexOf(k.stage);
+      return `<li><b>${esc(st.characters[k.target_id].name)}</b>
+        <ol class="ladder small">${E.INV_STAGES.map((s, j) => `<li class="${j === i ? "now" : j < i ? "past" : ""}">${esc(titleCase(s))}</li>`).join("")}</ol>
+        <small>known since ${esc(shortMonth(k.since))}</small></li>`;
+    }).join("")}</ul>` : `<p class="quiet">No investigations that you know of. That is not the same as none.</p>`;
+    return `<div class="family">
+      <div class="col-head"><h2>The city</h2><small>who holds what, and how things stand</small></div>
+      <div class="houses">${ours}${rivals}</div>
+      <div class="col-head"><h2>The law</h2><small>what you know the government is doing</small></div>
+      ${law}
+    </div>`;
   }
 
   // ---- sources ----
@@ -385,7 +482,7 @@
     renderMast();
     const view = byId("view");
     view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
-      : tab === "sources" ? renderSources() : renderOffice();
+      : tab === "sources" ? renderSources() : tab === "city" ? renderCity() : renderOffice();
     const on = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
     on("new-game", () => { confirmingNewGame = true; render(); });
     on("cancel-new", () => { confirmingNewGame = false; render(); });
@@ -404,7 +501,10 @@
   function onViewClick(event) {
     const check = event.target.closest(".verify");
     const btn = event.target.closest(".choice");
-    if (check && !check.disabled) {
+    const move = event.target.closest(".move");
+    if (move) {
+      E.sitdownAct(game.state, move.dataset.move, CONTENT);
+    } else if (check && !check.disabled) {
       E.verify(game.state, game.rng, check.dataset.matter, Number(check.dataset.intel), CONTENT);
     } else if (btn) {
       const choice = btn.dataset.choice === "" ? null : btn.dataset.choice;
