@@ -1,0 +1,248 @@
+id: informant_list
+title: A list for sale
+text: |-
+  Detective Lieutenant Ray Gallo of the Intelligence Division has let it be known, through a bail bondsman, that he has a list. On it are the names of the police department's informants inside the city's families, ours included. He will sell it for twenty-five thousand dollars.
+
+  A list like that would be worth any price, if it were real. A policeman who sells one would be worth watching, if it were not.
+primary: true
+cast:
+  underboss:
+    role: [underboss]
+  capo:
+    role: [capo]
+trigger: [[month, ">=", 14]]
+cooldown: 11
+patience: 0
+secrets:
+  sting: 0.35      # the offer is a trap; the money is marked and the meeting is wired
+  real_names: 0.6  # if not a trap, the list is genuine
+facts:
+  gallo_broke: Lieutenant Gallo has a sick wife, two mortgages, and a habit at the trotters. He needs money badly.
+  gallo_clean: Gallo has no debts anyone can find. A policeman with no debts selling a list is selling something else.
+  sample_true: Gallo gave you one name for free, a numbers runner of {capo}'s. {capo} confirms the runner has been talking to the police.
+  sample_false: Gallo gave you one name for free, a runner of {capo}'s. {capo} swears the runner is as solid as anyone he has.
+  middleman: "{underboss} knows a bail bondsman who could carry the money and the list, so no one from the family meets Gallo."
+talks:
+  - with: other
+    name: Lieutenant Ray Gallo
+    where: in a parked car by the reservoir, with the windows fogged
+    nodes:
+      start:
+        says: |-
+          Lieutenant Gallo is a heavy man in a light raincoat. He doesn't look at you; he looks at the reservoir. "Twenty-five thousand. Every name the Division has in your family, and in the other two. Take it or leave it, but don't take long."
+        lines:
+          - say: Why would you sell it?
+            when: [[secret.sting, "==", 0]]
+            to: broke
+          - say: Why would you sell it?
+            when: [[secret.sting, "==", 1]]
+            to: smooth
+          - say: Give me one name, as a sample.
+            when: [[secret.sting, "==", 0], [secret.real_names, "==", 1]]
+            to: sample_good
+          - say: Give me one name, as a sample.
+            when: [{any: [[secret.sting, "==", 1], [secret.real_names, "==", 0]]}]
+            to: sample_bad
+          - say: I'll be in touch.
+      broke:
+        says: |-
+          He laughs without humor. "My wife's in Mercy Hospital with something they can't pronounce. I've got two mortgages and a bookie who calls me at home. Why does anybody sell anything?"
+        learn: [gallo_broke]
+        lines_from: start
+      smooth:
+        says: |-
+          "Because I'm tired of being a policeman and I'd like to be a man with a boat." He says it easily, like a line he has practised. Later, a friend at the precinct tells you Gallo owns his house outright and has never bet on anything in his life.
+        learn: [gallo_clean]
+        lines_from: start
+      sample_good:
+        says: |-
+          He writes one name on a matchbook and hands it over without turning his head. It is one of {capo}'s numbers runners.
+        learn: [sample_true]
+        lines_from: start
+      sample_bad:
+        says: |-
+          He writes one name on a matchbook and hands it over without turning his head. It is one of {capo}'s runners, a cousin of {capo}'s wife.
+        learn: [sample_false]
+        lines_from: start
+  - with: capo
+    where: at the back of his garage, among the tires
+    nodes:
+      start:
+        says: |-
+          {capo} wipes his hands on a rag. "You've got a name for me. I can see it on your face."
+        lines:
+          - say: Your runner on the matchbook. Is he talking to the police?
+            when: [[knows.sample_true, "==", 1]]
+            to: confirmed
+          - say: Your runner on the matchbook. Is he talking to the police?
+            when: [[knows.sample_false, "==", 1]]
+            to: denied
+          - say: Never mind. Nothing yet.
+      confirmed:
+        says: |-
+          {capo} reads the name and goes gray. "He's been paying his bets in new bills for a year. I thought he had a girl with money." He folds the matchbook very small. "I'll take care of it."
+        lines:
+          - say: Don't do anything. Not until the Don decides.
+            effects:
+              - stat: {who: capo, stat: respect, delta: 2}
+            to: waits
+        lines_from: start
+      denied:
+        says: |-
+          {capo} reads the name and laughs. "Him? He's my wife's cousin. He couldn't find the police station with a map. Whoever gave you this is selling you a fairy tale."
+        lines_from: start
+      waits:
+        says: |-
+          "Until the Don decides." He doesn't like it, but he nods.
+        lines_from: start
+  - with: underboss
+    where: at the bakery, after hours
+    nodes:
+      start:
+        says: |-
+          {underboss} is doing the bakery's accounts, which are honest, as a kind of hobby. "A cop selling names. I've heard this song before. It's usually got a second verse."
+        lines:
+          - say: Could we buy it without anyone from the family in the room?
+            to: middleman
+          - say: Have you heard of this sort of thing before?
+            to: history
+          - say: Good night.
+      middleman:
+        says: |-
+          "There's a bail bondsman on Union Avenue, Irving Platt. He carries things between people who shouldn't meet. If it's a trap, they catch Irving with an envelope, and Irving never heard of us." He makes a note in the margin. "Irving charges two thousand. He's worth it."
+        learn: [middleman]
+        lines_from: start
+      history:
+        says: |-
+          "In Philadelphia they sold the Calvetti people a list of names last year. Marked money, a wire in the cop's hat. Six men went away." He closes the ledger. "Of course, sometimes a cop is just a crook. Most of them are."
+        lines_from: start
+  - with: don
+    where: in the Don's study, with the curtains drawn
+    nodes:
+      start:
+        says: |-
+          The Don listens with his hands folded on his stomach. "A list," he says. "Every family dreams of that list. That's what worries me. Tell me."
+        lines:
+          - say: The sample was good. {capo}'s runner really is talking to the police. The list is real.
+            when: [[knows.sample_true, "==", 1]]
+            case: {buy: 0.15, middleman: 0.1}
+            to: heard
+          - say: The sample was wrong. {capo} says the runner is his wife's cousin and as solid as anyone. The list is a fairy tale.
+            when: [[knows.sample_false, "==", 1]]
+            case: {walk_away: 0.2, buy: -0.2}
+            to: heard
+          - say: Gallo is drowning in debt. He has every reason to sell.
+            when: [[knows.gallo_broke, "==", 1]]
+            case: {buy: 0.1, middleman: 0.05}
+            to: heard
+          - say: Gallo has no debts at all. A clean policeman selling names is a trap.
+            when: [[knows.gallo_clean, "==", 1]]
+            case: {walk_away: 0.15, report_him: 0.15, buy: -0.2}
+            to: suspicious
+          - say: We use a bail bondsman to carry the money. If it's a trap, they catch a stranger.
+            when: [[knows.middleman, "==", 1]]
+            case: {middleman: 0.2}
+            to: heard
+          - say: Buy it. Whatever it costs, we need to know who's talking.
+            case: {buy: 0.1}
+            to: heard
+      heard:
+        says: |-
+          "Mm." The Don studies his thumbs. "Go on."
+        lines_from: start
+      suspicious:
+        says: |-
+          The Don smiles for the first time. "A policeman with no debts. I've never met one." He waves a hand. "Go on."
+        lines_from: start
+options:
+  - id: buy
+    label: Buy the list, and have one of ours make the exchange
+    don: {base: 0.5, paranoid: 1, greedy: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.sting, "==", 1]]
+            mult: 0
+          - when: [[secret.real_names, "==", 0]]
+            mult: 0.1
+        text: The list is real. Three names on it are ours. Within a month all three have moved to other cities, or other lines of work, and the police find their sources oddly quiet.
+        effects:
+          - treasury: -12000
+          - heat: {who: family, delta: -12}
+          - strength: {who: family, delta: 2}
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.sting, "==", 1]]
+            mult: 0
+          - when: [[secret.real_names, "==", 1]]
+            mult: 0.1
+        text: The list is a list of names, copied from old arrest reports. Gallo is twenty-five thousand dollars happier and has retired to Florida.
+        effects:
+          - treasury: -12000
+      - tone: bad
+        weight: 0.1
+        weight_if:
+          - when: [[secret.sting, "==", 1]]
+            mult: 50
+        text: The envelope is handed over by the reservoir and the car fills with light. The money was marked and Gallo was wired. The man who carried it is ours, and he is in a cell.
+        headline: "Mob Courier Arrested in Police Bribery Sting"
+        effects:
+          - treasury: -12000
+          - heat: {who: family, delta: 9}
+          - standing: {exposure: 4}
+          - investigation: {who: underboss, progress: 12}
+  - id: middleman
+    label: Buy it through Irving Platt the bondsman, so no one of ours is there
+    needs: [middleman]
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.sting, "==", 1]]
+            mult: 0
+          - when: [[secret.real_names, "==", 0]]
+            mult: 0.1
+        text: Irving Platt brings back the list in a laundry bag. It is real. Three names are ours, and none of them knows how the family found out.
+        effects:
+          - treasury: -13000
+          - heat: {who: family, delta: -12}
+          - strength: {who: family, delta: 2}
+      - tone: neutral
+        weight: 1
+        text: Irving Platt comes back with a list of names, or is arrested with a marked envelope and swears he has never heard of anybody. Either way the family is out its money and nothing worse.
+        effects:
+          - treasury: -13000
+  - id: report_him
+    label: Let it be known at Headquarters that Gallo is selling secrets
+    needs: [gallo_clean]
+    don: {base: 0, cautious: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.sting, "==", 0]]
+            mult: 0.3
+        text: An anonymous letter reaches the Police Commissioner, describing Lieutenant Gallo's meeting by the reservoir. The Intelligence Division's sting becomes the Intelligence Division's embarrassment, and Gallo is transferred to the harbor patrol.
+        effects:
+          - heat: {who: family, delta: -6}
+          - standing: {influence: 3}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.sting, "==", 0]]
+            mult: 3
+        text: The letter reaches the Commissioner and a crooked lieutenant is fired. He was a real crook with a real list, and now he sells it to somebody else.
+        effects:
+          - heat: {who: family, delta: 3}
+  - id: walk_away
+    label: Leave the lieutenant to his reservoir
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The family does not call Gallo back. If his list was real, somebody else has it now. If it was a trap, it closes on somebody else.
+        effects:
+          - don_mood: -2

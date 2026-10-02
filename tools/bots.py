@@ -19,11 +19,12 @@ from consigliere.engine.commands import (  # noqa: E402
     ProposeReassign,
     Recommend,
     SitDownAct,
+    Talk,
     Verify,
 )
 from consigliere.engine.content import balance, events  # noqa: E402
 from consigliere.engine.eventdefs import EventDef, OptionDef  # noqa: E402
-from consigliere.engine.matters import WAIT, apparent_trust, can_flag, can_propose, can_verify  # noqa: E402
+from consigliere.engine.matters import WAIT, apparent_trust, can_flag, can_propose, can_verify, option_open  # noqa: E402
 from consigliere.engine.models import Matter  # noqa: E402
 from consigliere.engine.rng import GameRNG  # noqa: E402
 from consigliere.engine.state import WorldState  # noqa: E402
@@ -149,11 +150,39 @@ class Bot:
     def verifies(self) -> bool:
         return False
 
+    talks = True  # sees everyone on a primary issue before advising
+
+    def line(self, state: WorldState, lines: list[str]) -> int:
+        """Which line to say. Bots can't tell which lines teach anything; they say the first."""
+        return 0
+
+    def converse(self, state: WorldState, matter: Matter) -> list[Talk]:
+        """Talk to everyone, the Don last, until there is nothing more to say. Talk commands change what
+        can be said next, so they are applied here, one by one, and returned only for the record."""
+        from consigliere.engine.commands import apply as run_command
+        said: list[Talk] = []
+        if not self.talks:
+            return said
+        for _ in range(2):  # a second round: facts learned later open lines in earlier rooms
+            for i, conversation in enumerate(matter.talks):
+                for _ in range(40):
+                    if not conversation.lines:
+                        break
+                    command = Talk(matter_id=matter.id, talk=i, line=self.line(state, conversation.lines))
+                    run_command(state, self.world_rng, command)
+                    said.append(command)
+        return said
+
     # -- the month --
-    def act(self, state: WorldState) -> list[Command]:
+    def act(self, state: WorldState, rng: GameRNG | None = None) -> list[Command]:
+        """This month's commands. Conversations are held on the spot, with the game's rng."""
+        self.world_rng = rng
         commands: list[Command] = housekeeping(state) if self.attentive else []
         for matter in state.matters:
             event = events()[matter.event_id]
+            if matter.primary and rng is not None:
+                self.converse(state, matter)
+                event = event.model_copy(update={"options": [o for o in event.options if option_open(matter, o)]})
             if self.verifies():
                 for i, item in enumerate(matter.intel):
                     if len(item.reports) < 2 and can_verify(state, matter, i):
@@ -169,6 +198,7 @@ class Silent(Bot):
     """Never advises the Don. Makes his own decisions as quietly as possible."""
 
     name = "silent"
+    talks = False
 
     def decide_own(self, state: WorldState, matter: Matter, event: EventDef) -> str | None:
         return event.default_option
@@ -228,6 +258,9 @@ class RandomBot(Bot):
 
     def sit(self, state):
         return self.rng.choice(["concede", "hold", "threaten", "walk"])
+
+    def line(self, state, lines):
+        return self.rng.randint(0, len(lines) - 1)
 
 
 class IgnoreTheLaw(Bot):

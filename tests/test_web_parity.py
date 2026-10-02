@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from consigliere.engine.commands import FlagBooks, ProposeReassign, Recommend, SitDownAct, Verify, apply
+from consigliere.engine.commands import FlagBooks, ProposeReassign, Recommend, SitDownAct, Talk, Verify, apply
 from consigliere.engine.content import events
-from consigliere.engine.matters import can_flag, can_propose, can_verify
+from consigliere.engine.matters import can_flag, can_propose, can_verify, option_open
 from consigliere.engine.rng import GameRNG
 from consigliere.engine.scenario import load_scenario, new_game
 from consigliere.engine.state import WorldState
@@ -38,18 +38,25 @@ for (let i = 0; i < input.months; i++) {
   }
   for (let k = 0; state.sitdown && k < 6; k++) E.sitdownAct(state, plan[k % plan.length], input.content);
   state.matters.forEach((m, j) => {
+    m.talks.forEach((t, ti) => {
+      for (let step = 0; t.lines.length && step < 40; step++) {
+        const pick = input.style === "cycle" ? (state.month + ti + step) % t.lines.length : 0;
+        E.talk(state, rng, m.id, ti, pick, input.content);
+      }
+    });
     m.intel.forEach((_, i) => {
       if ((state.month + i + j) % 2 === 0 && E.canVerify(state, m, i, input.content)) E.verify(state, rng, m.id, i, input.content);
     });
-    const choices = m.options.map((o) => o.id).concat(m.can_wait ? ["wait"] : [], [null]);
+    const choices = m.options.filter((o) => E.optionOpen(m, o)).map((o) => o.id).concat(m.can_wait ? ["wait"] : [], [null]);
     const def = input.content.events.find((e) => e.id === m.event_id);
     if (input.style === "cycle") E.recommend(state, m.id, choices[(state.month * 7 + j * 3) % choices.length]);
     else if (def.you_decide) E.recommend(state, m.id, m.options[0].id);
     else if (input.style === "faithful") {
       const don = state.characters[E.playerFamily(state).don_id];
       const appeal = (o) => (o.don.base ?? 0) + don.traits.reduce((t, tr) => t + (o.don[tr] ?? 0), 0);
-      let best = def.options[0];
-      for (const o of def.options) if (appeal(o) > appeal(best)) best = o;
+      const open = def.options.filter((o) => E.optionOpen(m, o));
+      let best = open[0];
+      for (const o of open) if (appeal(o) > appeal(best)) best = o;
       E.recommend(state, m.id, best.id);
     }
   });
@@ -61,7 +68,7 @@ process.stdout.write(JSON.stringify({ state, probe: rng.random() }));
 
 def bot_choice(state: WorldState, matter, index: int):
     """The same deterministic advisor as the JS runner: cycles through every kind of advice."""
-    choices = [o.id for o in matter.options] + (["wait"] if matter.can_wait else []) + [None]
+    choices = [o.id for o in matter.options if option_open(matter, o)] + (["wait"] if matter.can_wait else []) + [None]
     return choices[(state.month * 7 + index * 3) % len(choices)]
 
 
@@ -102,6 +109,12 @@ def run_py(state: dict | None, seed: int, months: int, style: str = "cycle", **o
                 break
             apply(world, rng, SitDownAct(action=plan[k % len(plan)]))
         for j, matter in enumerate(world.matters):
+            for ti, conversation in enumerate(matter.talks):
+                step = 0
+                while conversation.lines and step < 40:
+                    pick = (world.month + ti + step) % len(conversation.lines) if style == "cycle" else 0
+                    apply(world, rng, Talk(matter_id=matter.id, talk=ti, line=pick))
+                    step += 1
             for i in range(len(matter.intel)):
                 if (world.month + i + j) % 2 == 0 and can_verify(world, matter, i):
                     apply(world, rng, Verify(matter_id=matter.id, intel_index=i))
@@ -113,7 +126,7 @@ def run_py(state: dict | None, seed: int, months: int, style: str = "cycle", **o
                 don = world.characters[world.player_family.don_id]
                 def appeal(o):
                     return o.don.get("base", 0) + sum(o.don.get(t.value, 0) for t in don.traits)
-                options = events()[matter.event_id].options
+                options = [o for o in events()[matter.event_id].options if option_open(matter, o)]
                 best = options[0]
                 for o in options:
                     if appeal(o) > appeal(best):
@@ -147,9 +160,9 @@ def test_same_seed_same_fifteen_years_with_a_faithful_advisor(seed, content):
 
 
 def test_a_trusted_advisor_retires(content):
-    state = starting_state(3)
+    state = starting_state(10)
     state["standing"]["dons_trust"] = 95
-    js, py = run_js(state, 3, 180, content, "faithful"), run_py(state, 3, 180, "faithful")
+    js, py = run_js(state, 10, 180, content, "faithful"), run_py(state, 10, 180, "faithful")
     assert py["state"]["ending"]["id"].startswith("retired")
     assert js == py
 

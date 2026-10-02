@@ -1,0 +1,271 @@
+id: rival_proposal
+title: An offer from across the river
+text: |-
+  {boss} has sent word through a priest, which is how he sends word when he wants to be taken seriously. {rival} would like to run its numbers in {district}, on our side of the line. In return they will pay the family thirty percent of everything their runners take there.
+
+  It is a great deal of money for doing nothing. Men who offer that are usually buying something they have not mentioned.
+primary: true
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, "<", 4]]
+  boss:
+    boss_of: rival
+  district:
+    district_of: family
+  capo:
+    role: [capo]
+  underboss:
+    role: [underboss]
+trigger: [[month, ">=", 1]]
+cooldown: 11
+patience: 0
+secrets:
+  setup: 0.4   # they mean to use the foothold to take the district
+  debt: 0.6    # they owe the Orsini loan sharks and need the money
+facts:
+  measuring: "{capo}'s men saw soldiers from {rival} walking our blocks in {district}, counting doorways."
+  quiet: "{capo}'s men have seen nothing unusual from {rival}."
+  their_debt: "{boss}'s family borrowed from uptown shylocks to cover a bad year, and the interest is eating them."
+  flush: "{underboss} hears {rival} is doing well. They don't need this money."
+  capo_wants_share: "{capo} would accept the deal if he gets a share of the thirty percent."
+talks:
+  - with: boss
+    where: at a restaurant across the river
+    nodes:
+      start:
+        says: |-
+          {boss} pours the wine himself. "Thirty percent of everything my runners take in {district}. Your Don gets money for nothing, and nobody has to get hurt over a few corners. Tell me what's wrong with that."
+        lines:
+          - say: Why now? You've stayed on your side of the river for ten years.
+            to: why
+          - say: Thirty is low.
+            to: haggle
+          - say: I'll put it to the Don.
+      why:
+        says:
+          - when: [[secret.debt, "==", 1]]
+            text: |-
+              He looks at the tablecloth for a moment longer than he should. "Business has been slow on our side. A man has to grow or he dies."
+          - text: |-
+              "Because my runners are already walking past your corners to get to the bus. Why should they walk past money?"
+        lines_from: start
+      haggle:
+        says:
+          - when: [[boss, has, hothead]]
+            text: |-
+              His face colors. "Thirty is generous. Don't insult me in my own restaurant." Then he remembers himself and smiles. "Thirty-five. That's the end of it."
+          - text: |-
+              He shrugs as if he expected it. "Thirty-five. Not a point more. Tell your Don I was reasonable."
+        lines_from: start
+  - with: capo
+    where: at the social club in {district}
+    nodes:
+      start:
+        says: |-
+          {capo} has already heard. "They want {district}? I've had men on those corners nine years. Nobody asked me."
+        lines:
+          - say: Have your men seen anything from {rival} lately?
+            when: [[secret.setup, "==", 1]]
+            to: seen
+          - say: Have your men seen anything from {rival} lately?
+            when: [[secret.setup, "==", 0]]
+            to: nothing
+          - say: Would thirty percent cover what you'd lose?
+            to: money
+          - say: That's all for now.
+      seen:
+        says: |-
+          "Funny you ask. Two of their guys were walking my blocks last week. Not buying, not betting. Counting doorways. My man asked them what they wanted and they said they were lost."
+        learn: [measuring]
+        lines_from: start
+      nothing:
+        says: |-
+          "Nothing. They keep to their side of the bridge. I'd know if they didn't."
+        learn: [quiet]
+        lines_from: start
+      money:
+        says: |-
+          He does the sum in his head, slowly. "Thirty percent of their take, maybe it covers it. Maybe. I'd want my piece of it, for my trouble."
+        lines:
+          - say: You'll get your piece. I'll see to it.
+            learn: [capo_wants_share]
+            effects:
+              - stat: {who: capo, stat: loyalty, delta: 3}
+            to: promised
+          - say: It's the family's money, not yours.
+            effects:
+              - stat: {who: capo, stat: loyalty, delta: -3}
+            to: refused
+        lines_from: start
+      promised:
+        says: |-
+          "Then I won't fight it." He means it, for now.
+        lines_from: start
+      refused:
+        says: |-
+          "It's my corners." He says it quietly, which with {capo} is worse than shouting.
+        lines_from: start
+  - with: underboss
+    where: in the back of the bakery on Garrick Street
+    nodes:
+      start:
+        says: |-
+          {underboss} is eating a sfogliatella over a napkin. "I hear {rival} is being generous. That's a first."
+        lines:
+          - say: What do you hear about their money?
+            when: [[secret.debt, "==", 1]]
+            to: broke
+          - say: What do you hear about their money?
+            when: [[secret.debt, "==", 0]]
+            to: flush
+          - say: Do you trust {boss}?
+            to: trust
+          - say: Enjoy your pastry.
+      broke:
+        says: |-
+          "That's the interesting part. {boss}'s people borrowed from the shylocks uptown last winter to cover a bad season. The vig is killing them. A man in that spot will pay a lot for a little."
+        learn: [their_debt]
+        lines_from: start
+      flush:
+        says: |-
+          "Money? They're doing fine. New cars on their side of the river. Whatever this is, they don't need it."
+        learn: [flush]
+        lines_from: start
+      trust:
+        says:
+          - when: [[boss, has, cautious]]
+            text: |-
+              "I trust him to be careful. A careful man doesn't offer you something for nothing. He offers you something for something later."
+          - text: |-
+              "I trust him to be {boss}." He brushes sugar off his tie. "Make of that what you like."
+        lines_from: start
+  - with: don
+    where: in the Don's study
+    nodes:
+      start:
+        says: |-
+          The Don has heard the offer twice already, once from the priest and once from his wife, who heard it from the priest's housekeeper. "Well, consigliere? Thirty percent of nothing much, for a piece of {district}."
+        lines:
+          - say: Take it. It's money, and it keeps the peace.
+            case: {accept: 0.05}
+            to: heard
+          - say: "{capo}'s men have seen nothing. I think the offer is what it looks like."
+            when: [[knows.quiet, "==", 1]]
+            case: {accept: 0.15}
+            to: heard
+          - say: Their soldiers have been counting our doorways. This is how they move in.
+            when: [[knows.measuring, "==", 1]]
+            case: {trap: 0.2, refuse: 0.1, accept: -0.1}
+            to: worried
+          - say: They owe the uptown shylocks. They need this more than we do. We can ask for more.
+            when: [[knows.their_debt, "==", 1]]
+            case: {counter: 0.2}
+            to: heard
+          - say: They're doing well. They don't need our corners, so why do they want them?
+            when: [[knows.flush, "==", 1]]
+            case: {refuse: 0.1, trap: 0.05}
+            to: heard
+          - say: "{capo} will go along, if he gets a piece of it."
+            when: [[knows.capo_wants_share, "==", 1]]
+            case: {accept: 0.05, counter: 0.05}
+            to: heard
+          - say: Turn it down. We don't share {district} with anybody.
+            case: {refuse: 0.1}
+            to: heard
+          - say: What do you make of it yourself?
+            to: his_view
+      heard:
+        says: |-
+          He nods slowly, which means he has heard you and not that he agrees. "Go on."
+        lines_from: start
+      worried:
+        says: |-
+          The Don sets down his cup. "Counting doorways." He says it the way other men say a curse. "Go on."
+        lines_from: start
+      his_view:
+        says:
+          - when: [[don, has, paranoid]]
+            text: |-
+              "I think a man who gives you money is measuring you for something. I haven't decided what."
+          - when: [[don, has, greedy]]
+            text: |-
+              "I think thirty percent is thirty percent. But I'd like to know why it isn't forty."
+          - text: |-
+              "I think I'd like to hear what you found out before I tell you what I think."
+        lines_from: start
+options:
+  - id: accept
+    label: Take the deal, thirty-five percent
+    don: {base: 0.5, greedy: 1, cautious: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.setup, "==", 1]]
+            mult: 0.15
+        text: Their runners work {district} and the envelope comes every month, fat and on time. {boss} sends the Don a case of wine at Christmas.
+        effects:
+          - treasury: 9000
+          - rivalry: {who: rival, tension: -15}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.setup, "==", 1]]
+            mult: 4
+          - when: [[knows.capo_wants_share, "==", 1]]
+            mult: 0.8
+        text: The envelope comes twice. Then their runners stop paying and start collecting from our shops as well. By spring half of {district} pays them.
+        headline: "Gang Rivalry Flares in {district}"
+        effects:
+          - transfer_district: {district: district, to: rival}
+          - strength: {who: family, delta: -3}
+          - stat: {who: capo, stat: loyalty, delta: -6}
+  - id: counter
+    label: Ask for half, since they need it more than we do
+    needs: [their_debt]
+    don: {base: 0.5, greedy: 1, vain: 0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.setup, "==", 1]]
+            mult: 0.4
+        text: "{boss} swallows hard and agrees to half. His family is too deep in debt to argue, and too busy paying to plan anything else."
+        effects:
+          - treasury: 16000
+          - rivalry: {who: rival, tension: -5}
+      - tone: bad
+        weight: 1
+        text: "{boss} hears half as an insult, which it partly was. The offer is withdrawn, and so is the priest."
+        effects:
+          - rivalry: {who: rival, tension: 15}
+  - id: trap
+    label: Agree, and have {capo}'s men watch every move they make
+    needs: [measuring]
+    don: {base: 0, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.setup, "==", 0]]
+            mult: 0.3
+        text: When their soldiers come for the shops on the third Friday, {capo}'s men are already waiting in the doorways they counted. {boss} sends an apology and twenty thousand dollars.
+        effects:
+          - treasury: 20000
+          - stat: {who: capo, stat: respect, delta: 5}
+          - strength: {who: family, delta: 2}
+          - rivalry: {who: rival, tension: 10}
+      - tone: neutral
+        weight: 1
+        text: Their runners work {district} quietly and pay what they promised, watched every step by men who expected worse. Nothing happens, at some expense.
+        effects:
+          - treasury: 4000
+  - id: refuse
+    label: Turn it down
+    don: {base: 0.5, paranoid: 0.5, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don sends the priest back with his regrets. {boss} says he understands, in a way that suggests he does not.
+        effects:
+          - rivalry: {who: rival, tension: 8}

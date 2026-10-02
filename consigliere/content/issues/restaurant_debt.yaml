@@ -1,0 +1,232 @@
+id: restaurant_debt
+title: Bastiani's cannot pay
+text: |-
+  Gino Bastiani owes {capo}'s shylocks thirty thousand dollars, and the interest grows by six hundred every week. He has offered the family his restaurant instead: Bastiani's, on Garrick Street, where the Don has eaten every Friday for twenty years.
+
+  {capo} wants the restaurant. The Don wants his Friday table. Gino wants to keep his father's name over the door. Not everyone can have what he wants.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+  rival:
+    rival: true
+trigger: [[month, ">=", 0]]
+cooldown: 11
+patience: 0
+secrets:
+  lien: 0.45      # the government has a tax lien on the restaurant
+  gambling: 0.55  # Gino borrows to cover losses at a rival family's card games
+facts:
+  lien: Mr. Fessler found a federal tax lien on Bastiani's for eighteen thousand dollars. Whoever owns it owes the government.
+  clean_title: Mr. Fessler says the restaurant's title is clean. It is worth more than the debt.
+  gambling: Gino's money goes to the card games {rival} runs over the bakery on Hollis Street. He borrows from us to lose to them.
+  bad_year: Gino says business fell off when the new highway took the Friday traffic. It is an honest bad year.
+  capo_plan: "{capo} would turn Bastiani's into a front, washing money through its books."
+  daughter: Gino's daughter Teresa runs the kitchen now, and the food has never been better.
+talks:
+  - with: other
+    name: Gino Bastiani
+    where: at the Don's usual table, before the restaurant opens
+    nodes:
+      start:
+        says: |-
+          Gino has set the Don's table with the good linen, as though the Don were coming. "Consigliere. Sit, sit. Teresa will bring you something." His hands are not steady. "You know why I asked to see you."
+        lines:
+          - say: How did you get so deep, Gino?
+            when: [[secret.gambling, "==", 1]]
+            to: cards
+          - say: How did you get so deep, Gino?
+            when: [[secret.gambling, "==", 0]]
+            to: highway
+          - say: Who's cooking these days?
+            to: kitchen
+          - say: Thank you for the coffee.
+      cards:
+        says: |-
+          He looks at the tablecloth for a long time. "Cards. On Hollis Street, over the bakery. I win, I lose, I borrow from {capo} to win it back." He laughs, horribly. "I never win it back."
+        learn: [gambling]
+        lines_from: start
+      highway:
+        says: |-
+          "The new highway. It took the Friday traffic. People drive past us to the suburbs now and eat in their cars." He spreads his hands. "I borrowed to fix the roof, to pay the cooks. Then it was the interest. It's always the interest."
+        learn: [bad_year]
+        lines_from: start
+      kitchen:
+        says: |-
+          His face changes. "Teresa. My daughter. She took over when my knees went." He calls toward the kitchen and a young woman with flour on her arms waves. "The Don says her braciole is better than my mother's. Don't tell my mother."
+        learn: [daughter]
+        lines_from: start
+  - with: capo
+    where: in his car, parked outside Bastiani's with the engine running
+    nodes:
+      start:
+        says: |-
+          {capo} is looking at the restaurant the way a man looks at a house he means to buy. "Thirty thousand and climbing. He'll never pay it. Let me take the place and be done."
+        lines:
+          - say: What would you do with it?
+            to: plan
+          - say: The Don eats there every Friday.
+            to: friday
+          - say: Let me think about it.
+      plan:
+        says: |-
+          "Keep the name. Keep the cooks. Run the cash from the card games through its books, so it comes out the other side as veal and wine." He grins. "Every family needs a restaurant. We've only got the bakery."
+        learn: [capo_plan]
+        lines_from: start
+      friday:
+        says: |-
+          "So he keeps eating there. Better food, even, when it's ours." He shrugs. "Gino's sentimental. Sentiment costs six hundred a week."
+        lines_from: start
+  - with: other
+    name: Mr. Fessler
+    where: at his office, with the restaurant's deed on the desk
+    nodes:
+      start:
+        says: |-
+          Mr. Fessler has already looked into it, because Mr. Fessler always has. "Before anybody takes a restaurant, somebody should know what the restaurant owes. I took the liberty."
+        lines:
+          - say: What does it owe?
+            when: [[secret.lien, "==", 1]]
+            to: lien
+          - say: What does it owe?
+            when: [[secret.lien, "==", 0]]
+            to: clean
+          - say: Thank you, counselor.
+      lien:
+        says: |-
+          "Eighteen thousand dollars to the federal government, in unpaid taxes. A lien. Whoever owns Bastiani's owns that debt, and the Internal Revenue Service will want to know who that is." He folds his hands. "I could probably settle it for a good deal less, quietly, before the deed changes hands. Afterward, not so quietly."
+        learn: [lien]
+        lines_from: start
+      clean:
+        says: |-
+          "Nothing. The title is clean. The building alone is worth more than Mr. Bastiani's debt." He closes the folder. "It is, as these things go, a good restaurant to own."
+        learn: [clean_title]
+        lines_from: start
+  - with: don
+    where: at Bastiani's, at his Friday table
+    nodes:
+      start:
+        says: |-
+          The Don eats Teresa's braciole slowly, the way he does everything that matters. "Gino's father served me my first meal in this country. Tell me what we do with his son."
+        lines:
+          - say: There's a federal tax lien on the place. If we take it as it is, we take on the government. Fessler can settle it first.
+            when: [[knows.lien, "==", 1]]
+            case: {take_clean: 0.25, take: -0.2}
+            to: heard
+          - say: The title is clean, and the building is worth more than the debt. Taking it is good business.
+            when: [[knows.clean_title, "==", 1]]
+            case: {take: 0.15}
+            to: heard
+          - say: Gino's losing the money at {rival}'s card games on Hollis Street. We're lending him money to give to them.
+            when: [[knows.gambling, "==", 1]]
+            case: {cut_off: 0.25}
+            to: angry
+          - say: It was an honest bad year. The highway took his customers. Give him time.
+            when: [[knows.bad_year, "==", 1]]
+            case: {extend: 0.2}
+            to: heard
+          - say: His daughter runs the kitchen now. This braciole is hers.
+            when: [[knows.daughter, "==", 1]]
+            case: {extend: 0.1, take: -0.05}
+            to: soft
+          - say: "{capo} wants it for a front, to wash the card game money."
+            when: [[knows.capo_plan, "==", 1]]
+            case: {take: 0.1}
+            to: heard
+      heard:
+        says: |-
+          He tears a piece of bread and wipes the plate. "Go on."
+        lines_from: start
+      angry:
+        says: |-
+          The Don puts down his fork. "We lend him money," he says slowly, "so he can give it to {rival}." He does not pick the fork up again. "Go on."
+        lines_from: start
+      soft:
+        says: |-
+          The Don looks toward the kitchen door for a moment. "Hers," he says. "Go on."
+        lines_from: start
+options:
+  - id: take
+    label: Take the restaurant in place of the debt
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.lien, "==", 1]]
+            mult: 0.2
+        text: Bastiani's changes hands on a Tuesday. Gino keeps his name over the door and a salary, and {capo}'s card game money starts coming out of the kitchen as veal.
+        effects:
+          - add_expense: {id: bastiani_salary, label: Gino Bastiani's salary, amount: 150}
+          - treasury: 6000
+          - stat: {who: capo, stat: loyalty, delta: 4}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.lien, "==", 1]]
+            mult: 4
+        text: The family takes Bastiani's, and with it a federal tax lien nobody noticed. The Internal Revenue Service would like to know who the new owners are, and why they pay their cooks in cash.
+        headline: "IRS Seizes Records at Garrick Street Restaurant"
+        effects:
+          - treasury: -5000
+          - heat: {who: family, delta: 5}
+  - id: take_clean
+    label: Have Mr. Fessler settle the lien quietly, then take the restaurant
+    needs: [lien]
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: Mr. Fessler settles the lien for seven thousand dollars and a lunch. A month later Bastiani's belongs to the family, clean as a plate, and the Don keeps his Friday table.
+        effects:
+          - treasury: -1000
+          - add_expense: {id: bastiani_salary, label: Gino Bastiani's salary, amount: 150}
+          - stat: {who: capo, stat: loyalty, delta: 3}
+      - tone: neutral
+        weight: 1
+        text: The lien is settled, slowly and expensively. The restaurant changes hands at last, worth roughly what it cost.
+        effects:
+          - treasury: -5000
+  - id: cut_off
+    label: Tell {rival} to stop giving Gino credit, and let him pay us back slowly
+    needs: [gambling]
+    don: {base: 0.5, vain: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        text: A word is said on Hollis Street. Gino's credit at the card games disappears overnight, and so, after a bad month, does his habit. He pays the family two hundred a week and cries when he does it.
+        effects:
+          - treasury: 4000
+          - rivalry: {who: rival, tension: 6}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[rival.stage, ">=", 2]]
+            mult: 3
+        text: "{rival} hears the word on Hollis Street as an order, and doesn't take orders. Gino keeps playing, now on credit from them, and now the family has two problems."
+        effects:
+          - rivalry: {who: rival, tension: 15}
+          - treasury: -6000
+  - id: extend
+    label: Freeze the interest and give Gino a year
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - tone: good
+        weight: 1
+        weight_if:
+          - when: [[secret.gambling, "==", 0]]
+            mult: 3
+        text: Gino gets a year without interest. Teresa's cooking brings the Friday crowd back from the suburbs, and the debt is paid by Christmas. The Don's table has fresh flowers every week.
+        effects:
+          - treasury: 3000
+          - don_mood: 6
+          - stat: {who: capo, stat: loyalty, delta: -3}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.gambling, "==", 1]]
+            mult: 3
+        text: Gino takes his year and spends it upstairs on Hollis Street. By spring he owes more than before, and has borrowed it from someone less patient.
+        effects:
+          - treasury: -5000
+          - stat: {who: capo, stat: loyalty, delta: -5}

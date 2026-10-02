@@ -1,0 +1,243 @@
+id: herald_series
+title: The Herald is writing about us
+text: |-
+  The Evening Herald is preparing a series of articles on the rackets in the city, and the first three are about the family. A reporter named Ellen Hartigan has been asking questions about {racket} for a month, and asking them well.
+
+  The series is set to begin in three weeks. The Herald's publisher has told friends it will be the most important thing his paper has done since the war.
+primary: true
+cast:
+  racket:
+    racket: true
+  capo:
+    role: [capo, underboss]
+    runs: racket
+  rival:
+    rival: true
+trigger: [[month, ">=", 12], [heat, ">=", 20]]
+cooldown: 11
+patience: 0
+secrets:
+  documents: 0.45   # she has real ledger pages from someone inside
+  owner_weak: 0.5   # the publisher cannot afford to lose his advertisers
+facts:
+  documents: Hartigan has pages from {racket}'s own ledgers. Someone inside gave them to her.
+  rumors: Hartigan has nothing on paper. She has interviews with frightened people, and they will deny everything in court.
+  trade: Hartigan would hold the series for a bigger story. She has always wanted to write about {rival}.
+  advertisers: The Herald loses money every year. The department stores that advertise in it keep it alive, and two of them pay the family for their deliveries.
+  owner_proud: The publisher is rich and stubborn and has wanted a crusade for years. Advertisers won't move him.
+  leaker: "{capo}'s bookkeeper, a nervous young man named Arnold Fisch, was seen at the Herald building twice last month."
+  capo_clean: "{capo} swears no one in his crew has talked to any reporter."
+talks:
+  - with: other
+    name: Ellen Hartigan of the Herald
+    where: at a lunch counter across from the Herald building, where she chose to meet
+    nodes:
+      start:
+        says: |-
+          Ellen Hartigan is thirty, with ink on her fingers and a notebook she does not open. "I wondered when someone would come. I'm not going to be frightened, if that's what you're here for. I've been frightened by better."
+        lines:
+          - say: I'm not here to frighten anyone. What have you got?
+            when: [[secret.documents, "==", 1]]
+            to: documents
+          - say: I'm not here to frighten anyone. What have you got?
+            when: [[secret.documents, "==", 0]]
+            to: rumors
+          - say: What does a reporter really want?
+            to: wants
+          - say: Good luck with your series.
+      documents:
+        says: |-
+          She smiles slightly. "Enough. Pages, in somebody's handwriting, with dates and amounts. I won't say whose." She finishes her coffee. "But I'll tell you they're real. I checked them against three bank deposits."
+        learn: [documents]
+        lines_from: start
+      rumors:
+        says: |-
+          "Interviews. Shopkeepers, runners' wives, a man who used to drive for you." She hesitates a fraction too long. "Enough for a series. Maybe not enough for a courtroom." She seems to know this is a weakness, and to dislike knowing it.
+        learn: [rumors]
+        lines_from: start
+      wants:
+        says: |-
+          "A story nobody else has." She turns her cup around in its saucer. "Everybody writes about your family. Nobody has ever written about what goes on across the river, at {rival}. Not one real story in twenty years." She looks at you directly. "If somebody had a story like that, I might be too busy for anything else."
+        learn: [trade]
+        lines_from: start
+  - with: other
+    name: Mr. Whitcomb, the Herald's advertising manager
+    where: at the bar of the Press Club, after his third martini
+    nodes:
+      start:
+        says: |-
+          Mr. Whitcomb sells advertising for the Herald and drinks for himself. "The series? Oh, the old man's crazy about it. A crusade. He's been waiting his whole life for a crusade."
+        lines:
+          - say: Can the Herald afford a crusade?
+            when: [[secret.owner_weak, "==", 1]]
+            to: broke
+          - say: Can the Herald afford a crusade?
+            when: [[secret.owner_weak, "==", 0]]
+            to: rich
+          - say: Enjoy your drink.
+      broke:
+        says: |-
+          He laughs into his martini. "Afford? The Herald loses money every year. Lindell's and Marsh Brothers keep it alive, with their full pages. If the department stores pulled out, the old man would be writing his crusade on a mimeograph." He looks at you more carefully. "Why do you ask?"
+        learn: [advertisers]
+        lines_from: start
+      rich:
+        says: |-
+          "Afford it? The old man's got more money than the Pope and half the stubbornness. If every advertiser in town pulled out, he'd print the series on his own dime and frame the cancellations." He shakes his head. "He'd enjoy it, too."
+        learn: [owner_proud]
+        lines_from: start
+  - with: capo
+    where: in his car, driving nowhere in particular
+    nodes:
+      start:
+        says: |-
+          {capo} drives with both hands on the wheel, which he never does. "A girl reporter. Writing about my business. In the newspaper my mother reads."
+        lines:
+          - say: Has anyone in your crew been talking to her?
+            when: [[secret.documents, "==", 1]]
+            to: suspicious
+          - say: Has anyone in your crew been talking to her?
+            when: [[secret.documents, "==", 0]]
+            to: clean
+          - say: Drop me at the corner.
+      suspicious:
+        says: |-
+          He drives a block in silence. "My bookkeeper. Arnold. Nervous kid. Somebody told me they saw him at the Herald building, twice. I said, Arnold? Arnold's scared of his own shadow." He grips the wheel harder. "Maybe that's why."
+        learn: [leaker]
+        lines_from: start
+      clean:
+        says: |-
+          "Nobody. On my mother. My people don't talk to the cops, they don't talk to the papers, half of them don't talk to their wives." He means it, and he's probably right.
+        learn: [capo_clean]
+        lines_from: start
+  - with: don
+    where: in the Don's study, with today's Herald folded on the desk
+    nodes:
+      start:
+        says: |-
+          The Don reads the Herald every morning, and this morning he has read it twice, looking for something that isn't there yet. "Three weeks," he says. "What do we do about Miss Hartigan?"
+        lines:
+          - say: She has real pages from {racket}'s ledgers. Somebody inside gave them to her.
+            when: [[knows.documents, "==", 1]]
+            case: {find_leak: 0.1, pressure: 0.05, ignore: -0.2}
+            to: grim
+          - say: "{capo}'s bookkeeper was seen at the Herald building twice. He's the leak."
+            when: [[knows.leaker, "==", 1]]
+            case: {find_leak: 0.25}
+            to: grim
+          - say: She has rumors, nothing on paper. Let her print. Nobody goes to jail for a rumor.
+            when: [[knows.rumors, "==", 1]]
+            case: {ignore: 0.2}
+            to: heard
+          - say: The paper lives on department store advertising, and two of those stores pay us.
+            when: [[knows.advertisers, "==", 1]]
+            case: {pressure: 0.25}
+            to: heard
+          - say: The publisher is rich and stubborn. Pressure would only make him print it louder.
+            when: [[knows.owner_proud, "==", 1]]
+            case: {pressure: -0.2, trade: 0.05}
+            to: heard
+          - say: She wants a story about {rival}. Give her one, and she'll be too busy for us.
+            when: [[knows.trade, "==", 1]]
+            case: {trade: 0.25}
+            to: interested
+      heard:
+        says: |-
+          The Don unfolds the Herald and folds it again. "Go on."
+        lines_from: start
+      grim:
+        says: |-
+          "Inside," the Don says, as though the word tasted bad. "Go on."
+        lines_from: start
+      interested:
+        says: |-
+          The Don's eyebrows rise. For a moment he looks almost cheerful. "Go on."
+        lines_from: start
+options:
+  - id: pressure
+    label: Have the department stores think about their advertising
+    don: {base: 0.5, vain: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.owner_weak, "==", 0]]
+            mult: 0.1
+        text: Lindell's and Marsh Brothers both reconsider their spring advertising on the same afternoon. The Herald's series is postponed, then shortened, then quietly forgotten.
+        effects:
+          - heat: {who: family, delta: -5}
+          - standing: {influence: -2}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.owner_weak, "==", 0]]
+            mult: 5
+        text: The publisher prints the series anyway, with an editorial on the front page about the advertisers who tried to stop it, and the men behind them.
+        headline: "The Herald Will Not Be Silenced: Inside the City's Rackets"
+        effects:
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 3}
+  - id: trade
+    label: Give Hartigan a better story, about {rival}
+    needs: [trade]
+    don: {base: 0.5, ambitious: 1, vain: 0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: An envelope of photographs and a phone number reach Ellen Hartigan. Her series runs in May, and it is about {rival}, and it is very good. The Herald wins a prize. The family's name appears once, in passing.
+        headline: "Across the River: An Empire of Fear"
+        effects:
+          - heat: {who: rival, delta: 15}
+          - rivalry: {who: rival, tension: 15}
+          - heat: {who: family, delta: -4}
+      - tone: bad
+        weight: 1
+        text: Hartigan takes the story about {rival}, and checks it, and in checking it finds out who gave it to her. Her series runs in two parts now. The second part is about why one family would inform on another.
+        headline: "Gang Feud Revealed as Families Trade Secrets"
+        effects:
+          - heat: {who: family, delta: 5}
+          - rivalry: {who: rival, stage: 1}
+  - id: find_leak
+    label: Find whoever gave her the pages, and stop the supply
+    needs: [documents]
+    don: {base: 0.5, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[knows.leaker, "==", 0]]
+            mult: 0.3
+        text: Arnold Fisch is sent to manage a laundromat in Miami and told never to write anything down again. Without new pages, Hartigan's series runs as a single article on page six.
+        effects:
+          - heat: {who: family, delta: 2}
+          - stat: {who: crew, stat: fear, delta: 3}
+      - tone: bad
+        weight: 1
+        text: The hunt for the leak frightens everyone on {racket} and catches no one. Hartigan's series runs on schedule, with a new paragraph about the family's search for her source.
+        headline: "Mob Hunts for Herald's Source"
+        effects:
+          - heat: {who: family, delta: 6}
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: ignore
+    label: Let them print it
+    don: {base: 0.5, cautious: 0.5, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 2
+        weight_if:
+          - when: [[secret.documents, "==", 1]]
+            mult: 0.2
+        text: The Herald prints three articles on the family. They are well written and contain nothing a jury could use. The city reads them over breakfast, and goes back to work.
+        headline: "Inside the Rackets, Part One: The Family Business"
+        effects:
+          - heat: {who: family, delta: 2}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.documents, "==", 1]]
+            mult: 4
+        text: The Herald prints photographs of {racket}'s ledger pages, in somebody's handwriting, with dates and amounts. The District Attorney reads them over breakfast too.
+        headline: "Herald Obtains Secret Mob Ledgers"
+        effects:
+          - heat: {who: family, delta: 7}
+          - investigation: {who: capo, progress: 12}
+          - standing: {exposure: 2}

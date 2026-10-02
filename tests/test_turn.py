@@ -30,6 +30,8 @@ def test_golden_seed_is_deterministic():
     def play(seed):
         state, rng = new_game(seed)
         for _ in range(24):
+            if state.ending is not None:
+                break
             apply(state, rng, EndMonth())
         return state.model_dump(), rng.get_state()
 

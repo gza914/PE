@@ -4,7 +4,7 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 7;
+  const SAVE_VERSION = 8;
   const SETTINGS_KEY = "consigliere.settings";
   const DEFAULT_SETTINGS = { typewriter: true, theme: "system", tips: true, dismissed: [] };
   const CHARS_PER_FRAME = 3;
@@ -16,6 +16,7 @@
   let setup = null; // { difficulty, tutorial } while a new game is being chosen
   let dossier = null; // the character whose dossier is open
   let paperFilter = "all";
+  const openTalk = {}; // matter id -> which conversation is open
   let animate = false; // the next render types in fresh news, a sit-down reply or the ending
   let typing = null; // { finish } while the typewriter is running
   let settings = loadSettings();
@@ -238,15 +239,80 @@
       </article>`;
   }
 
+  // ---- the month's business: a primary issue ----
+  function caseWord(m, optionId) {
+    if (!Object.keys(m.case).length) return "";
+    const net = E.caseFor(m, optionId);
+    if (net >= 0.2) return `<span class="case strong">Your case for this is strong</span>`;
+    if (net >= 0.1) return `<span class="case fair">You have made a case for this</span>`;
+    if (net > 0) return `<span class="case fair">You have said a word for this</span>`;
+    if (net < 0) return `<span class="case doubt">You have given him doubts about this</span>`;
+    return "";
+  }
+
+  function issueCard(m) {
+    const open = Math.min(openTalk[m.id] ?? 0, m.talks.length - 1);
+    const t = m.talks[open];
+    const fam = E.playerFamily(game.state);
+    const status = (x) => x.node === null ? "said all there is" : !x.lines.length ? "nothing to say yet"
+      : x.log.some((l) => l.speaker === "you") ? "talking" : "not yet seen";
+    const people = m.talks.map((x, i) => `<li><button class="person-pick${x.node === null ? " done" : ""}${x.who === fam.don_id ? " don" : ""}"
+      data-matter="${esc(m.id)}" data-talk="${i}" aria-current="${i === open}"><b>${esc(x.name)}</b><small>${status(x)}</small></button></li>`).join("");
+    const lastThem = t.log.length - 1 - t.log.slice().reverse().findIndex((l) => l.speaker === "them");
+    const log = t.log.map((l, i) => `<li class="${l.speaker}${i === lastThem && i === t.log.length - 1 ? " typewrite" : ""}">${esc(l.text)}</li>`).join("");
+    const lines = t.node === null
+      ? `<div class="convo-done">${t.who === fam.don_id ? "The Don has heard what you came to say." : "There is nothing more to say here."}</div>`
+      : !t.lines.length
+      ? `<div class="convo-done">${t.who === fam.don_id ? "You have nothing to put to him yet. Find out more first." : "Nothing more to say for now. You may think of something once you know more."}</div>`
+      : `<div class="say-lines" role="group" aria-label="What you say">${t.lines.map((line, li) =>
+          `<button class="say" data-matter="${esc(m.id)}" data-talk="${open}" data-line="${li}">${esc(line)}</button>`).join("")}</div>`;
+    const facts = m.facts.length
+      ? `<ul class="facts">${m.facts.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>`
+      : `<p class="quiet">Nothing yet. People know things; ask them.</p>`;
+    const choice = (o) => {
+      const can = E.optionOpen(m, o);
+      return `<button class="choice" aria-pressed="${m.recommendation === o.id}" data-matter="${esc(m.id)}" data-choice="${esc(o.id)}" ${can ? "" : "disabled"}>
+        <span class="box" aria-hidden="true"></span><span>${esc(o.label)}${can ? caseWord(m, o.id) : `<span class="why">You don't know enough yet to put this to him.</span>`}</span></button>`;
+    };
+    const current = m.recommendation === null ? "Saying nothing" : `Advising: ${m.options.find((o) => o.id === m.recommendation).label}`;
+    return `
+      <section class="issue fresh" aria-label="The month's business">
+        <div>
+          <div class="kicker">The month's business</div>
+          <h2>${esc(m.title)}</h2>
+        </div>
+        <div class="brief">${paras(m.text)}</div>
+        <div class="issue-grid">
+          <nav aria-label="People to see"><div class="section-head">People to see</div><ul class="people-list">${people}</ul></nav>
+          <div class="convo">
+            <div class="convo-head"><b>${esc(t.name)}</b><small>${esc(t.where)}</small></div>
+            <ol class="transcript" id="transcript">${log}</ol>
+            ${lines}
+          </div>
+          <aside class="known" aria-label="What you know"><div class="section-head">What you know</div>${facts}</aside>
+        </div>
+        <div class="issue-advice">
+          <div class="section-head">Your advice to the Don</div>
+          <div class="choices" role="group" aria-label="Your advice on ${esc(m.title)}">
+            ${m.options.map(choice).join("")}
+          </div>
+          <div class="choice-row">
+            <button class="choice aside" aria-pressed="${m.recommendation === null}" data-matter="${esc(m.id)}" data-choice=""><span class="box" aria-hidden="true"></span><span>Say nothing. No risk, no credit.</span></button>
+          </div>
+          <div class="advice-status"><b>${esc(current)}.</b> What you argued in his study counts when he decides, at the end of the month. He notices a man who argues every side.</div>
+        </div>
+      </section>`;
+  }
+
   function renderDesk() {
     const st = game.state;
     const news = st.knowledge.news.filter((n) => n.month === st.month);
     const items = (st.knowledge.sitdown ? [sitdownCard(st.knowledge.sitdown)] : [])
-      .concat(news.map(newsCard), st.matters.map(matterCard));
+      .concat(news.map(newsCard), st.matters.filter((m) => !m.primary).map(matterCard));
     return `
       <section class="col" aria-label="Your desk">
-        <div class="col-head"><h2>On your desk</h2><small>${esc(E.monthLabel(st.month))}</small></div>
-        ${items.length ? items.join("") : `<p class="empty">Nothing needs the Don this month. End the month when you're ready.</p>`}
+        <div class="col-head"><h2>${st.matters.some((m) => m.primary) ? "Also on your desk" : "On your desk"}</h2><small>${esc(E.monthLabel(st.month))}</small></div>
+        ${items.length ? items.join("") : `<p class="empty">Nothing else needs the Don this month.</p>`}
       </section>`;
   }
 
@@ -315,7 +381,8 @@
   function renderOffice() {
     const ledger = game.state.knowledge.ledger;
     const report = ledger.length ? reportSheet(ledger[ledger.length - 1]) : introMemo();
-    return `<div class="office">${renderDesk()}
+    const primary = game.state.matters.find((m) => m.primary);
+    return `${primary ? issueCard(primary) : ""}<div class="office">${renderDesk()}
       <section class="col" aria-label="Last month">
         <div class="col-head"><h2>${ledger.length ? "Last month" : "A word first"}</h2><small><kbd>N</kbd> ends the month</small></div>
         ${report}
@@ -741,8 +808,10 @@
 
   // ---- tutorial tips ----
   const TIPS = [
-    { id: "advise", when: (st) => st.month === 0 && st.matters.length > 0,
-      text: "Each card on your desk is a matter for the Don. Pick the advice you would give him, tell him to wait, or say nothing. Nothing happens until you end the month." },
+    { id: "business", when: (st) => st.matters.some((m) => m.primary),
+      text: "The month's business comes first. See the people involved: what they tell you goes under What you know, and opens new things to say and new advice to give. Then make your case to the Don in his study, and pick your advice. Talk to whoever you like; it costs nothing but care." },
+    { id: "advise", when: (st) => st.month === 0 && st.matters.some((m) => !m.primary),
+      text: "Below it are smaller matters. Pick the advice you would give him, tell him to wait, or say nothing. Nothing happens until you end the month." },
     { id: "verify", when: (st) => st.month === 0 && st.matters.some((m) => m.intel.length),
       text: "What you have heard comes from sources, and sources can be wrong. Asking a second one costs Influence. When two disagree, trust the one with the better record." },
     { id: "end", when: (st) => st.month === 0,
@@ -879,6 +948,8 @@
         : tab === "dossiers" ? renderDossiers() : tab === "papers" ? renderPapers()
         : tab === "settings" ? renderSettings() : renderOffice();
     }
+    const transcript = byId("transcript");
+    if (transcript) transcript.scrollTop = transcript.scrollHeight;
     typewrite();
   }
 
@@ -928,6 +999,24 @@
     const prop = event.target.closest(".propose");
     const pick = event.target.closest(".dossier-pick");
     const pinBtn = event.target.closest(".pin");
+    const personPick = event.target.closest(".person-pick");
+    const sayBtn = event.target.closest(".say");
+    if (personPick) {
+      openTalk[personPick.dataset.matter] = Number(personPick.dataset.talk);
+      const scroll = window.scrollY;
+      render();
+      window.scrollTo(0, scroll);
+      return;
+    }
+    if (sayBtn) {
+      E.talk(game.state, game.rng, sayBtn.dataset.matter, Number(sayBtn.dataset.talk), Number(sayBtn.dataset.line), CONTENT);
+      animate = true;
+      save();
+      const scroll = window.scrollY;
+      render();
+      window.scrollTo(0, scroll);
+      return;
+    }
     if (flag && !flag.disabled) {
       E.flagBooks(game.state, game.rng, flag.dataset.capo, CONTENT);
       tab = "office";

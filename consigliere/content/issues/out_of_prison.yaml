@@ -1,0 +1,241 @@
+id: out_of_prison
+title: Tony Cirillo comes home
+text: |-
+  Tony Cirillo went to Greyhaven prison in 1949 for a payroll robbery he did for the family, and kept his mouth shut for nine years of a twelve-year sentence. He was released on Monday, three years early. On Tuesday he came to the social club and asked {capo}, politely, for the piece of {racket} he was promised when he went in.
+
+  {capo} does not remember any promise. Tony remembers it very well.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+    where: [[self.rackets, ">=", 1]]
+  racket:
+    racket_of: capo
+trigger: [[month, ">=", 8]]
+cooldown: 11
+patience: 0
+secrets:
+  deal: 0.3     # he got out early by agreeing to report to the Bureau
+  bitter: 0.5   # nine years have made him hard to satisfy
+facts:
+  promise: The Don promised Tony a piece of {racket} himself, the night before the trial. {capo} was in the room.
+  early_federal: His parole officer says the early release came at the request of a federal office. That is not how overcrowding works.
+  early_crowded: His parole officer says Greyhaven is so crowded they let out anyone who kept his nose clean. Tony kept his nose very clean.
+  wants_respect: Tony says he would take a pension instead of a racket, if the Don told him so himself.
+  wants_racket: Tony says he wants what he was promised, nothing less. Nine years is a long time.
+  capo_digs_in: "{capo} will not give up a dollar of {racket} without a fight."
+talks:
+  - with: other
+    name: Tony Cirillo
+    where: on the bench in front of his mother's house, in a suit that fit him in 1949
+    nodes:
+      start:
+        says: |-
+          Tony Cirillo is thinner than you remember and grayer, and his hands rest on his knees as though he were waiting to be told he could move them. "Consigliere. Nine years. I never said a word. Not one."
+        lines:
+          - say: The family knows what you did for it. What do you need?
+            when: [[secret.bitter, "==", 0]]
+            to: soft
+          - say: The family knows what you did for it. What do you need?
+            when: [[secret.bitter, "==", 1]]
+            to: hard
+          - say: How did you get out early?
+            to: early
+          - say: Welcome home, Tony.
+      soft:
+        says: |-
+          He looks at the street for a while. "I need the Don to look at me and say thank you. That's all, really. Then a little something to live on, so my mother stops crying every time I eat." He almost smiles. "The racket, I don't even know the business anymore."
+        learn: [wants_respect]
+        lines_from: start
+      hard:
+        says: |-
+          "What I need?" His hands close on his knees. "I need what I was promised. A piece of {racket}. Not a gold watch, not an envelope. What I was promised." He says it very evenly. "Nine years is a long time to think about a promise."
+        learn: [wants_racket]
+        lines_from: start
+      early:
+        says:
+          - when: [[secret.deal, "==", 1]]
+            text: |-
+              "Good behavior," he says, too quickly. Then, more slowly: "They needed the beds." He doesn't look at you while he says either one.
+          - text: |-
+              "Good behavior. They needed the beds. Half my tier went home this year." He shrugs. "I behaved."
+        lines_from: start
+  - with: capo
+    where: in the back of the social club
+    nodes:
+      start:
+        says: |-
+          {capo} is angry before you sit down. "A piece of {racket}? My racket? Nine years ago somebody said something to cheer him up before the trial, and now it's my problem?"
+        lines:
+          - say: Who made him the promise?
+            to: who
+          - say: Would you share any of it?
+            to: share
+          - say: Calm down. Nobody's taking anything yet.
+      who:
+        says: |-
+          He stops. "The Don, if you want to know. The night before the trial, at the house." He looks away. "I was there. I heard it. So what? The Don says things."
+        learn: [promise]
+        lines_from: start
+      share:
+        says: |-
+          "Not a dollar. Not a nickel. I built {racket} back up from nothing after the war. Tony robbed one payroll and got caught doing it." He jabs the table. "Let the Don pay him from the Don's pocket."
+        learn: [capo_digs_in]
+        lines_from: start
+  - with: other
+    name: Mr. Hollander, Tony's parole officer
+    where: at a lunch counter near the courthouse, where you happen to sit beside him
+    nodes:
+      start:
+        says: |-
+          Mr. Hollander is a tired man with mustard on his tie. He does not know who you are, or pretends not to, which in his profession is the same thing. "Cirillo? Model parolee. Reports every Tuesday. Why do you ask?"
+        lines:
+          - say: Just curious how a man gets out three years early.
+            when: [[secret.deal, "==", 1]]
+            to: federal
+          - say: Just curious how a man gets out three years early.
+            when: [[secret.deal, "==", 0]]
+            to: crowded
+          - say: No reason. Enjoy your lunch.
+      federal:
+        says: |-
+          He chews for a while. "Funny thing. Wasn't the parole board. Came down as a request from a federal office. I asked which office and they told me not to ask." He wipes his mouth. "Twenty years I've done this job. That's how it happens when somebody wants a man on the outside."
+        learn: [early_federal]
+        lines_from: start
+      crowded:
+        says: |-
+          "Overcrowding. Greyhaven was built for eleven hundred and they've got nineteen hundred. Anybody who kept his nose clean got a ticket home this spring." He shrugs. "Cirillo kept his very clean. Never even got a write-up."
+        learn: [early_crowded]
+        lines_from: start
+  - with: don
+    where: in the Don's study
+    nodes:
+      start:
+        says: |-
+          The Don already knows Tony is home. He sent flowers to Tony's mother on Monday. "Tony Cirillo," he says. "A good boy. What does he want, and what can we give him?"
+        lines:
+          - say: You promised him a piece of {racket} yourself, the night before his trial.
+            when: [[knows.promise, "==", 1]]
+            case: {give_piece: 0.15, pension: 0.1}
+            to: remembers
+          - say: He'd take a pension, if you thanked him yourself. He wants respect more than money.
+            when: [[knows.wants_respect, "==", 1]]
+            case: {pension: 0.25}
+            to: heard
+          - say: He wants the racket and nothing less. Nine years has hardened him.
+            when: [[knows.wants_racket, "==", 1]]
+            case: {give_piece: 0.1, refuse: -0.1}
+            to: heard
+          - say: His early release came from a federal office. Somebody wants him on the outside, near us.
+            when: [[knows.early_federal, "==", 1]]
+            case: {test: 0.25, give_piece: -0.25}
+            to: cold
+          - say: He got out because the prison is full. It's nothing more than that.
+            when: [[knows.early_crowded, "==", 1]]
+            case: {give_piece: 0.05, pension: 0.05}
+            to: heard
+          - say: "{capo} won't give up a dollar of {racket} without a fight."
+            when: [[knows.capo_digs_in, "==", 1]]
+            case: {pension: 0.1, give_piece: -0.1}
+            to: heard
+      heard:
+        says: |-
+          "Go on."
+        lines_from: start
+      remembers:
+        says: |-
+          The Don closes his eyes. "I did. I remember his face." He opens them. "Go on."
+        lines_from: start
+      cold:
+        says: |-
+          Something in the Don's face goes still and stays still. "A federal office," he repeats. "Go on."
+        lines_from: start
+options:
+  - id: give_piece
+    label: Give Tony a share of {racket}, as he was promised
+    don: {base: 0.5, sentimental: 1, pious: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.deal, "==", 1]]
+            mult: 0
+        text: Tony gets a tenth of {racket} and a corner table at the social club. He works hard and says little, which is what he has always done. {capo} sulks for a season.
+        effects:
+          - add_expense: {id: cirillo_share, label: Tony Cirillo's share, amount: 300, stipend: true}
+          - cohesion: 4
+          - stat: {who: capo, stat: loyalty, delta: -6}
+      - tone: bad
+        weight: 0.1
+        weight_if:
+          - when: [[secret.deal, "==", 1]]
+            mult: 40
+        text: Tony gets his share of {racket} and learns every route and every name in it. Every Tuesday he reports to Mr. Hollander, and on Thursdays to someone else.
+        effects:
+          - add_expense: {id: cirillo_share, label: Tony Cirillo's share, amount: 300, stipend: true}
+          - investigation: {who: capo, progress: 15}
+          - heat: {who: family, delta: 6}
+  - id: pension
+    label: Have the Don thank him in person, and give him a pension instead
+    don: {base: 0.5, cautious: 0.5, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.bitter, "==", 1]]
+            mult: 0.3
+        text: The Don embraces Tony at Sunday dinner in front of everyone and calls him a man of honor. Tony weeps. His envelope arrives every month and he never asks for more.
+        effects:
+          - add_expense: {id: cirillo_pension, label: Tony Cirillo's pension, amount: 200, stipend: true}
+          - cohesion: 3
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.bitter, "==", 1]]
+            mult: 2
+        text: Tony takes the envelope and the embrace, and goes home, and sits on his mother's bench, and thinks about promises. He stops coming to Sunday dinner.
+        effects:
+          - add_expense: {id: cirillo_pension, label: Tony Cirillo's pension, amount: 200, stipend: true}
+          - standing: {exposure: 1}
+  - id: test
+    label: Tell Tony something false and see where it goes
+    needs: [early_federal]
+    don: {base: 0.5, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.deal, "==", 0]]
+            mult: 0.2
+        text: Tony is told that a shipment will come into Pier 4 on Thursday. On Thursday the Bureau watches Pier 4 all night, and Tony Cirillo is on a bus to his cousin's in Arizona by Friday. Nobody asks him to come back.
+        effects:
+          - heat: {who: family, delta: -5}
+          - standing: {influence: 3}
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.deal, "==", 0]]
+            mult: 3
+        text: Tony is told about a shipment that doesn't exist, and nothing happens. Nothing at all. He was only a man who got out early, and the Don feels foolish for a week.
+        effects:
+          - don_mood: -4
+  - id: refuse
+    label: Tell Tony there was no promise
+    don: {base: 0, greedy: 1, vain: 0.5}
+    outcomes:
+      - tone: bad
+        weight: 2
+        weight_if:
+          - when: [[secret.bitter, "==", 0]]
+            mult: 0.5
+        text: Tony Cirillo is told there was never any promise. He nods, and thanks everybody, and the next week he is seen getting into a gray car with two men in gray hats.
+        headline: "Ex-Convict Questioned in Old Payroll Case"
+        effects:
+          - heat: {who: family, delta: 5}
+          - standing: {exposure: 2}
+          - cohesion: -4
+      - tone: neutral
+        weight: 1
+        text: Tony is told there was no promise. He goes to work in his brother-in-law's hardware store, and the soldiers who remember him start saying the family forgets its own.
+        effects:
+          - cohesion: -5

@@ -1,0 +1,258 @@
+id: brothers_blood
+title: "{capo}'s brother"
+text: |-
+  Danny, {capo}'s younger brother, was shot dead on Saturday night in the parking lot of a roadhouse on the county line. The man who shot him is a soldier of {rival} named Lou Fratta, who has not been seen since.
+
+  {capo} wants Lou Fratta dead and {rival} to pay for him. He has asked the Don for permission, which is more than some men would do. He will not ask twice.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+  rival:
+    rival: true
+    where: [[self.stage, "<", 5]]
+  boss:
+    boss_of: rival
+trigger: [[month, ">=", 10]]
+cooldown: 11
+patience: 0
+secrets:
+  personal: 0.5     # it was about a debt between two men, not about the families
+  sanctioned: 0.3   # the rival boss approved it
+facts:
+  debt: Danny owed Lou Fratta four thousand dollars from a card game, and had been laughing about not paying it.
+  business: Danny had been running {capo}'s numbers on {rival}'s side of the river. Fratta was sent to stop him.
+  disowned: "{boss} says Fratta acted alone and will be handed over to the family, with money for Danny's widow."
+  boss_behind: "{boss} would not say Fratta acted alone. He said Danny was told twice to stay off his streets."
+  capo_waits: "{capo} would wait for justice if the Don gave him his word it was coming."
+  capo_wild: "{capo} has already bought a car with stolen plates. He is not going to wait long."
+talks:
+  - with: capo
+    where: at the funeral home, in the room with the coffin
+    nodes:
+      start:
+        says: |-
+          {capo} has not slept. He stands by the coffin with his hand on the lid, as if keeping it shut. "My mother's sixty-eight years old. She buried my father, now she buries Danny. Tell me the Don is going to let me take care of it."
+        lines:
+          - say: I'm sorry, {capo}. The Don will do right by Danny. Will you give him time?
+            when: [[capo.loyalty, ">=", 55]]
+            to: waits
+          - say: I'm sorry, {capo}. The Don will do right by Danny. Will you give him time?
+            when: [[capo.loyalty, "<", 55]]
+            to: wild
+          - say: What was Danny doing at that roadhouse?
+            to: roadhouse
+          - say: I'll talk to the Don today.
+      waits:
+        says: |-
+          He takes his hand off the coffin. "If the Don gives me his word. His word, not yours. Then I wait." His voice breaks on the last word, and he lets it.
+        learn: [capo_waits]
+        lines_from: start
+      wild:
+        says: |-
+          "Time." He laughs, terribly, in front of his brother's coffin. "I've got a car outside with plates off a Buick in Jersey. Danny's had all the time he's going to get."
+        learn: [capo_wild]
+        lines_from: start
+      roadhouse:
+        says: |-
+          "Danny went where Danny went. He liked cards, he liked girls, he liked driving fast." He looks at the coffin. "He liked to win."
+        lines_from: start
+  - with: other
+    name: Rosa, Danny's widow
+    where: in her kitchen, with neighbors' casseroles on every surface
+    nodes:
+      start:
+        says: |-
+          Rosa is twenty-four and has a baby on her hip. The kitchen smells of other women's cooking. "Everybody tells me Danny was a hero. I want to know why he's dead."
+        lines:
+          - say: Did Danny owe anyone money?
+            when: [[secret.personal, "==", 1]]
+            to: owed
+          - say: What was Danny working on for his brother?
+            when: [[secret.personal, "==", 0]]
+            to: work
+          - say: Did Danny owe anyone money?
+            when: [[secret.personal, "==", 0]]
+            to: no_debt
+          - say: The family will take care of you, Rosa.
+            effects:
+              - add_expense: {id: danny_widow, label: Danny's widow, amount: 100, stipend: true}
+            to: cared
+      owed:
+        says: |-
+          She shifts the baby. "Four thousand dollars. To a man called Lou, from a card game. Danny thought it was funny. He said Lou wouldn't dare." She looks at you. "He said that. Wouldn't dare."
+        learn: [debt]
+        lines_from: start
+      no_debt:
+        says: |-
+          "Danny? Danny always had money. That was the trouble with Danny." She does not explain.
+        lines_from: start
+      work:
+        says: |-
+          "Numbers. Across the river. His brother said it was easy money, nobody over there would notice." Her mouth twists. "Somebody noticed."
+        learn: [business]
+        lines_from: start
+      cared:
+        says: |-
+          She nods without thanking you, which is the right answer. "The baby's name is Daniel," she says.
+        lines_from: start
+  - with: boss
+    where: at a church across the river, in a back pew, during a Mass neither of you hears
+    nodes:
+      start:
+        says: |-
+          {boss} kneels and crosses himself and sits back. "I lit a candle for the boy. You can tell {capo} that." He keeps his eyes on the altar. "You came to ask whether it was me."
+        lines:
+          - say: Was it?
+            when: [[secret.sanctioned, "==", 0]]
+            to: disowns
+          - say: Was it?
+            when: [[secret.sanctioned, "==", 1]]
+            to: behind
+          - say: I came to light a candle.
+      disowns:
+        says: |-
+          "No. On my mother." He says it simply. "Fratta is an animal. Over four thousand dollars, a card game. I'll give him to you. Gift-wrapped. And ten thousand for the widow. I don't want a war over Lou Fratta. He's not worth a war."
+        learn: [disowned]
+        lines_from: start
+      behind:
+        says: |-
+          He is quiet through the whole of the Agnus Dei. "The boy was told. Twice. Stay on your side of the river. He thought it was funny." He crosses himself again. "I'm sorry for his mother. I'm not sorry for anything else."
+        learn: [boss_behind]
+        lines_from: start
+  - with: don
+    where: in the Don's study, after the funeral
+    nodes:
+      start:
+        says: |-
+          The Don is still wearing his black tie. He went to the funeral and held {capo}'s mother's hands for a long time. "{capo} wants blood. Tell me whether he's right to."
+        lines:
+          - say: "{boss} swears Fratta acted alone. He'll hand him over, with money for the widow."
+            when: [[knows.disowned, "==", 1]]
+            case: {accept_fratta: 0.25, strike: -0.15}
+            to: heard
+          - say: "{boss} as good as admitted he ordered it. Danny was warned off his streets."
+            when: [[knows.boss_behind, "==", 1]]
+            case: {strike: 0.2, accept_fratta: -0.1}
+            to: grave
+          - say: It was a card debt, four thousand dollars. It's not about the families.
+            when: [[knows.debt, "==", 1]]
+            case: {fratta_only: 0.2, strike: -0.15}
+            to: heard
+          - say: Danny was running numbers on their side of the river. We gave them a reason.
+            when: [[knows.business, "==", 1]]
+            case: {restrain: 0.1, strike: -0.05}
+            to: heard
+          - say: "{capo} will wait, if you give him your word yourself."
+            when: [[knows.capo_waits, "==", 1]]
+            case: {restrain: 0.15, accept_fratta: 0.05}
+            to: heard
+          - say: "{capo} won't wait. He has a car with stolen plates outside. If we say no, he goes anyway."
+            when: [[knows.capo_wild, "==", 1]]
+            case: {fratta_only: 0.1, restrain: -0.2}
+            to: heard
+      heard:
+        says: |-
+          The Don loosens the black tie at last. "Go on."
+        lines_from: start
+      grave:
+        says: |-
+          The Don is silent. Then: "Twice," he says. "He warned the boy twice, and then he killed him. He thinks that makes it polite." He does not loosen his tie. "Go on."
+        lines_from: start
+options:
+  - id: fratta_only
+    label: Let {capo} have Lou Fratta, and nobody else
+    don: {base: 0.5, hothead: 1, sentimental: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.sanctioned, "==", 1]]
+            mult: 0.3
+        text: Lou Fratta is found in the trunk of a car in the long-term lot at the airport. {rival} lets it be known that Fratta had it coming. {capo} goes to Mass for the first time in years.
+        headline: "Body Found in Trunk at Airport Lot"
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 8}
+          - heat: {who: family, delta: 4}
+          - rivalry: {who: rival, tension: 10}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.sanctioned, "==", 1]]
+            mult: 3
+        text: Lou Fratta is killed, and {rival} treats it as what it is, which is an answer to a question {boss} asked on purpose.
+        headline: "Body Found in Trunk at Airport Lot"
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 6}
+          - heat: {who: family, delta: 4}
+          - rivalry: {who: rival, stage: 1, tension: 15}
+  - id: accept_fratta
+    label: Accept {boss}'s offer, Fratta and the money, and settle it quietly
+    needs: [disowned]
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: Lou Fratta is delivered to a warehouse on the river by his own people, and nobody sees him again. {boss} pays ten thousand dollars to Danny's widow. The two families send each other flowers at Christmas.
+        effects:
+          - treasury: 5000
+          - stat: {who: capo, stat: loyalty, delta: 5}
+          - rivalry: {who: rival, tension: -15}
+      - tone: neutral
+        weight: 1
+        text: The money comes, but Fratta is said to have fled to Canada before he could be delivered. {capo} accepts the money for Rosa and keeps a photograph of Lou Fratta in his wallet.
+        effects:
+          - treasury: 5000
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: strike
+    label: Strike back at {rival}, not just at Fratta
+    don: {base: 0, hothead: 1.5, vain: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - tone: good
+        weight: 1
+        weight_if:
+          - when: [[secret.sanctioned, "==", 1]]
+            mult: 2
+        text: In a single night, two of {rival}'s bookmaking shops burn and Lou Fratta is found in the river. {boss} sends word that the matter is closed. {capo} would die for the Don now.
+        headline: "Two Bookie Joints Torched in Night of Violence"
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 10}
+          - rivalry: {who: rival, stage: 1}
+          - strength: {who: rival, delta: -3}
+          - heat: {who: family, delta: 5}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.personal, "==", 1]]
+            mult: 3
+        text: The family burns two of {rival}'s shops over a card debt between two men. {boss} has been given a war he never wanted, and takes it.
+        headline: "Two Bookie Joints Torched in Night of Violence"
+        effects:
+          - rivalry: {who: rival, stage: 2}
+          - heat: {who: family, delta: 6}
+          - stat: {who: capo, stat: loyalty, delta: 4}
+  - id: restrain
+    label: Hold {capo} back, and let time settle it
+    don: {base: 0.5, cautious: 1, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[capo.loyalty, "<", 55]]
+            mult: 0.3
+        text: The Don gives {capo} his word that the account will be settled in its time. {capo} accepts it. Lou Fratta dies two years later in a car accident that may even have been one.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -2}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[capo.loyalty, "<", 55]]
+            mult: 3
+        text: "{capo} hears no as an insult to his brother. He takes the car with the stolen plates across the river anyway, and kills Fratta in front of witnesses, and the family has to answer for what it forbade."
+        headline: "Gangland Slaying in Broad Daylight"
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -10}
+          - heat: {who: family, delta: 6}
+          - rivalry: {who: rival, tension: 20}

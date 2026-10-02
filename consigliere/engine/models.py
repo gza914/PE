@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -251,6 +251,25 @@ class Report(Model):
 class MatterOption(Model):
     id: str
     label: str
+    needs: list[str] = Field(default_factory=list)  # facts you must know before you can put it to him
+
+
+class TalkEntry(Model):
+    speaker: Literal["you", "them"]
+    text: str
+
+
+class MatterTalk(Model):
+    """One conversation on a primary issue, as far as it has gone."""
+
+    index: int  # which talk in the event definition
+    who: str  # character id, or "" for someone outside the cast
+    name: str
+    where: str = ""
+    node: str | None = "start"  # None once there is nothing more to say
+    log: list[TalkEntry] = Field(default_factory=list)
+    lines: list[str] = Field(default_factory=list)  # what you could say next
+    used: list[str] = Field(default_factory=list)  # "node/line" keys already said
 
 
 class IntelReport(Model):
@@ -280,6 +299,10 @@ class Matter(Model):
     can_wait: bool = True
     recommendation: str | None = None  # option id, "wait", or None for silence
     intel: list[MatterIntel] = Field(default_factory=list)
+    primary: bool = False
+    facts: list[str] = Field(default_factory=list)  # what you have learned, in the order you learned it
+    talks: list[MatterTalk] = Field(default_factory=list)
+    case: dict[str, float] = Field(default_factory=dict)  # option id -> how well you have argued for it
 
 
 class Scheduled(Model):

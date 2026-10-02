@@ -7,9 +7,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .engine.calendar import month_label
-from .engine.commands import CommandError, EndMonth, Recommend, Verify, apply
+from .engine.commands import CommandError, EndMonth, Recommend, Talk, Verify, apply
 from .engine.content import balance
-from .engine.matters import apparent_trust
+from .engine.matters import apparent_trust, option_open
 from .engine.content import observations
 from .engine.models import Role
 from .engine.rng import GameRNG, fresh_seed
@@ -17,7 +17,7 @@ from .engine.scenario import new_game
 from .engine.state import SaveError, WorldState, load_game, save_game
 
 DEFAULT_SAVE = Path("saves/save.json")
-HELP = "[d]esk  [a]dvise N choice  [v]erify N I  [n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
+HELP = "[d]esk  [t]alk N P [L]  [a]dvise N choice  [v]erify N I  [n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
 WIDTH = 60
 
 
@@ -92,6 +92,13 @@ def desk_view(state: WorldState) -> list[str]:
     for i, matter in enumerate(state.matters, 1):
         lines.append(f"[{i}] {matter.title}")
         lines.extend(f"    {para}" for para in matter.text.split("\n") if para)
+        if matter.primary:
+            lines.append("    The month's business. People to see (t N P):")
+            for p, talk in enumerate(matter.talks, 1):
+                state_word = "said all there is" if talk.node is None else "nothing to say yet" if not talk.lines else "open"
+                lines.append(f"      {p}. {talk.name}, {talk.where} ({state_word})")
+            lines.append("    What you know:" if matter.facts else "    What you know: nothing yet.")
+            lines.extend(f"      - {fact}" for fact in matter.facts)
         for k, item in enumerate(matter.intel, 1):
             lines.append(f"    ({k}) What you've heard:")
             for report in item.reports:
@@ -102,7 +109,8 @@ def desk_view(state: WorldState) -> list[str]:
                 lines.append("        Nobody has said anything yet.")
         for j, option in enumerate(matter.options, 1):
             mark = "*" if matter.recommendation == option.id else " "
-            lines.append(f"   {mark}{j}. {option.label}")
+            locked = "" if option_open(matter, option) else "  (you don't know enough yet)"
+            lines.append(f"   {mark}{j}. {option.label}{locked}")
         if matter.can_wait:
             lines.append(f"   {'*' if matter.recommendation == 'wait' else ' '}w. Let it wait")
         lines.append(f"   {'*' if matter.recommendation is None else ' '}s. Say nothing")
@@ -129,6 +137,37 @@ def advise(state: WorldState, rng: GameRNG, arg: str) -> str:
     except CommandError as exc:
         return str(exc)
     return f"Noted for {matter.title}."
+
+
+def converse(state: WorldState, rng: GameRNG, arg: str) -> list[str]:
+    """Parse "N P" to see a conversation, or "N P L" to say line L in it."""
+    parts = arg.split()
+    usage = ["Usage: t <matter number> <person number> [line number]"]
+    if not 2 <= len(parts) <= 3 or not all(p.isdigit() for p in parts) or not 1 <= int(parts[0]) <= len(state.matters):
+        return usage
+    matter = state.matters[int(parts[0]) - 1]
+    if not matter.primary or not 1 <= int(parts[1]) <= len(matter.talks):
+        return usage
+    index = int(parts[1]) - 1
+    talk = matter.talks[index]
+    out = []
+    if len(parts) == 3:
+        try:
+            apply(state, rng, Talk(matter_id=matter.id, talk=index, line=int(parts[2]) - 1))
+        except CommandError as exc:
+            return [str(exc)]
+        out += [f"  You: {talk.log[-2].text if talk.log[-1].speaker == 'them' else talk.log[-1].text}"]
+        if talk.log[-1].speaker == "them":
+            out.append(f"  {talk.log[-1].text}")
+    else:
+        out.append(f"{talk.name}, {talk.where}")
+        out += [f"  {'You: ' if e.speaker == 'you' else ''}{e.text}" for e in talk.log]
+    if talk.node is None:
+        out.append("  (There is nothing more to say.)")
+    elif not talk.lines:
+        out.append("  (Nothing to say for now. Find out more first.)")
+    out += [f"   {k}. \"{line}\"" for k, line in enumerate(talk.lines, 1)]
+    return out
 
 
 def check_intel(state: WorldState, rng: GameRNG, arg: str) -> str:
@@ -188,7 +227,7 @@ def run(
         verb, _, arg = line.partition(" ")
         verb = verb.lower()
         path = Path(arg.strip()) if arg.strip() else DEFAULT_SAVE
-        if state.ending is not None and verb in ("n", "next", "", "a", "advise", "v", "verify"):
+        if state.ending is not None and verb in ("n", "next", "", "a", "advise", "v", "verify", "t", "talk"):
             for out in ending_view(state):
                 write(out)
             continue
@@ -201,6 +240,9 @@ def run(
                 write(out)
         elif verb in ("a", "advise"):
             write(advise(state, rng, arg))
+        elif verb in ("t", "talk"):
+            for out in converse(state, rng, arg):
+                write(out)
         elif verb in ("v", "verify"):
             write(check_intel(state, rng, arg))
         elif verb in ("r", "report"):

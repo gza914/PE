@@ -10,21 +10,20 @@ def test_seed_1234_first_year_with_a_silent_consigliere():
     for _ in range(12):
         tick(state, rng)
     family = state.player_family
-    assert (family.treasury, family.cohesion, family.heat) == (71490, 76, 15)
+    assert (family.treasury, family.cohesion, family.heat) == (40374, 68, 19)
     assert {c.id: c.stats.loyalty for c in state.members(family.id)} == {
         "don_ferrante": 100,
-        "underboss_lauro": 68,
+        "underboss_lauro": 64,
         "you": 80,
-        "capo_amaro": 96,
-        "capo_tessaro": 48,
-        "capo_marchetti": 82,
-        "capo_sabella": 67,
-        "vincent_ferrante": 68,
-        "capo_9_8": 80,
+        "capo_amaro": 94,
+        "capo_tessaro": 44,
+        "capo_marchetti": 66,
+        "capo_sabella": 45,
+        "vincent_ferrante": 69,
     }
     assert len(state.knowledge.ledger) == 12
     assert len(state.knowledge.reports) == 2
-    assert len(state.knowledge.decisions) == 30
+    assert len(state.knowledge.decisions) == 25
     assert len(state.knowledge.papers) >= 12
-    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (38, 77, 3)
-    assert {k: (v.stage, v.tension) for k, v in state.rivalries.items()} == {"brancato": (0, 42), "orsini": (0, 7)}
+    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (38, 46, 3)
+    assert {k: (v.stage, v.tension) for k, v in state.rivalries.items()} == {"brancato": (0, 42), "orsini": (0, 16)}

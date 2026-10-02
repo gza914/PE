@@ -40,8 +40,8 @@ observation:
   confidence: 0.6
 
 matters:
-  per_month_min: 1            # matters that reach your desk each month
-  per_month_max: 3
+  per_month_min: 1            # side matters that reach your desk each month, besides the primary issue
+  per_month_max: 2
 
 advice:
   follow_base: 0.15           # chance the Don takes your advice...

@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Consigliere</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -292,6 +293,49 @@ td.flag { color: var(--danger); font-weight: 700; }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 kbd { font: 0.75rem var(--typed); border: 1px solid var(--rule); padding: 0 4px; }
 
+
+/* The month's business: a primary issue with conversations */
+.issue { background: var(--sheet); border: 1.5px solid var(--ink); border-top: 5px solid var(--brass); padding: 22px 24px; display: grid; gap: 16px; margin-bottom: 28px; }
+.issue .kicker { font: 700 0.72rem var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); }
+.issue h2 { font: 700 clamp(1.7rem, 3vw, 2.3rem)/1.05 var(--display); text-transform: uppercase; letter-spacing: 0.02em; margin: 4px 0 0; text-wrap: balance; }
+.issue .brief p { margin: 0 0 10px; max-width: 74ch; }
+.issue .brief p:last-child { margin-bottom: 0; }
+.issue-grid { display: grid; grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr) minmax(14rem, 19rem); gap: 20px; align-items: start; }
+@media (max-width: 1100px) { .issue-grid { grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr); } .known { grid-column: 1 / -1; } }
+@media (max-width: 720px) { .issue-grid { grid-template-columns: minmax(0, 1fr); } }
+.people-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.person-pick { width: 100%; text-align: left; background: transparent; border: 1px solid var(--rule); border-left: 3px solid var(--rule); padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; }
+.person-pick:hover { border-color: var(--ink); }
+.person-pick b { font-weight: 600; }
+.person-pick small { font: 0.72rem var(--typed); color: var(--muted); }
+.person-pick[aria-current="true"] { border-color: var(--brass); border-left-color: var(--brass); background: var(--brass-soft); }
+.person-pick.done small { color: var(--good); }
+.person-pick.don b::after { content: " · the Don"; font-weight: 400; color: var(--muted); font-size: 0.85em; }
+.convo { border: 1px solid var(--rule); background: var(--paper); display: grid; min-width: 0; }
+.convo-head { padding: 10px 14px; border-bottom: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.convo-head b { font: 700 1.05rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.03em; }
+.convo-head small { font: 0.78rem var(--typed); color: var(--muted); }
+.transcript { list-style: none; margin: 0; padding: 14px; display: grid; gap: 12px; max-height: 26rem; overflow-y: auto; }
+.transcript li { max-width: 64ch; }
+.transcript .them { white-space: pre-line; }
+.transcript .you { justify-self: end; font: 0.92rem/1.45 var(--typed); background: var(--sheet); border: 1px solid var(--rule); border-right: 3px solid var(--brass); padding: 7px 11px; }
+.transcript .you::before { content: "You: "; color: var(--muted); }
+.say-lines { display: grid; gap: 6px; padding: 12px 14px 14px; border-top: 1px dashed var(--rule); }
+.say { text-align: left; background: var(--sheet); border: 1px solid var(--rule); padding: 8px 12px; cursor: pointer; font: 0.93rem/1.4 var(--typed); }
+.say:hover { border-color: var(--brass); background: var(--brass-soft); }
+.say::before { content: "\201C"; color: var(--brass); margin-right: 2px; }
+.say::after { content: "\201D"; color: var(--brass); }
+.convo-done { padding: 12px 14px; border-top: 1px dashed var(--rule); color: var(--muted); font-style: italic; font-size: 0.92rem; }
+.known { display: grid; gap: 8px; align-content: start; }
+.known .section-head { margin-top: 0; }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.facts li { font-size: 0.92rem; padding-left: 12px; border-left: 2px solid var(--brass); }
+.issue-advice { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.issue-advice .choices { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+.choice:disabled { cursor: not-allowed; opacity: 0.55; border-style: dashed; }
+.choice .why { display: block; font: 0.75rem var(--typed); color: var(--muted); margin-top: 2px; }
+.case { display: block; font: 700 0.7rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 3px; }
+.case.strong { color: var(--good); } .case.fair { color: var(--brass); } .case.doubt { color: var(--danger); }
 
 /* Papers: the Evening Herald, month by month */
 .papers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem); gap: 32px; align-items: start; }

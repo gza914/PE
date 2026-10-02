@@ -285,6 +285,7 @@
   // ---- matters (engine/matters.py) ----
   const WAIT = "wait";
   const SECRET = "?";
+  const FACT = SECRET + "fact:";
   const STATS = ["loyalty", "fear", "respect", "competence", "greed", "discretion"];
   const HIDDEN = ["health", "stash", "birth_year", "debts"];
   const yearOf = (month) => 1958 + Math.floor(month / 12);
@@ -318,6 +319,7 @@
     }
     if (head === "flag") return attr in state.flags ? 1 : 0;
     if (head === "secret") return bindings[SECRET + attr] === "yes" ? 1 : 0;
+    if (head === "knows") return bindings[FACT + attr] === "yes" ? 1 : 0;
     const target = resolveId(state, bindings, head, selfId);
     if (target in state.characters) {
       const c = state.characters[target];
@@ -416,6 +418,18 @@
   const nameOf = (state, ref) => (state.characters[ref] || state.rackets[ref] || state.families[ref] || state.districts[ref]).name;
   const joinNames = (names) => names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
 
+  const SENTENCE_START = [".", "!", "?", ":", '"', "\n"];
+  function putName(text, key, name) {
+    if (!name.startsWith("The ")) return text.split(key).join(name);
+    const parts = text.split(key);
+    let out = parts[0];
+    for (const part of parts.slice(1)) {
+      const before = out.replace(/ +$/, "");
+      out += (!before || SENTENCE_START.some((c) => before.endsWith(c)) ? name : "the" + name.slice(3)) + part;
+    }
+    return out;
+  }
+
   function fill(text, state, bindings, lists) {
     for (const [name, slots] of Object.entries(lists || {})) {
       const names = slots.map((slot) => nameOf(state, bindings[slot])).sort();
@@ -423,7 +437,7 @@
     }
     for (const [name, ref] of castItems(bindings)) {
       if (ref in state.characters || ref in state.rackets || ref in state.families || ref in state.districts) {
-        text = text.split("{" + name + "}").join(nameOf(state, ref));
+        text = putName(text, "{" + name + "}", nameOf(state, ref));
       }
     }
     const family = playerFamily(state);
@@ -490,7 +504,7 @@
       }
       case "add_expense":
         if (family.expenses.every((e) => e.id !== v.id)) {
-          family.expenses.push({ id: v.id, label: v.label, amount: v.amount, stipend: Boolean(v.stipend), until: null });
+          family.expenses.push({ id: v.id, label: fill(v.label, state, bindings, source.lists), amount: v.amount, stipend: Boolean(v.stipend), until: null });
         }
         break;
       case "change_expense":
@@ -693,12 +707,110 @@
       if (report !== null) known.reports.push(report);
       intel.push(known);
     }
-    return {
+    const matter = {
       id: matterId, event_id: event.id, month: state.month,
       title: fill(event.title, state, bindings, event.lists), text: fill(event.text, state, bindings, event.lists),
-      options: event.options.map((o) => ({ id: o.id, label: fill(o.label, state, bindings, event.lists) })),
+      options: event.options.map((o) => ({ id: o.id, label: fill(o.label, state, bindings, event.lists), needs: o.needs.slice() })),
       bindings, waited: 0, can_wait: event.patience > 0, recommendation: null, intel,
+      primary: event.primary, facts: [], talks: [], case: {},
     };
+    if (event.primary) openTalks(state, matter, event);
+    return matter;
+  }
+
+  // ---- conversations on a primary issue ----
+  function knows(matter, fact) { return matter.bindings[FACT + fact] === "yes"; }
+
+  function optionOpen(matter, option) { return option.needs.every((f) => knows(matter, f)); }
+
+  function learn(state, matter, event, fact) {
+    if (!knows(matter, fact)) {
+      matter.bindings[FACT + fact] = "yes";
+      matter.facts.push(fill(event.facts[fact], state, matter.bindings, event.lists));
+    }
+  }
+
+  function openTalks(state, matter, event) {
+    event.talks.forEach((talk, i) => {
+      if (!checkAll(state, matter.bindings, talk.when)) return;
+      let who, name;
+      if (talk.with_ === "other") { who = ""; name = fill(talk.name, state, matter.bindings, event.lists); }
+      else { who = resolveId(state, matter.bindings, talk.with_); name = state.characters[who].name; }
+      const mt = { index: i, who, name, where: fill(talk.where, state, matter.bindings), node: "start", log: [], lines: [], used: [] };
+      matter.talks.push(mt);
+      enter(state, matter, event, mt, "start");
+    });
+    refreshTalks(state, matter, event);
+  }
+
+  function enter(state, matter, event, mt, nodeId) {
+    const node = event.talks[mt.index].nodes[nodeId];
+    mt.node = nodeId;
+    let text;
+    if (typeof node.says === "string") text = node.says;
+    else {
+      const v = node.says.find((x) => checkAll(state, matter.bindings, x.when));
+      text = v ? v.text : node.says[node.says.length - 1].text;
+    }
+    mt.log.push({ speaker: "them", text: fill(text, state, matter.bindings, event.lists) });
+    for (const fact of node.learn) learn(state, matter, event, fact);
+  }
+
+  function availableLines(state, matter, event, mt) {
+    if (mt.node === null) return [];
+    const nodes = event.talks[mt.index].nodes;
+    const sources = [mt.node].concat(nodes[mt.node].lines_from ? [nodes[mt.node].lines_from] : []);
+    const found = [];
+    for (const nodeId of sources) {
+      nodes[nodeId].lines.forEach((line, j) => {
+        const key = `${nodeId}/${j}`;
+        if (!mt.used.includes(key) && checkAll(state, matter.bindings, line.when)) found.push([key, line]);
+      });
+    }
+    return found;
+  }
+
+  function unsaid(event, mt) {
+    const nodes = event.talks[mt.index].nodes;
+    const sources = [mt.node].concat(nodes[mt.node].lines_from ? [nodes[mt.node].lines_from] : []);
+    return sources.some((nodeId) => nodes[nodeId].lines.some((_, j) => !mt.used.includes(`${nodeId}/${j}`)));
+  }
+
+  function refreshTalks(state, matter, event) {
+    for (const mt of matter.talks) {
+      if (mt.node !== null && !unsaid(event, mt)) mt.node = null;
+      const lines = availableLines(state, matter, event, mt);
+      mt.lines = lines.map(([, line]) => fill(line.say, state, matter.bindings, event.lists));
+    }
+  }
+
+  function canTalk(state, matter, talkIndex, lineIndex) {
+    return matter.primary && talkIndex >= 0 && talkIndex < matter.talks.length
+      && lineIndex >= 0 && lineIndex < matter.talks[talkIndex].lines.length;
+  }
+
+  /** Say one line in one conversation on a primary issue. */
+  function talk(state, rng, matterId, talkIndex, lineIndex, content) {
+    CURRENT = content;
+    const matter = state.matters.find((m) => m.id === matterId);
+    if (!matter || !canTalk(state, matter, talkIndex, lineIndex)) throw new Error("You can't say that now.");
+    const event = indexEvents(content).byId[matter.event_id];
+    const mt = matter.talks[talkIndex];
+    const [key, line] = availableLines(state, matter, event, mt)[lineIndex];
+    mt.used.push(key);
+    mt.log.push({ speaker: "you", text: fill(line.say, state, matter.bindings, event.lists) });
+    for (const fact of line.learn) learn(state, matter, event, fact);
+    for (const effect of line.effects) applyEffect(state, effect, matter.bindings, rng, event, matter.title);
+    for (const [optionId, bonus] of Object.entries(line.case)) matter.case[optionId] = (matter.case[optionId] ?? 0.0) + bonus;
+    if (line.to === undefined || line.to === null) mt.node = null;
+    else enter(state, matter, event, mt, line.to);
+    refreshTalks(state, matter, event);
+  }
+
+  function caseFor(matter, optionId) {
+    let others = 0.0;
+    for (const [other, value] of Object.entries(matter.case)) if (other !== optionId && value > 0) others += value;
+    return (matter.case[optionId] ?? 0.0) - others;
   }
 
   function printHeadline(state, text, bindings, lists) {
@@ -751,7 +863,12 @@
     const count = rng.randint(m.per_month_min, m.per_month_max);
     let pool = eligible(state, rng, evs);
     for (const [event, bindings] of pool.filter(([e]) => e.urgent)) state.matters.push(makeMatter(event, bindings, state, rng));
-    pool = pool.filter(([e]) => !e.urgent);
+    const primaries = pool.filter(([e]) => e.primary);
+    pool = pool.filter(([e]) => !e.urgent && !e.primary);
+    if (primaries.length && !state.matters.some((m) => m.primary)) {
+      const [event, bindings] = primaries[rng.weightedIndex(primaries.map(([e]) => e.weight))];
+      state.matters.unshift(makeMatter(event, bindings, state, rng));
+    }
     const n = Math.min(count, pool.length);
     for (let i = 0; i < n; i++) {
       const [[event, bindings]] = pool.splice(rng.weightedIndex(pool.map(([e]) => e.weight)), 1);
@@ -768,9 +885,10 @@
     return clamp(p, adv.follow_min, adv.follow_max);
   }
 
-  function donPreference(event, don, rng, bal) {
-    let best = event.options[0].id, bestScore = null;
-    for (const option of event.options) {
+  function donPreference(event, don, rng, bal, matter = null) {
+    const options = event.options.filter((o) => matter === null || optionOpen(matter, o));
+    let best = options[0].id, bestScore = null;
+    for (const option of options) {
       let score = (option.don.base ?? 0.0) + sum(don.traits.map((t) => option.don[t] ?? 0.0));
       score += rng.uniform(-bal.advice.don_noise, bal.advice.don_noise);
       if (bestScore === null || score > bestScore) { best = option.id; bestScore = score; }
@@ -804,11 +922,13 @@
       choice = rec !== null ? rec : event.default_option;
       followed = null;
     } else if (rec === null) {
-      choice = donPreference(event, don, rng, bal);
+      choice = donPreference(event, don, rng, bal, matter);
       followed = null;
     } else {
-      const own = donPreference(event, don, rng, bal);
-      if (rng.chance(followChance(state, don, bal))) { choice = rec; followed = true; }
+      const own = donPreference(event, don, rng, bal, matter);
+      let chance = followChance(state, don, bal);
+      if (Object.keys(matter.case).length) chance = clamp(chance + caseFor(matter, rec), bal.advice.follow_min, bal.advice.follow_max);
+      if (rng.chance(chance)) { choice = rec; followed = true; }
       else { choice = own; followed = own === rec; }
     }
 
@@ -874,6 +994,8 @@
     if (!matter) throw new Error(`No matter ${matterId} on your desk.`);
     const allowed = matter.options.map((o) => o.id).concat(matter.can_wait ? [WAIT] : []);
     if (choice !== null && !allowed.includes(choice)) throw new Error(`${choice} is not an option.`);
+    const option = matter.options.find((o) => o.id === choice);
+    if (option && !optionOpen(matter, option)) throw new Error("You don't know enough yet to put that to the Don.");
     matter.recommendation = choice;
   }
 
@@ -1409,6 +1531,7 @@
     GameRNG, pyRound, monthLabel, player, playerFamily, members, bandFor, tick, newGame, recommend, WAIT,
     canVerify, verify, apparentTrust, sitdownAct, STAGES: ["peace", "insult", "sit-down", "retaliation", "blood", "war"],
     INV_STAGES, districtHeat, canFlag, flagBooks, canPropose, propose, note, pin, pressure,
+    talk, canTalk, optionOpen, caseFor,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ConsigliereEngine = api;

@@ -1,0 +1,246 @@
+id: missing_furs
+title: Forty thousand dollars of mink
+text: |-
+  A truck carrying forty thousand dollars of mink coats left {racket} on Thursday night and never reached the furrier's warehouse. The driver was found at dawn tied to a lamppost, unhurt and very cold. The furrier, Saul Brenner, has paid {capo} for protection for eleven years.
+
+  Brenner wants his coats or his money. Every other merchant who pays the family is waiting to see which he gets.
+primary: true
+cast:
+  racket:
+    racket: true
+    where: [[self.kind, "==", docks]]
+  capo:
+    role: [capo, underboss]
+    runs: racket
+  rival:
+    rival: true
+trigger: [[month, ">=", 4]]
+cooldown: 11
+patience: 0
+secrets:
+  inside: 0.4     # some of the capo's own men did it
+  rival_did: 0.5  # if not, a rival family did; if not that either, freelancers
+  insured: 0.5    # Brenner is insured and will be made whole anyway
+facts:
+  inside_job: The hijackers knew the route, the time and the driver's name. Somebody on {racket} told them.
+  rival_men: The driver says two of the hijackers talked about a bar across the river that {rival} owns.
+  freelancers: The driver says the hijackers were Irish kids from the West Side, with no organization behind them.
+  insured: Saul Brenner admits the coats were insured. He will be paid either way; what he wants is face.
+  uninsured: Saul Brenner's coats were not insured. Forty thousand dollars could ruin him.
+  capo_touchy: "{capo} takes any question about his own men as an insult."
+talks:
+  - with: other
+    name: Saul Brenner, the furrier
+    where: in his showroom, surrounded by empty racks
+    nodes:
+      start:
+        says: |-
+          Saul Brenner stands among the empty racks like a man at a funeral. "Eleven years, I pay. Every month, on time, never a question. And this is what I pay for?"
+        lines:
+          - say: We'll make it right. Tell me about the coats.
+            when: [[secret.insured, "==", 1]]
+            to: insured
+          - say: We'll make it right. Tell me about the coats.
+            when: [[secret.insured, "==", 0]]
+            to: ruined
+          - say: Protection doesn't cover acts of God.
+            to: insulted
+          - say: I'll come back when I know more.
+      insured:
+        says: |-
+          He waves a hand. "The coats, the coats. The coats were insured, Lloyd's of London, they'll pay. That's not the point." He lowers his voice. "The point is everybody on Garrick Street saw my empty racks. The point is what I'm paying you for."
+        learn: [insured]
+        lines_from: start
+      ruined:
+        says: |-
+          He sits down heavily on a sample case. "Insurance? On mink? Do you know what they charge? I was going to be insured next year." He is not shouting anymore, which is worse. "Forty thousand. I don't have forty thousand. I have a daughter getting married in June."
+        learn: [uninsured]
+        lines_from: start
+      insulted:
+        says: |-
+          Brenner stares at you. "Acts of God. Eleven years, and I'm paying God." He turns his back. Through the window, two other merchants are watching from across the street.
+        lines_from: start
+  - with: other
+    name: Eddie Walsh, the driver
+    where: at his kitchen table, with a blanket still around his shoulders
+    nodes:
+      start:
+        says: |-
+          Eddie Walsh has a cold and a bruised wrist and the look of a man who expects to be blamed. "I didn't see nothing. They had masks. I told the cops I didn't see nothing."
+        lines:
+          - say: Nobody blames you. Did they say anything?
+            when: [[secret.inside, "==", 1]]
+            to: inside
+          - say: Nobody blames you. Did they say anything?
+            when: [[secret.inside, "==", 0], [secret.rival_did, "==", 1]]
+            to: rival
+          - say: Nobody blames you. Did they say anything?
+            when: [[secret.inside, "==", 0], [secret.rival_did, "==", 0]]
+            to: kids
+          - say: Get some rest, Eddie.
+      inside:
+        says: |-
+          He thinks. "One of them called me Eddie. I never said my name. And they knew I'd stop at the light on Carver Street, because I always stop for coffee there." He looks up. "Who knew that? Only the guys on the pier."
+        learn: [inside_job]
+        lines_from: start
+      rival:
+        says: |-
+          "They talked like I wasn't there. Something about meeting after at the Rialto." The Rialto is a bar across the river. Everyone knows who owns it.
+        learn: [rival_men]
+        lines_from: start
+      kids:
+        says: |-
+          "Kids. Irish kids, West Side, you could hear it. One of them was so scared he dropped his gun. If they were professionals I'm a bishop."
+        learn: [freelancers]
+        lines_from: start
+  - with: capo
+    where: on the pier, among the cranes
+    nodes:
+      start:
+        says: |-
+          {capo} is shouting at a foreman when you arrive and keeps shouting a while after. "Forty thousand dollars off MY pier. You know how that makes me look?"
+        lines:
+          - say: Could any of your own men have been part of it?
+            effects:
+              - stat: {who: capo, stat: loyalty, delta: -2}
+            to: touchy
+          - say: Who knew the truck's route?
+            to: route
+          - say: Keep your men close until this is settled.
+      touchy:
+        says:
+          - when: [[secret.inside, "==", 1]]
+            text: |-
+              He goes very red. "My men? My men are like my sons." He says it too loudly, and the foreman finds something to do somewhere else.
+          - text: |-
+              He looks at you for a long moment. "My men? I'll forget you asked that. Once."
+        learn: [capo_touchy]
+        lines_from: start
+      route:
+        says: |-
+          "The dispatcher. The foreman. Me. Eddie." He counts on his fingers and stops. "And anybody who's ever watched that truck leave on a Thursday, which is half the waterfront."
+        lines_from: start
+  - with: don
+    where: at the kitchen table, over coffee
+    nodes:
+      start:
+        says: |-
+          The Don has heard about the mink from his barber, his tailor and his wife. "Brenner has paid us eleven years. What does the family do?"
+        lines:
+          - say: The hijackers knew the route and the driver's name. It was some of our own men on the pier.
+            when: [[knows.inside_job, "==", 1]]
+            case: {hunt_inside: 0.25}
+            to: grim
+          - say: They drank at the Rialto afterwards. It was {rival}.
+            when: [[knows.rival_men, "==", 1]]
+            case: {confront: 0.25}
+            to: heard
+          - say: It was Irish kids from the West Side. Amateurs. We can find them.
+            when: [[knows.freelancers, "==", 1]]
+            case: {find_kids: 0.25}
+            to: heard
+          - say: Brenner was insured. He'll be paid either way. He only needs to see us take it seriously.
+            when: [[knows.insured, "==", 1]]
+            case: {pay: -0.1, shrug: 0.05}
+            to: heard
+          - say: Brenner wasn't insured. If we don't make him whole, he's finished, and every merchant will know it.
+            when: [[knows.uninsured, "==", 1]]
+            case: {pay: 0.2}
+            to: heard
+          - say: Pay him back from the treasury. Protection has to mean something.
+            case: {pay: 0.1}
+            to: heard
+      heard:
+        says: |-
+          The Don stirs his coffee for longer than coffee needs. "Go on."
+        lines_from: start
+      grim:
+        says: |-
+          The Don puts down his spoon. "Our own men. Stealing from a man we protect." He says it quietly. "Go on."
+        lines_from: start
+options:
+  - id: pay
+    label: Pay Brenner for his coats out of the treasury
+    don: {base: 0.5, sentimental: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        text: Brenner receives forty thousand dollars in a box marked Linens. Every merchant on Garrick Street hears about it by Friday, and the envelopes are a little thicker for a while.
+        effects:
+          - treasury: -12000
+          - racket_income: {racket: racket, pct: 5}
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.insured, "==", 1]]
+            mult: 3
+        text: Brenner takes the money, and then the insurance money too, and is seen at the races in a new coat. The family has paid twice for the same mink.
+        effects:
+          - treasury: -12000
+  - id: hunt_inside
+    label: Find the men on the pier who sold the route
+    needs: [inside_job]
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: Two of {capo}'s loaders are found with mink in their mothers' closets. Most of the coats go back to Brenner. The loaders go somewhere else, and everyone on the pier understands.
+        effects:
+          - treasury: -3000
+          - stat: {who: crew, stat: fear, delta: 4}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+      - tone: bad
+        weight: 1
+        text: The hunt for the inside men turns {capo}'s pier upside down, and in the confusion the loaders who did it get away to Philadelphia. {capo} takes it personally.
+        effects:
+          - treasury: -8000
+          - stat: {who: capo, stat: loyalty, delta: -8}
+  - id: confront
+    label: Demand the coats back from {rival}
+    needs: [rival_men]
+    don: {base: 0.5, hothead: 1, vain: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        text: "{rival} denies everything, and three days later a truck of mink is found parked outside Brenner's warehouse with the keys in it. Nobody says a word."
+        effects:
+          - rivalry: {who: rival, tension: 10}
+          - standing: {influence: 3}
+      - tone: bad
+        weight: 1
+        text: "{rival} denies everything, loudly, and calls the demand an insult. The coats are never seen again, and the insult is remembered."
+        effects:
+          - rivalry: {who: rival, stage: 1}
+          - treasury: -6000
+  - id: find_kids
+    label: Find the Irish kids and take the coats back
+    needs: [freelancers]
+    don: {base: 0.5, hothead: 0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: The kids are found in a garage on Union Avenue, trying on the coats. They return them with apologies and a couple of loose teeth. Brenner's racks are full by Monday.
+        effects:
+          - stat: {who: crew, stat: fear, delta: 2}
+          - standing: {influence: 2}
+      - tone: neutral
+        weight: 1
+        text: The kids have already sold half the coats to a fence in Newark. The rest go back to Brenner, along with an envelope for the difference.
+        effects:
+          - treasury: -6000
+  - id: shrug
+    label: Tell Brenner the family can't insure every truck
+    don: {base: 0, greedy: 1}
+    outcomes:
+      - tone: bad
+        weight: 2
+        weight_if:
+          - when: [[secret.insured, "==", 1]]
+            mult: 0.5
+        text: Brenner stops paying, and so do four other furriers on the same block. Protection that doesn't protect is just a tax, and nobody likes taxes.
+        effects:
+          - racket_income: {racket: racket, pct: -15}
+          - standing: {influence: -3}
+      - tone: neutral
+        weight: 1
+        text: Brenner grumbles and keeps paying. His insurance company pays for the coats, eventually. Garrick Street decides it was bad luck.

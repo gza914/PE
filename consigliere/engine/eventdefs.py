@@ -16,6 +16,14 @@ Intel is what your sources tell you about a matter: a claim, its denial, the con
 the claim true, and the kinds of source that would know. Each source reports the truth with its
 hidden reliability; a compromised source always reports the opposite.
 
+A primary issue (primary: true) is the month's main business. Besides options it has facts you can
+learn and talks: one branching conversation per person (a cast slot, or "don"). Each talk is a set
+of nodes starting at "start" (with: other, plus a name, for someone outside the cast); a node is what they say (the first variant whose "when" holds) and
+the lines you can answer with. A line can teach facts, apply effects, build your case to the Don for
+an option (case: {option_id: bonus to his follow chance}), and lead to another node. Every line can
+be said once. Conditions read what you have learned as "knows.fact_id", and an option with
+"needs" can only be recommended (or chosen by the Don) once you know those facts.
+
 Lists render several cast members as one sorted phrase, so text never reveals slot order:
 lists: {suspects: [a, b, c]} makes {suspects} read "Augie Sabella, Frank Tessaro and Leo Marchetti".
 """
@@ -313,6 +321,7 @@ class OptionDef(Model):
     label: str
     don: dict[str, float] = Field(default_factory=dict)  # "base" and trait names -> appeal to the Don
     advised_exposure: int = 0  # your name is on it if he follows your advice
+    needs: list[str] = Field(default_factory=list)  # facts you must know to put this to him
     outcomes: list[Outcome] = Field(min_length=1)
 
     @field_validator("id")
@@ -332,6 +341,54 @@ class IntelDef(Model):
     reveal: Unit | None = None  # chance the truth comes out once settled; default from balance
 
     _check = field_validator("truth")(check_conditions)
+
+
+class Variant(Model):
+    when: list[Condition] = Field(default_factory=list)
+    text: str
+
+    _check = field_validator("when")(check_conditions)
+
+
+class TalkLine(Model):
+    """Something you can say. Each line can be said once per conversation."""
+
+    say: str
+    to: str | None = None  # the node it leads to; None ends the conversation
+    when: list[Condition] = Field(default_factory=list)
+    learn: list[str] = Field(default_factory=list)
+    effects: list[Effect] = Field(default_factory=list)
+    case: dict[str, float] = Field(default_factory=dict)  # option id -> bonus to the Don's follow chance
+
+    _check = field_validator("when")(check_conditions)
+
+
+class TalkNode(Model):
+    says: str | list[Variant]
+    learn: list[str] = Field(default_factory=list)  # what hearing this teaches you
+    lines: list[TalkLine] = Field(default_factory=list)  # none (and no lines_from): the conversation is over
+    lines_from: str | None = None  # also offer what is still unsaid from that node: a hub to come back to
+
+
+class TalkDef(Model):
+    with_: str = Field(alias="with")  # a cast slot, "don", or "other" for someone outside the game's cast
+    name: str | None = None  # the other person's name, for "other"
+    where: str = ""  # a few words of setting: "at the social club"
+    when: list[Condition] = Field(default_factory=list)  # when this person will see you at all
+    nodes: dict[str, TalkNode]
+
+    model_config = {"populate_by_name": True}
+    _check = field_validator("when")(check_conditions)
+
+    @model_validator(mode="after")
+    def has_start(self) -> TalkDef:
+        if "start" not in self.nodes:
+            raise ValueError("a talk starts at a node called start")
+        if (self.with_ == "other") != (self.name is not None):
+            raise ValueError('a talk with "other" needs a name, and only then')
+        if self.nodes["start"].learn:
+            raise ValueError("the start node cannot teach anything; you have not said a word yet")
+        return self
 
 
 class EventDef(Model):
@@ -359,13 +416,16 @@ class EventDef(Model):
     headline: str | None = None  # for news: what the Herald prints
     you_decide: bool = False  # no Don to ask: your choice is the decision
     default_option: str | None = None  # what happens if you say nothing, when you decide
+    primary: bool = False  # the month's main business, with conversations
+    facts: dict[str, str] = Field(default_factory=dict)  # what you can learn, as it reads in your notes
+    talks: list[TalkDef] = Field(default_factory=list)
 
     _check = field_validator("trigger")(check_conditions)
 
     @model_validator(mode="after")
     def shape(self) -> EventDef:
-        if self.kind == "matter" and not 2 <= len(self.options) <= 4:
-            raise ValueError("a matter has 2 to 4 options")
+        if self.kind == "matter" and not 2 <= len(self.options) <= (6 if self.primary else 4):
+            raise ValueError("a matter has 2 to 4 options (a primary issue up to 6)")
         if self.kind == "news" and (self.options or self.intel):
             raise ValueError("news has effects, not options or intel")
         ids = [o.id for o in self.options]
@@ -373,6 +433,15 @@ class EventDef(Model):
             raise ValueError("option ids must be unique")
         if self.you_decide and (self.default_option not in ids or self.patience != 0):
             raise ValueError("an event you decide needs a default_option among its options and patience 0")
+        if self.primary:
+            if self.kind != "matter" or self.you_decide or not self.talks:
+                raise ValueError("a primary issue is a matter for the Don, with talks")
+            if not any(t.with_ == "don" for t in self.talks):
+                raise ValueError("a primary issue needs a talk with the Don")
+            if all(o.needs for o in self.options):
+                raise ValueError("a primary issue needs at least one option that needs no facts")
+        elif self.talks or self.facts or any(o.needs for o in self.options):
+            raise ValueError("talks, facts and needs belong to primary issues")
         return self
 
     def option(self, option_id: str) -> OptionDef:

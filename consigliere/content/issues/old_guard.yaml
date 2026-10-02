@@ -1,0 +1,289 @@
+id: old_guard
+title: "{underboss} wants {racket}"
+text: |-
+  {underboss} has asked the Don, in front of two capos, whether it isn't time {racket} had younger hands on it. {old} has run it since before the war. He was in the room. He said nothing, and then he went home early.
+
+  The Don has asked you to find out what everyone actually wants, which is rarely what they say at dinner.
+primary: true
+cast:
+  underboss:
+    role: [underboss]
+  old:
+    role: [capo]
+    where: [[self.age, ">=", 50], [self.rackets, ">=", 1]]
+  racket:
+    racket_of: old
+  rival:
+    rival: true
+trigger: [[month, ">=", 6]]
+cooldown: 11
+patience: 0
+secrets:
+  failing: 0.5   # the old man is slipping, and the books show it
+  dealing: 0.35  # the underboss has been talking to a rival family
+facts:
+  old_tired: "{old} admits he is tired. He would step back from {racket} for a fair pension and a little respect."
+  old_proud: "{old} says he'll give up {racket} when they carry him out of it."
+  books_down: "Mrs. Ruggiero, who keeps {old}'s books, says {racket} has been bringing in a fifth less every month."
+  books_fine: "Mrs. Ruggiero says {racket} is as steady as it ever was."
+  side_deal: "Nunzio the barber says {underboss} has been seen having coffee with men from {rival}, three Tuesdays running."
+  plan: "{underboss} has a real plan for {racket}: new runners, new spots, a bigger bank."
+talks:
+  - with: old
+    where: on the bench outside his building, feeding pigeons
+    nodes:
+      start:
+        says: |-
+          {old} throws bread to the pigeons a crumb at a time. "So. The young man wants my business. Sit down, you're blocking my birds."
+        lines:
+          - say: How are you keeping, these days?
+            when: [[secret.failing, "==", 1]]
+            to: tired
+          - say: How are you keeping, these days?
+            when: [[secret.failing, "==", 0]]
+            to: proud
+          - say: What do you think of {underboss}?
+            to: opinion
+          - say: I'll leave you to your birds.
+      tired:
+        says: |-
+          He is quiet for a long time. "My knees are gone. I fall asleep at the card table. Last month I forgot a collector's name, a man I've known twenty years." He throws the last of the bread. "I would step back. If it was done right. If nobody said I was pushed."
+        learn: [old_tired]
+        lines:
+          - say: Nobody will say that. You have my word.
+            effects:
+              - stat: {who: old, stat: loyalty, delta: 5}
+            to: word
+        lines_from: start
+      word:
+        says: |-
+          "Your word." He nods. "That's worth something. Not everybody's is."
+        lines_from: start
+      proud:
+        says: |-
+          "Keeping? I'm keeping fine. I walk my route every Friday, the whole thing, and the young ones can't keep up." He means it. "They'll get {racket} when they carry me out of it."
+        learn: [old_proud]
+        lines_from: start
+      opinion:
+        says:
+          - when: [[underboss.loyalty, "<", 50]]
+            text: |-
+              "{underboss}?" He spits, carefully, away from the pigeons. "He smiles at the Don and counts the silverware. Watch him."
+          - text: |-
+              "He's smart. Smarter than me, probably. That's not the same as ready." He shrugs. "Nobody was ever ready."
+        lines_from: start
+  - with: underboss
+    where: at a table in the back of his favorite restaurant
+    nodes:
+      start:
+        says: |-
+          {underboss} orders for both of you without asking. "You've talked to the old man already? Then you know. I'm not trying to hurt him. I'm trying to keep {racket} from dying with him."
+        lines:
+          - say: What would you do with it?
+            to: plan
+          - say: You embarrassed him in front of the Don.
+            to: embarrassed
+          - say: Where were you last Tuesday?
+            when: [[knows.side_deal, "==", 1]]
+            to: tuesday
+          - say: Thanks for lunch.
+      plan:
+        says: |-
+          He takes a pen from his jacket and draws on the tablecloth: new spots near the plants, runners who are twenty and not sixty, a bank big enough to take the large bets the old man turns away. It is a good plan. He has thought about it for a long time.
+        learn: [plan]
+        lines_from: start
+      embarrassed:
+        says: |-
+          "Maybe I did." He puts the pen down. "Somebody had to say it out loud. You wouldn't have."
+        lines_from: start
+      tuesday:
+        says:
+          - when: [[secret.dealing, "==", 1]]
+            text: |-
+              For just a moment he stops chewing. "Tuesday? Having coffee. A man's allowed coffee." He smiles. It is a good smile, and it arrives a second late.
+          - text: |-
+              He laughs. "Nunzio. That barber hears everything and understands half of it. Yes, I had coffee with their people. The Don sent me, about the jukebox routes. Ask him."
+        lines_from: start
+  - with: other
+    name: Mrs. Ruggiero
+    where: in the little office over the candy store where she keeps the books
+    nodes:
+      start:
+        says: |-
+          Mrs. Ruggiero has kept {old}'s books for nineteen years and has never once been asked about them. She looks at you over her glasses as if you might be from the government.
+        lines:
+          - say: How has {racket} been doing this year?
+            when: [[secret.failing, "==", 1]]
+            to: down
+          - say: How has {racket} been doing this year?
+            when: [[secret.failing, "==", 0]]
+            to: fine
+          - say: I'm sorry to have bothered you.
+      down:
+        says: |-
+          She opens a ledger, then another. "Down. A fifth, every month since Easter. Collectors are short and he doesn't notice. I've told him. He says I'm counting wrong." She closes the ledger. "I don't count wrong."
+        learn: [books_down]
+        lines_from: start
+      fine:
+        says: |-
+          "Steady. Steady as a church." She shows you the columns. They are very neat. "He's old, not stupid. There's a difference people forget."
+        learn: [books_fine]
+        lines_from: start
+  - with: other
+    name: Nunzio the barber
+    where: in the chair at Nunzio's, with a hot towel on your face
+    nodes:
+      start:
+        says: |-
+          Nunzio sharpens the razor on the strop with long, slow strokes. "You're not here for a shave, consigliere. Nobody comes on a Wednesday for a shave."
+        lines:
+          - say: What are people saying about {underboss}?
+            when: [[secret.dealing, "==", 1]]
+            to: seen
+          - say: What are people saying about {underboss}?
+            when: [[secret.dealing, "==", 0]]
+            to: nothing
+          - say: Just the shave, Nunzio.
+      seen:
+        says: |-
+          The razor stops. "Three Tuesdays now, the coffee shop on Hollis Street. Him and two fellows from {rival}. They sit in the back. They don't order cake." He resumes stropping. "I only say what I see."
+        learn: [side_deal]
+        lines_from: start
+      nothing:
+        says: |-
+          "About him? That he wants the old man's business, and that he's right, and that it's a shame." He tilts your head back. "Nothing you don't know."
+        lines_from: start
+  - with: don
+    where: in the Don's study, with the door closed
+    nodes:
+      start:
+        says: |-
+          The Don has a photograph on his desk of himself and {old} at a wedding in 1934. He turns it face down while you talk, which is how you know it matters to him. "Well? Who gets {racket}?"
+        lines:
+          - say: "{old} is tired. He'll step back for a pension, if it's done with respect."
+            when: [[knows.old_tired, "==", 1]]
+            case: {pension: 0.25}
+            to: heard
+          - say: The books are down a fifth since Easter. {racket} needs new hands.
+            when: [[knows.books_down, "==", 1]]
+            case: {give: 0.1, pension: 0.1, keep: -0.15}
+            to: heard
+          - say: The books are steady. The old man is doing fine.
+            when: [[knows.books_fine, "==", 1]]
+            case: {keep: 0.15}
+            to: heard
+          - say: "{underboss} has a real plan for it. I've seen it."
+            when: [[knows.plan, "==", 1]]
+            case: {give: 0.15}
+            to: heard
+          - say: "{underboss} has been meeting with {rival}. I'd want to know why before he gets anything."
+            when: [[knows.side_deal, "==", 1]]
+            case: {watch: 0.25, give: -0.2}
+            to: troubled
+          - say: Leave it with {old}. He's earned it.
+            case: {keep: 0.1}
+            to: heard
+      heard:
+        says: |-
+          "Hm." He taps the face-down photograph with one finger. "And?"
+        lines_from: start
+      troubled:
+        says: |-
+          The Don says nothing at all for a while. Then: "{underboss}'s father and I came over on the same boat." It is not clear whether that is a defense. "And?"
+        lines_from: start
+options:
+  - id: give
+    label: Give {racket} to {underboss}
+    don: {base: 0.5, ambitious: 0.5, greedy: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.dealing, "==", 1]]
+            mult: 0.3
+        text: "{underboss} takes {racket} and within three months it is bringing in more than it has in years. {old} stops coming to Sunday dinner."
+        effects:
+          - assign_racket: {racket: racket, to: underboss}
+          - racket_income: {racket: racket, pct: 15}
+          - stat: {who: old, stat: loyalty, delta: -10}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.dealing, "==", 1]]
+            mult: 3
+        text: "{underboss} takes {racket}, and a month later {rival} runners are working half its spots. Nobody can prove how they knew which ones."
+        headline: "Gang Moves In on Rival's Rackets, Police Say"
+        effects:
+          - assign_racket: {racket: racket, to: underboss}
+          - racket_income: {racket: racket, pct: -20}
+          - rivalry: {who: rival, tension: 10}
+          - stat: {who: old, stat: loyalty, delta: -10}
+  - id: pension
+    label: Let {old} step back with a pension and his name, and pass {racket} to {underboss}
+    needs: [old_tired]
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.dealing, "==", 1]]
+            mult: 0.5
+        text: There is a dinner for {old}, with speeches. The Don gives him a gold watch and his name stays on {racket} for a year, out of courtesy. {underboss} runs it well and says so to nobody.
+        effects:
+          - assign_racket: {racket: racket, to: underboss}
+          - add_expense: {id: old_guard_pension, label: "{old}'s pension", amount: 500}
+          - cohesion: 5
+          - retire: old
+      - tone: bad
+        weight: 1
+        text: "{old} steps back with a pension, and {racket} goes to {underboss}, and the old collectors go with neither. Half of them quit by summer."
+        effects:
+          - assign_racket: {racket: racket, to: underboss}
+          - add_expense: {id: old_guard_pension, label: "{old}'s pension", amount: 500}
+          - racket_income: {racket: racket, pct: -10}
+          - retire: old
+  - id: keep
+    label: Leave {racket} with {old}
+    don: {base: 0.5, sentimental: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 2
+        weight_if:
+          - when: [[secret.failing, "==", 1]]
+            mult: 0.4
+        text: "{racket} stays with {old}. He walks his route every Friday to prove he can. {underboss} smiles at dinner and says nothing."
+        effects:
+          - stat: {who: old, stat: loyalty, delta: 5}
+          - stat: {who: underboss, stat: loyalty, delta: -5}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.failing, "==", 1]]
+            mult: 3
+        text: "{racket} stays with {old}, and keeps slipping. By winter it brings in a third less, and {underboss} reminds everyone he said so."
+        effects:
+          - racket_income: {racket: racket, pct: -20}
+          - stat: {who: underboss, stat: loyalty, delta: -5}
+  - id: watch
+    label: Leave things as they are, and have {underboss} watched
+    needs: [side_deal]
+    don: {base: 0, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.dealing, "==", 0]]
+            mult: 0.2
+        text: The men watching {underboss} follow him to Hollis Street and photograph who he meets. The Don looks at the photographs for a long time. {underboss} is never quite trusted with anything again, and never quite knows why.
+        effects:
+          - stat: {who: underboss, stat: fear, delta: 10}
+          - strength: {who: family, delta: 1}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.dealing, "==", 0]]
+            mult: 3
+        text: "{underboss} notices he's being followed, and works out who ordered it. He was meeting {rival} on the Don's business all along. He does not forget it."
+        effects:
+          - stat: {who: underboss, stat: loyalty, delta: -12}
+          - standing: {dons_trust: -5}

@@ -1,0 +1,225 @@
+id: light_books
+title: The envelopes from {capo}
+text: |-
+  For four months the envelopes from {racket} have been light. Not badly light; light the way a man's envelopes get when he is testing whether anyone counts. The Don counts. He has asked you, without raising his voice, to find out why.
+
+  {capo} says it is the police. It may be the police. It is always possible that it is the police.
+primary: true
+cast:
+  capo:
+    role: [capo]
+    where: [[self.rackets, ">=", 1]]
+  racket:
+    racket_of: capo
+  successor:
+    role: [capo, underboss]
+trigger: [[month, ">=", 9]]
+cooldown: 11
+patience: 0
+secrets:
+  skimming: 0.55    # the capo is keeping back money
+  girlfriend: 0.5   # and spending it on a girl in a new apartment
+facts:
+  collector_full: Benny the collector says the take on {racket} has been as good as ever. The money is going missing after it reaches {capo}.
+  collector_slow: Benny the collector says the police have been sitting on {racket}'s corners all spring. The take really is down.
+  bracelet: A jeweler on Garrick Street sold {capo} a three-thousand-dollar bracelet in April, for a young woman who is not his wife.
+  no_bracelet: The jeweler on Garrick Street hasn't seen {capo} since his anniversary, and that was a modest brooch.
+  admits: "{capo}, shown the collector's numbers, admitted keeping back money, and offered to pay it all back if the Don never hears the details."
+  blames_cops: "{capo} insists the police have been squeezing {racket} since spring."
+talks:
+  - with: capo
+    where: at his club, over a plate of clams he doesn't touch
+    nodes:
+      start:
+        says: |-
+          {capo} pushes the clams toward you. "Eat, eat. You're here about the envelopes. Everybody's here about the envelopes." He spreads his hands. "It's the cops. They're on my corners like pigeons."
+        lines:
+          - say: Tell me about the police.
+            to: cops
+          - say: Benny says the take has been as good as ever.
+            when: [[knows.collector_full, "==", 1]]
+            to: cornered
+          - say: Somebody bought a bracelet on Garrick Street in April.
+            when: [[knows.bracelet, "==", 1]]
+            to: bracelet
+          - say: I'll let you eat.
+      cops:
+        says: |-
+          "A new captain. He puts a radio car on my best corner from noon to six. My runners can't stand there, the players can't play." He shrugs elaborately. "What am I supposed to do, shoot a radio car?"
+        learn: [blames_cops]
+        lines_from: start
+      cornered:
+        says: |-
+          {capo} stops talking. He looks at the clams for a long time. "Benny," he says finally. "Benny counts very well." He lowers his voice. "It was a few thousand. I'll put it all back. Every dollar. The Don doesn't need the details. Please."
+        learn: [admits]
+        lines_from: start
+      bracelet:
+        says: |-
+          The color leaves his face and then comes back too much. "That's my business. That's a personal matter." He wipes his mouth. "That's a man's own business."
+        lines_from: start
+  - with: other
+    name: Benny the collector
+    where: walking his route with him, a step behind, the way collectors walk
+    nodes:
+      start:
+        says: |-
+          Benny has collected on {racket} for eleven years and has never been short a nickel, which he will tell you about at length. "You want to know about the take, you ask Benny. Benny knows the take."
+        lines:
+          - say: How's the take been this spring?
+            when: [[secret.skimming, "==", 1]]
+            to: full
+          - say: How's the take been this spring?
+            when: [[secret.skimming, "==", 0]]
+            to: slow
+          - say: Keep walking, Benny.
+      full:
+        says: |-
+          "Good. Better than last year, even. The new spot by the bus depot does very well." He stops walking. "Why? Somebody saying different?" He sees your face and understands, and is sorry he does. "I give it to him every Friday. Every dollar. After that, I don't know."
+        learn: [collector_full]
+        lines_from: start
+      slow:
+        says: |-
+          "Terrible. There's a radio car on the corner of Union and Fifth every afternoon. Half my players won't come out. I'm down a third." He spits. "New captain. Thinks he's the whole FBI by himself."
+        learn: [collector_slow]
+        lines_from: start
+  - with: other
+    name: Mr. Levin the jeweler
+    where: in his shop on Garrick Street, among the trays of rings
+    nodes:
+      start:
+        says: |-
+          Mr. Levin sells jewelry to half the men in the family and their wives and, separately, to their girlfriends. He has survived thirty years on discretion. "I don't discuss customers. Unless I'm asked very politely by a very good customer."
+        lines:
+          - say: Has {capo} been in lately?
+            when: [[secret.girlfriend, "==", 1], [secret.skimming, "==", 1]]
+            to: bracelet
+          - say: Has {capo} been in lately?
+            when: [{any: [[secret.girlfriend, "==", 0], [secret.skimming, "==", 0]]}]
+            to: brooch
+          - say: Just admiring the rings.
+      bracelet:
+        says: |-
+          Mr. Levin opens a ledger without appearing to. "April. A bracelet, gold and sapphires, three thousand dollars, paid in cash in small bills." He closes the ledger. "Not for his wife. His wife has small wrists. This was for someone with a larger appetite."
+        learn: [bracelet]
+        lines_from: start
+      brooch:
+        says: |-
+          "{capo}? Not since his anniversary. A brooch, a modest one. He haggled." Mr. Levin smiles thinly. "A man who haggles over his wife's brooch is not a man who is spending money he shouldn't have."
+        learn: [no_bracelet]
+        lines_from: start
+  - with: don
+    where: in the Don's study, with four months of envelopes stacked on the desk
+    nodes:
+      start:
+        says: |-
+          The Don has kept every envelope from {racket}, empty, in a stack. He taps it. "Four months. Tell me what you found."
+        lines:
+          - say: "{capo} admitted it to me. He'll pay it all back if you'll spare him the details."
+            when: [[knows.admits, "==", 1]]
+            case: {repay: 0.25}
+            to: hurt
+          - say: The collector says the take is as good as ever. The money disappears after it reaches {capo}.
+            when: [[knows.collector_full, "==", 1]]
+            case: {reassign: 0.2, believe: -0.2}
+            to: hurt
+          - say: There's a new police captain sitting on his corners. The take really is down.
+            when: [[knows.collector_slow, "==", 1]]
+            case: {fix_police: 0.2, believe: 0.1, reassign: -0.15}
+            to: heard
+          - say: He bought a girl a three-thousand-dollar bracelet in April.
+            when: [[knows.bracelet, "==", 1]]
+            case: {reassign: 0.1, repay: 0.05, believe: -0.1}
+            to: heard
+          - say: He haggled over his wife's anniversary brooch. He isn't spending money he shouldn't.
+            when: [[knows.no_bracelet, "==", 1]]
+            case: {believe: 0.1}
+            to: heard
+          - say: "{capo} blames the police."
+            when: [[knows.blames_cops, "==", 1]]
+            case: {believe: 0.05}
+            to: heard
+      heard:
+        says: |-
+          The Don taps the stack of envelopes. "Go on."
+        lines_from: start
+      hurt:
+        says: |-
+          The Don takes the top envelope off the stack and looks inside it, as though something might have appeared there. "{capo} was at my daughter's christening," he says. "Go on."
+        lines_from: start
+options:
+  - id: repay
+    label: Let {capo} pay it all back quietly, and keep {racket}
+    needs: [admits]
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: "{capo} pays back eleven thousand dollars over three months, in envelopes heavier than they have ever been. He knows exactly how close he came, and is the most loyal man in the family for years."
+        effects:
+          - treasury: 11000
+          - stat: {who: capo, stat: loyalty, delta: 10}
+          - stat: {who: capo, stat: greed, delta: -10}
+      - tone: neutral
+        weight: 1
+        text: "{capo} pays some of it back, and then stops, and then the envelopes are light again, by a little. The Don notices. He says nothing yet."
+        effects:
+          - treasury: 4000
+  - id: reassign
+    label: Take {racket} away from {capo} and give it to {successor}
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.skimming, "==", 0]]
+            mult: 0.2
+        text: "{racket} goes to {successor}, and the envelopes are full again by the next month. {capo} keeps his remaining business and his mouth shut."
+        effects:
+          - assign_racket: {racket: racket, to: successor}
+          - stat: {who: capo, stat: loyalty, delta: -8}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.skimming, "==", 0]]
+            mult: 3
+        text: "{racket} goes to {successor}, and the envelopes stay light, because the radio car stays on the corner. {capo} was telling the truth, and now everyone knows the Don didn't believe him."
+        effects:
+          - assign_racket: {racket: racket, to: successor}
+          - stat: {who: capo, stat: loyalty, delta: -15}
+          - cohesion: -4
+  - id: fix_police
+    label: Pay the new captain's lieutenant to move the radio car
+    needs: [collector_slow]
+    don: {base: 0.5, cautious: 0.5, greedy: 0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: An envelope reaches the precinct, and the radio car finds that the corner of Union and Fifth has very little crime after all. The take recovers by summer. {capo} is grateful someone believed him.
+        effects:
+          - add_expense: {id: radio_car, label: A lieutenant at the precinct, amount: 150}
+          - stat: {who: capo, stat: loyalty, delta: 5}
+      - tone: bad
+        weight: 1
+        text: The lieutenant takes the envelope and the captain finds out. Now there are two radio cars.
+        effects:
+          - heat: {who: family, delta: 3}
+          - treasury: -3000
+  - id: believe
+    label: Take {capo} at his word, and wait for the police to lose interest
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 2
+        weight_if:
+          - when: [[secret.skimming, "==", 1]]
+            mult: 0.2
+        text: The police lose interest by autumn, as police do, and the envelopes recover with them.
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.skimming, "==", 1]]
+            mult: 5
+        text: The Don takes {capo} at his word, and {capo} takes that as permission. The envelopes get lighter all year.
+        effects:
+          - racket_income: {racket: racket, pct: -15}
+          - stat: {who: capo, stat: greed, delta: 5}

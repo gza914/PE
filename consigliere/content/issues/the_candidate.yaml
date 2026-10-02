@@ -1,0 +1,252 @@
+id: the_candidate
+title: The race for City Hall
+text: |-
+  Mayor Thomas Brophy has run the city for eight years and been reasonable about the family for all of them. This autumn he faces Councilman Edward Hask, who is young and handsome and talks about clean streets on the radio.
+
+  Hask's people have let it be known that he would welcome the family's help in the river wards, where elections are decided by men who can count votes before they are cast. Brophy's people have let it be known that they expect it.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 20]]
+cooldown: 11
+patience: 0
+secrets:
+  reformer: 0.4      # Hask means it, and will turn on the family once elected
+  brophy_weak: 0.5   # the Mayor is going to lose
+facts:
+  commissioner: Hask's campaign manager promises the family a say in who becomes police commissioner.
+  reform_draft: Hask's campaign manager let slip that a speech announcing a crime commission is already written, for after the election.
+  brophy_losing: Mickey Shea says the river wards have turned. Brophy is going to lose.
+  brophy_safe: Mickey Shea says Brophy will win the river wards by the usual margin, with or without help.
+  shea_price: Mickey Shea can split the river wards between the candidates for fifteen thousand dollars, and nobody would ever know who the family backed.
+  capo_votes: "{capo} can deliver four thousand votes in his district, if the family says which way."
+talks:
+  - with: other
+    name: Arthur Kell, Hask's campaign manager
+    where: in a booth at the Ambassador Hotel bar
+    nodes:
+      start:
+        says: |-
+          Arthur Kell has a campaign button on his lapel and a second, smaller one underneath it that says nothing at all. "The Councilman admires practical men. He's a practical man himself, whatever he says on the radio."
+        lines:
+          - say: What does the family get, if he wins?
+            to: offer
+          - say: What does he say when the radio isn't on?
+            when: [[secret.reformer, "==", 1]]
+            to: slip
+          - say: What does he say when the radio isn't on?
+            when: [[secret.reformer, "==", 0]]
+            to: practical
+          - say: I'll pass it along.
+      offer:
+        says: |-
+          "A say in the police commissioner. A friendly ear on zoning. The Councilman remembers his friends." He orders another drink. "Brophy's people have had it their way for eight years. Things get stale."
+        learn: [commissioner]
+        lines_from: start
+      slip:
+        says: |-
+          Kell has had three drinks, and the fourth makes him confiding. "Between us? He's got a speech in his desk drawer. A crime commission. Hearings." He realizes what he's said and laughs too hard. "Politics. Everybody's got a speech in a drawer."
+        learn: [reform_draft]
+        lines_from: start
+      practical:
+        says: |-
+          "When the radio's off he asks what things cost." Kell smiles. "He's the most practical man I know."
+        lines_from: start
+  - with: other
+    name: Mickey Shea, the river wards' leader
+    where: at the Shamrock Democratic Club, under a portrait of a dead governor
+    nodes:
+      start:
+        says: |-
+          Mickey Shea has delivered the river wards in every election since 1932 and expects to deliver them after he's dead. "Everybody wants to know about the river wards. I'll tell you what I tell them. The river wards are for sale, and I'm not."
+        lines:
+          - say: How are the wards leaning this year?
+            when: [[secret.brophy_weak, "==", 1]]
+            to: losing
+          - say: How are the wards leaning this year?
+            when: [[secret.brophy_weak, "==", 0]]
+            to: safe
+          - say: Could the wards go both ways?
+            to: split
+          - say: Good night, Mickey.
+      losing:
+        says: |-
+          "Leaning?" He snorts. "They've fallen over. The young people like Hask. The old people like Hask's mother. Brophy's going to lose by ten points, and he's the last one to know it."
+        learn: [brophy_losing]
+        lines_from: start
+      safe:
+        says: |-
+          "The same way they always lean. Brophy by twelve. Hask's a radio voice, and you can't drink with a radio voice."
+        learn: [brophy_safe]
+        lines_from: start
+      split:
+        says: |-
+          He considers the ceiling. "Fifteen thousand dollars, and I can make it so half my captains worked for one man and half for the other. Whoever wins, he owes the family. Whoever loses, he never knew." He shrugs. "It's an old trick. It works because nobody believes anyone would bother."
+        learn: [shea_price]
+        lines_from: start
+  - with: capo
+    where: at the social club, during a card game he doesn't stop playing
+    nodes:
+      start:
+        says: |-
+          {capo} plays a card without looking at it. "Elections. Every four years everybody remembers we have friends."
+        lines:
+          - say: How many votes can you bring in?
+            to: votes
+          - say: Who would you back?
+            to: opinion
+          - say: Enjoy your game.
+      votes:
+        says: |-
+          "In my district? Four thousand, give or take a cemetery." He plays another card. "Tell me which way and when."
+        learn: [capo_votes]
+        lines_from: start
+      opinion:
+        says:
+          - when: [[capo, has, cautious]]
+            text: |-
+              "Brophy. The devil you know. Eight years and he's never once surprised us."
+          - text: |-
+              "Hask. Brophy's old. Old men get scared, and scared men call in the Feds to prove they're clean."
+        lines_from: start
+  - with: don
+    where: in the Don's study, with the newspapers spread out
+    nodes:
+      start:
+        says: |-
+          The Don has both candidates' pictures in front of him, in the Herald. He has drawn a small mustache on Hask. "Brophy or the boy. Which?"
+        lines:
+          - say: Hask has a crime commission speech in his drawer, for after the election. We should back him only with something to hold over him.
+            when: [[knows.reform_draft, "==", 1]]
+            case: {leash: 0.25, back_hask: -0.2}
+            to: frown
+          - say: Hask is offering us a say in the next police commissioner.
+            when: [[knows.commissioner, "==", 1]]
+            case: {back_hask: 0.15}
+            to: heard
+          - say: Brophy is going to lose. Shea says the wards have turned.
+            when: [[knows.brophy_losing, "==", 1]]
+            case: {back_hask: 0.1, both: 0.1, back_brophy: -0.15}
+            to: heard
+          - say: Brophy will win the wards by twelve, with or without us.
+            when: [[knows.brophy_safe, "==", 1]]
+            case: {back_brophy: 0.15}
+            to: heard
+          - say: Shea can split the wards both ways for fifteen thousand. Whoever wins owes us.
+            when: [[knows.shea_price, "==", 1]]
+            case: {both: 0.2}
+            to: heard
+          - say: Stay out of it. Elections are for citizens.
+            case: {stay_out: 0.1}
+            to: amused
+      heard:
+        says: |-
+          He adds a small beard to the mustache. "Go on."
+        lines_from: start
+      frown:
+        says: |-
+          The Don stops drawing. "A speech in a drawer." He looks at Hask's picture differently. "Go on."
+        lines_from: start
+      amused:
+        says: |-
+          "Citizens." The Don laughs, a real laugh, the first in a week. "Go on, go on."
+        lines_from: start
+options:
+  - id: back_hask
+    label: Back Hask, with money and {capo}'s votes
+    don: {base: 0.5, ambitious: 1}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.reformer, "==", 1]]
+            mult: 0.1
+        text: Hask wins by eight points, most of them from the river wards. The new police commissioner is a man who plays golf with Mr. Fessler.
+        headline: "Hask Sweeps River Wards, Takes City Hall"
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: -12}
+          - standing: {influence: 5}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.reformer, "==", 1]]
+            mult: 4
+          - when: [[secret.brophy_weak, "==", 0]]
+            mult: 0.5
+        text: Hask wins, and in his second week he takes a speech out of his desk drawer. The Mayor's Crime Commission begins its hearings in March. The first name on its list is one the family knows well.
+        headline: "Mayor Hask Announces Crime Commission"
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: 9}
+          - standing: {exposure: 3}
+  - id: back_brophy
+    label: Back Mayor Brophy, as always
+    don: {base: 0.5, cautious: 1, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.brophy_weak, "==", 1]]
+            mult: 0.15
+        text: Brophy wins a third term. He sends the Don a box of cigars and keeps the police commissioner exactly where he is.
+        effects:
+          - treasury: -4000
+          - heat: {who: family, delta: -5}
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.brophy_weak, "==", 1]]
+            mult: 5
+        text: Brophy loses by ten points, and Mayor Hask remembers who carried the river wards for the other man.
+        headline: "Brophy Concedes; Hask Thanks 'The Decent People of the River Wards'"
+        effects:
+          - treasury: -4000
+          - heat: {who: family, delta: 5}
+          - standing: {influence: -3}
+  - id: both
+    label: Pay Mickey Shea to split the river wards between them
+    needs: [shea_price]
+    don: {base: 0, cautious: 1, greedy: -0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: Half of Shea's captains work for Brophy and half for Hask, and both candidates believe the family was quietly on their side. Whoever won, the family's friends are in City Hall.
+        effects:
+          - treasury: -8000
+          - heat: {who: family, delta: -6}
+          - standing: {influence: 3}
+      - tone: neutral
+        weight: 1
+        text: Shea splits the wards so evenly that neither candidate is sure of anything, the family included. Fifteen thousand dollars buys a great deal of uncertainty.
+        effects:
+          - treasury: -8000
+  - id: leash
+    label: Back Hask, but get something on him first
+    needs: [reform_draft]
+    don: {base: 0.5, paranoid: 1, ambitious: 0.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        text: A photographer takes a picture of Councilman Hask accepting an envelope at the Ambassador Hotel. Hask wins. The speech stays in the drawer, and the photograph stays in the Don's safe.
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: -10}
+          - standing: {influence: 6}
+      - tone: bad
+        weight: 1
+        text: Hask is more careful than he looks. He refuses the envelope, wins anyway, and gives the speech a month early.
+        headline: "Mayor Hask Announces Crime Commission"
+        effects:
+          - treasury: -3000
+          - heat: {who: family, delta: 6}
+  - id: stay_out
+    label: Stay out of the election
+    don: {base: 0.5, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 1
+        text: The family stays home on election day. Whoever wins owes it nothing, and acts accordingly.
+        effects:
+          - standing: {influence: -3}

@@ -50,6 +50,17 @@ The Don follows your advice with a probability set by Don's Trust, his traits, a
 
 For each matter you can recommend one of its 2 to 4 options, recommend waiting, or stay silent (no risk, no gain). A month in which you say nothing on any of the Don's matters costs a little of his trust, down to a floor: a consigliere who never speaks is sidelined, though silence alone never gets him killed. With enough Influence you can also act behind the scenes: arrange a meeting, move money, plant a rumor, or warn someone. Each matter shows what you believe, how sure you are, and what it would cost to learn more.
 
+### The month's business (primary issues)
+
+Since the primary-issue rework, each month centers on one **primary issue**: a larger problem with people attached to it. The smaller matters above remain, as side issues on the desk below it, with no conversations.
+
+- **See people.** Each primary issue lists the people involved: capos, the underboss, rival bosses, outsiders (a lawyer, a witness, a reporter), and the Don. Each has a hand-written branching conversation. You can talk to all of them, in any order, as much as there is to say; nothing is rationed but your attention.
+- **Learn facts.** What people tell you depends on the hidden truth (a capo who is skimming answers differently from one who isn't) and on who they are (traits, loyalty). Hearing something can teach you a **fact**, written into "What you know." Facts open new lines in other conversations and unlock options you could not otherwise put to the Don.
+- **Make your case.** In the Don's study you argue from what you know. Each argument builds your case for some options and against others. Your net case for the option you recommend (what you argued for it, less what you argued for the alternatives) adds to the chance he follows you. A consigliere who argues every side convinces nobody.
+- **Recommend.** Then you advise as before. The Don decides at month end; left alone, he can only choose among options that need no special knowledge.
+
+Conversations are content, in `content/issues/*.yaml` (schema at the top of `engine/eventdefs.py`): nodes of what they say (with variants by condition), the lines you can answer with (each said once; a hub node can offer the remaining lines of another), and on each line the facts it teaches, effects (pressing a capo can cost his loyalty), and your case to the Don. Load-time checks reject unreachable nodes, unknown or unteachable facts, and arguments for options that don't exist.
+
 There is no win screen. Runs end in one of several endings, ranked in the end-of-run memoir; the best is retiring alive with the family intact.
 
 ## Systems
@@ -124,6 +135,8 @@ Target counts:
 |---|---|---|---|
 | Vertical slice | 30 | 10 | 1 |
 | Full game | 150+ | 60+ | 8 to 12 |
+
+Primary issues are a separate target: as built, 12, each recurring about once a year with a fresh cast and freshly rolled truths. More of them is the most valuable content to add next.
 
 ### Story arcs
 

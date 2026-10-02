@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from .matters import WAIT, can_flag, can_propose, can_verify, flag_books, propose, verify
+from .matters import WAIT, can_flag, can_propose, can_talk, can_verify, flag_books, option_open, propose, talk, verify
 from .world import SITDOWN_ACTIONS, sitdown_act
 from .models import Model
 from .rng import GameRNG
@@ -30,6 +30,15 @@ class Verify(Model):
     kind: Literal["verify"] = "verify"
     matter_id: str
     intel_index: int
+
+
+class Talk(Model):
+    """Say one of the lines open to you in one conversation on a primary issue."""
+
+    kind: Literal["talk"] = "talk"
+    matter_id: str
+    talk: int
+    line: int
 
 
 class SitDownAct(Model):
@@ -70,7 +79,7 @@ class ProposeReassign(Model):
 
 NOTE_LIMIT = 500
 
-Command = Union[EndMonth, Recommend, Verify, SitDownAct, Note, Pin, FlagBooks, ProposeReassign]
+Command = Union[EndMonth, Recommend, Verify, Talk, SitDownAct, Note, Pin, FlagBooks, ProposeReassign]
 
 
 class CommandError(ValueError):
@@ -90,7 +99,18 @@ def apply(state: WorldState, rng: GameRNG, command: Command) -> None:
         allowed = {o.id for o in matter.options} | ({WAIT} if matter.can_wait else set())
         if command.choice is not None and command.choice not in allowed:
             raise CommandError(f"{command.choice!r} is not an option for {matter.title!r}.")
+        option = next((o for o in matter.options if o.id == command.choice), None)
+        if option is not None and not option_open(matter, option):
+            raise CommandError("You don't know enough yet to put that to the Don.")
         matter.recommendation = command.choice
+    elif isinstance(command, Talk):
+        try:
+            matter = state.matter(command.matter_id)
+        except KeyError:
+            raise CommandError(f"No matter {command.matter_id!r} on your desk.") from None
+        if not can_talk(state, matter, command.talk, command.line):
+            raise CommandError("You can't say that now.")
+        talk(state, rng, matter, command.talk, command.line)
     elif isinstance(command, Verify):
         try:
             matter = state.matter(command.matter_id)

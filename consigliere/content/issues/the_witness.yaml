@@ -1,0 +1,267 @@
+id: the_witness
+title: The bartender at the Blue Anchor
+text: |-
+  One of {capo}'s men, a soldier called Joey Spina, beat a longshoreman half to death outside the Blue Anchor on Saturday night. The longshoreman will live. The bartender, a widower named Walter Kopek, saw all of it, and the District Attorney's office has already been to see him twice.
+
+  If Kopek testifies, Joey Spina goes away for ten years. Joey Spina knows a great deal about {capo}'s business, and ten years is a long time to keep quiet.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 2]]
+cooldown: 11
+patience: 0
+secrets:
+  joey_soft: 0.5     # Joey would talk to save himself
+  kopek_scared: 0.6  # Kopek wants out of it; he is not brave, only cornered
+facts:
+  daughter: Walter Kopek's daughter is in a sanatorium upstate, and the bills are more than a bartender makes.
+  da_pressure: The District Attorney has told Kopek he'll be charged with receiving stolen liquor if he doesn't testify.
+  joey_soft: "{capo} admits that Joey Spina has never done time, and doesn't know how."
+  joey_solid: "{capo} swears Joey Spina would do ten years standing on his head."
+  fessler_angle: Mr. Fessler says the case rests on Kopek alone. Without him there is no case.
+  kopek_willing: Kopek would leave town if he could afford to.
+talks:
+  - with: other
+    name: Walter Kopek
+    where: behind the bar at the Blue Anchor, before opening
+    nodes:
+      start:
+        says: |-
+          Kopek is polishing a glass that is already clean. He knows who you are. "I didn't ask to see anything, mister. I was changing a keg."
+        lines:
+          - say: Nobody's blaming you. How are you holding up?
+            to: kind
+          - say: You know what happens to men who testify.
+            effects:
+              - standing: {exposure: 1}
+            to: threatened
+          - say: I'll let you get back to work.
+      kind:
+        says: |-
+          He puts the glass down. "Not well. The DA's men come every day. And I've got my daughter to think about."
+        lines:
+          - say: Your daughter?
+            to: daughter
+          - say: What does the DA want from you, exactly?
+            to: da
+        lines_from: start
+      daughter:
+        says: |-
+          "Anna. She's at the sanatorium in Lake Moriah. Her lungs." He looks at the till. "It's forty dollars a week. I make sixty."
+        learn: [daughter]
+        lines:
+          - say: If you could leave the city, would you?
+            when: [[secret.kopek_scared, "==", 1]]
+            to: leave_yes
+          - say: If you could leave the city, would you?
+            when: [[secret.kopek_scared, "==", 0]]
+            to: leave_no
+        lines_from: start
+      leave_yes:
+        says: |-
+          "Tomorrow. Tonight. I'd go up to Lake Moriah and wash dishes in the sanatorium kitchen to be near her. But I can't afford to stop working."
+        learn: [kopek_willing]
+        lines_from: start
+      leave_no:
+        says: |-
+          He shakes his head. "And go where? This bar is all I have. They'd find me anyway, the DA or your people."
+        lines_from: start
+      da:
+        says: |-
+          "They say if I don't testify they'll charge me with receiving. The liquor. Half the bars on the waterfront buy off the same truck, but they'll charge me." He laughs without any pleasure. "So I'm a witness or I'm a defendant."
+        learn: [da_pressure]
+        lines_from: start
+      threatened:
+        says: |-
+          The color goes out of his face. "I know." He picks the glass up again, and his hands are shaking. "I know what happens."
+        lines_from: start
+  - with: capo
+    where: in the back room of his social club
+    nodes:
+      start:
+        says: |-
+          {capo} is angry, and not at the longshoreman. "Joey's an idiot. A good earner, but an idiot. You want to know if he'll stand up?"
+        lines:
+          - say: Will he?
+            when: [[secret.joey_soft, "==", 1]]
+            to: soft
+          - say: Will he?
+            when: [[secret.joey_soft, "==", 0]]
+            to: solid
+          - say: Could Joey take a plea and keep his mouth shut?
+            to: plea
+          - say: Keep him off the street until this is settled.
+      soft:
+        says: |-
+          {capo} takes a long time to answer. "Joey's never done a day inside. He's thirty-one and he cries at the movies. I'd like to tell you he'd stand up." He doesn't.
+        learn: [joey_soft]
+        lines_from: start
+      solid:
+        says: |-
+          "Joey? Joey would do ten years standing on his head and come out asking for his old corner. His father did twelve. It's the family business."
+        learn: [joey_solid]
+        lines_from: start
+      plea:
+        says: |-
+          "A plea's five years, minimum, for what he did. Five years is still a long time to sit with a DA asking you questions every month."
+        lines_from: start
+  - with: other
+    name: Mr. Fessler
+    where: at his office downtown, with the door closed
+    nodes:
+      start:
+        says: |-
+          Mr. Fessler has the police report already, which says something about Mr. Fessler. "It is an ugly case, and a simple one. Simple cases are the dangerous kind."
+        lines:
+          - say: What does the DA have besides the bartender?
+            to: case
+          - say: What happens if the bartender changes his story?
+            to: story
+          - say: Thank you, counselor.
+      case:
+        says: |-
+          "Nothing. The longshoreman was unconscious and remembers nothing, which is lucky for everyone, him included. The other drinkers saw nothing, which is customary. The case rests on Mr. Kopek and Mr. Kopek alone."
+        learn: [fessler_angle]
+        lines_from: start
+      story:
+        says: |-
+          He takes off his glasses. "Then I would be very surprised, and I would not ask how it happened. Witnesses forget things all the time. It is when they forget things suddenly that juries become curious."
+        lines_from: start
+  - with: don
+    where: in the garden, among the tomatoes
+    nodes:
+      start:
+        says: |-
+          The Don is tying up tomato plants. He does not stop. "Joey Spina. I knew his father. Tell me what we do about this bartender."
+        lines:
+          - say: The bartender has a sick daughter and no money. Pay for her care, and he goes upstate to be near her.
+            when: [[knows.daughter, "==", 1]]
+            case: {send_away: 0.2}
+            to: noted
+          - say: He told me himself he'd leave tonight if he could afford it. He wants out more than we want him gone.
+            when: [[knows.kopek_willing, "==", 1]]
+            case: {send_away: 0.15}
+            to: noted
+          - say: The whole case is the bartender. If he's gone, there's no case at all.
+            when: [[knows.fessler_angle, "==", 1]]
+            case: {send_away: 0.1, lean: 0.05}
+            to: noted
+          - say: The DA is squeezing him with a liquor charge. Get Fessler to make that charge go away, and he has no reason to talk.
+            when: [[knows.da_pressure, "==", 1]]
+            case: {fessler: 0.2}
+            to: noted
+          - say: Joey will stand up. Let it go to trial. Ten years, and he'll keep quiet.
+            when: [[knows.joey_solid, "==", 1]]
+            case: {trial: 0.2}
+            to: noted
+          - say: Joey won't stand up. We can't let this go to trial.
+            when: [[knows.joey_soft, "==", 1]]
+            case: {trial: -0.2, send_away: 0.05, lean: 0.05}
+            to: noted
+          - say: Frighten the bartender. Men like him frighten easily.
+            case: {lean: 0.1}
+            to: frighten
+          - say: What would your father have done?
+            to: father
+      noted:
+        says: |-
+          He ties a knot and tests it. "Go on."
+        lines_from: start
+      frighten:
+        says:
+          - when: [[don, has, sentimental]]
+            text: |-
+              "He's a widower with a bar." The Don looks at you over the tomato plants. "I've been a widower. I'd rather not frighten widowers unless I must."
+          - text: |-
+              "Frightened men run to the police. Sometimes they run to us. It depends what they're more frightened of." He thinks about it. "Go on."
+        lines_from: start
+      father:
+        says: |-
+          "My father would have had the bartender on a boat to Palermo by Sunday and Joey Spina on the boat after that, for being stupid." He almost smiles. "We are more modern now."
+        lines_from: start
+options:
+  - id: send_away
+    label: Pay for the daughter's care, and let Kopek go upstate to be near her
+    needs: [daughter]
+    don: {base: 0.5, sentimental: 1, pious: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.kopek_scared, "==", 0]]
+            mult: 0.4
+        text: Walter Kopek closes the Blue Anchor and takes a job in the kitchen at Lake Moriah. The District Attorney's star witness cannot be found, and the case against Joey Spina is dropped in a month.
+        effects:
+          - add_expense: {id: kopek_daughter, label: A sanatorium bill at Lake Moriah, amount: 100}
+          - stat: {who: capo, stat: loyalty, delta: 4}
+      - tone: bad
+        weight: 1
+        text: Kopek takes the money and goes upstate, and the DA's men follow him there. He testifies by deposition, from a room with a view of the lake.
+        headline: "Waterfront Beating Witness Testifies From Hiding"
+        effects:
+          - treasury: -4000
+          - heat: {who: family, delta: 4}
+          - standing: {exposure: 2}
+  - id: fessler
+    label: Have Mr. Fessler make the liquor charge go away, so the DA has no hold on him
+    needs: [da_pressure]
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        weight: 2
+        text: Mr. Fessler has lunch with an assistant district attorney who owes him a favor. The receiving charge evaporates, and with it Walter Kopek's memory. Joey Spina pleads to a misdemeanor.
+        effects:
+          - treasury: -4000
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.kopek_scared, "==", 0]]
+            mult: 2
+        text: The liquor charge disappears, but Kopek testifies anyway, out of plain stubbornness. Joey Spina gets four years and keeps his mouth shut, more or less.
+        effects:
+          - treasury: -4000
+          - heat: {who: family, delta: 2}
+  - id: lean
+    label: Have {capo}'s men remind Kopek what witnesses risk
+    don: {base: 0.5, hothead: 1, paranoid: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - tone: good
+        weight: 1
+        weight_if:
+          - when: [[secret.kopek_scared, "==", 1]]
+            mult: 2
+        text: Two men buy drinks at the Blue Anchor and leave a large tip and a small remark. Kopek tells the DA he was in the cellar the whole time.
+        effects:
+          - stat: {who: crew, stat: fear, delta: 2}
+      - tone: bad
+        weight: 1
+        text: Kopek goes straight to the District Attorney with the large tip and the small remark. Now there are two cases, and one of them is about the family.
+        headline: "Bartender Says Mob Threatened Him Over Testimony"
+        effects:
+          - heat: {who: family, delta: 6}
+          - standing: {exposure: 2}
+  - id: trial
+    label: Let it go to trial, and trust Joey to keep quiet
+    don: {base: 0.5, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.joey_soft, "==", 1]]
+            mult: 0.2
+        text: Joey Spina gets eight years and says nothing to anybody, including his lawyer. {capo} sends his mother an envelope every month.
+        effects:
+          - add_expense: {id: spina_mother, label: Mrs. Spina, amount: 100, stipend: true}
+      - tone: bad
+        weight: 0.3
+        weight_if:
+          - when: [[secret.joey_soft, "==", 1]]
+            mult: 6
+        text: Three weeks into his sentence Joey Spina asks to speak to the District Attorney. He has a great deal to say about {capo}'s business.
+        headline: "Convicted Dockside Thug Turns State's Evidence"
+        effects:
+          - heat: {who: family, delta: 7}
+          - investigation: {who: capo, progress: 15}
+          - stat: {who: capo, stat: loyalty, delta: -4}

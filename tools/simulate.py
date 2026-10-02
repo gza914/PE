@@ -47,7 +47,7 @@ def play(strategy: str, seed: int, months: int = LAST_MONTH + 1) -> dict:
             if state.sitdown is None:
                 break
             apply(state, rng, sitdown_command(bot, state))
-        for command in bot.act(state):
+        for command in bot.act(state, rng):
             try:
                 apply(state, rng, command)
             except CommandError:

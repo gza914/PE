@@ -4,7 +4,8 @@ text: |-
   There are empty chairs at the table on Sundays now. The soldiers notice, and so do the men across the river.
 
   Two of the soldiers have earned a look: one who has never given anyone a moment's worry, and one who brings in more than men twice his age.
-trigger: [[crew_size, "<", 5], [flag.don_gone, "==", 0]]
+trigger: [[crew_size, "<", 4], [flag.don_gone, "==", 0]]
+urgent: true  # a family that runs out of capos is finished; this always reaches the desk
 weight: 3
 cooldown: 3
 options:

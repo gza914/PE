@@ -260,6 +260,16 @@ def check_event_references(events: dict[str, EventDef]) -> None:
         for option in event.options:
             for outcome in option.outcomes:
                 effects.extend(outcome.effects)
+        if {"don", "other", "you", "crew", "family"} & set(event.cast):
+            raise ContentError(f"{event.id}: a cast slot cannot be called don, other, you, crew or family")
+        for talk_def in event.talks:
+            if talk_def.with_ not in ("don", "other") and talk_def.with_ not in names:
+                raise ContentError(f"{event.id}: a talk with unknown {talk_def.with_}")
+            for node in talk_def.nodes.values():
+                for line in node.lines:
+                    effects.extend(line.effects)
+        if event.primary:
+            check_talks(event)
         for effect in effects:
             value = getattr(effect, effect.kind)
             if effect.kind == "followup" and value.event not in events:
@@ -288,11 +298,87 @@ def check_event_references(events: dict[str, EventDef]) -> None:
                     raise ContentError(f"{event.id}: effect refers to unknown {ref}")
 
 
+def conditions_in(event: EventDef) -> list:
+    """Every condition an event uses, flattened, so references to facts can be checked."""
+    found: list = []
+
+    def walk(conds):
+        for cond in conds:
+            if isinstance(cond, dict):
+                walk(cond["any"])
+            else:
+                found.append(cond)
+
+    walk(event.trigger)
+    for option in event.options:
+        for outcome in option.outcomes:
+            for mod in outcome.weight_if:
+                walk(mod.when)
+    for talk_def in event.talks:
+        walk(talk_def.when)
+        for node in talk_def.nodes.values():
+            if not isinstance(node.says, str):
+                for variant in node.says:
+                    walk(variant.when)
+            for line in node.lines:
+                walk(line.when)
+    return found
+
+
+def check_talks(event: EventDef) -> None:
+    """A primary issue's conversations: every node reachable, every fact learnable and used rightly."""
+    option_ids = {o.id for o in event.options}
+    learned: set[str] = set()
+    for talk_def in event.talks:
+        who = talk_def.with_
+        reachable, frontier = {"start"}, ["start"]
+        while frontier:
+            node = talk_def.nodes[frontier.pop()]
+            for line in node.lines:
+                if line.to is not None and line.to not in talk_def.nodes:
+                    raise ContentError(f"{event.id}: talk with {who} goes to unknown node {line.to}")
+                if line.to is not None and line.to not in reachable:
+                    reachable.add(line.to)
+                    frontier.append(line.to)
+        for node_id, node in talk_def.nodes.items():
+            if node.lines_from is not None and (node.lines_from not in talk_def.nodes or node.lines_from == node_id):
+                raise ContentError(f"{event.id}: talk with {who} node {node_id} takes lines from a bad node")
+        unreachable = set(talk_def.nodes) - reachable
+        if unreachable:
+            raise ContentError(f"{event.id}: talk with {who} never reaches {sorted(unreachable)}")
+        for node in talk_def.nodes.values():
+            learned |= set(node.learn)
+            if not isinstance(node.says, str) and node.says[-1].when:
+                raise ContentError(f"{event.id}: talk with {who} needs a last variant with no conditions")
+            for line in node.lines:
+                learned |= set(line.learn)
+                if not set(line.case) <= option_ids:
+                    raise ContentError(f"{event.id}: talk with {who} argues for an unknown option")
+    unknown = learned - set(event.facts)
+    if unknown:
+        raise ContentError(f"{event.id}: teaches unknown facts {sorted(unknown)}")
+    never = set(event.facts) - learned
+    if never:
+        raise ContentError(f"{event.id}: facts nobody can teach: {sorted(never)}")
+    for option in event.options:
+        if not set(option.needs) <= set(event.facts):
+            raise ContentError(f"{event.id}: option {option.id} needs unknown facts")
+    for left, _, right in conditions_in(event):
+        for side in (left, right):
+            if isinstance(side, str) and side.startswith("knows.") and side[6:] not in event.facts:
+                raise ContentError(f"{event.id}: condition on unknown fact {side}")
+
+
+def event_files() -> list[Path]:
+    """Side matters and news in events/, primary issues in issues/."""
+    return sorted((CONTENT_DIR / "events").glob("*.yaml")) + sorted((CONTENT_DIR / "issues").glob("*.yaml"))
+
+
 @lru_cache
 def events() -> dict[str, EventDef]:
     """All events, keyed by id, in file-name order."""
     loaded: dict[str, EventDef] = {}
-    for path in sorted((CONTENT_DIR / "events").glob("*.yaml")):
+    for path in event_files():
         event = EventDef.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
         if event.id != path.stem:
             raise ContentError(f"{path.name}: id {event.id!r} must match the file name")

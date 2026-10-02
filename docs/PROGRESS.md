@@ -1,7 +1,24 @@
 # Progress
 
 ## Current milestone
-9 (content pass) and 11 (polish): **done**. Left: 10 (optional live sit-downs).
+Primary issues with conversations: **done** (a rework requested after Milestone 11). Left: more primary issues; 10 (optional live sit-downs).
+
+## Primary issues and conversations
+- **The month's business:** each month one primary issue reaches the desk first (drawn before the side matters, never two at once). The existing matters stay as side issues, 1 to 2 a month, with no conversations.
+- **Conversations:** each issue has 3 to 5 people to see: cast members, outsiders (`with: other`, with a name), and always the Don. You can talk to everyone; each line can be said once.
+  - A node says the first variant whose conditions hold, so answers depend on hidden truth, traits and loyalty.
+  - A line can teach facts, apply effects, and build your case to the Don (`case: {option: bonus}`).
+  - `lines_from` makes a hub: a reply that offers what is still unsaid elsewhere.
+  - A conversation ends when nothing is left unsaid; lines waiting on facts keep it open.
+- **Facts** (`facts:` and `knows.fact` in conditions): stored in the matter's bindings like secrets, so outcome weights and follow-ups can read them. Options with `needs:` are locked until you know those facts, and the Don can't choose them on his own either.
+- **Your case:** at month end, the Don's follow chance gets your net case for the option you recommend (case for it, less positive case for the others), clamped as usual.
+- **Content:** 12 primary issues in `content/issues/`: an offer from across the river, the bartender who saw a beating, an old capo and an ambitious underboss, a casino in the desert, a hijacked load of mink, the mayor's race, a restaurant that can't pay, a soldier home from prison, a detective selling informants' names, a capo's murdered brother, a capo's light envelopes, and a newspaper exposé. Each recurs about once a year (cooldown 11). The restaurant always opens the game.
+- **Load-time checks:** unreachable nodes, unknown targets, facts nobody can teach, unknown facts in conditions, arguments for unknown options, a talk with someone outside the cast, reserved slot names.
+- **Engine:** `Talk` command; `Matter` gains `primary`, `facts`, `talks` and `case`; options gain `needs`. Mirrored in `web/engine.js`; the parity bots talk through every issue. Schema version 9.
+- **Also fixed:** "The Brancato Family" now reads "the Brancato Family" mid-sentence, everywhere. Expense labels are filled with names. The empty-chair recruiting matter is now urgent when the crew drops below four, since primary issues can retire men.
+- **Web:** the month's business sits above the desk, full width: people to see, the conversation (typewriter on each reply), what you know, and your advice, with locked options and how strong your case is for each.
+- **CLI:** `t N P` shows a conversation, `t N P L` says a line.
+- **Balance** (`docs/BALANCE.md`, 1,000 runs each): RESULTS2
 
 ## Milestone 9: content pass
 - **151 events** (from 56), in four batches, with the balance check rerun after each.

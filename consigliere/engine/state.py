@@ -37,7 +37,7 @@ from .models import (
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -118,9 +118,22 @@ def _v7_to_v8(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v8_to_v9(data: dict[str, Any]) -> dict[str, Any]:
+    """Primary issues: matters carry conversations, what you learned, and your case to the Don."""
+    for matter in data.get("matters", []):
+        matter.setdefault("primary", False)
+        matter.setdefault("facts", [])
+        matter.setdefault("talks", [])
+        matter.setdefault("case", {})
+        for option in matter.get("options", []):
+            option.setdefault("needs", [])
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
 MIGRATIONS: dict[int, Migration] = {
     1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7, 7: _v7_to_v8,
+    8: _v8_to_v9,
 }
 
 

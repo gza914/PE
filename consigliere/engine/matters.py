@@ -9,7 +9,7 @@ from typing import Any
 
 from .calendar import year_of
 from .content import Balance, ContentError, balance, difficulties, events
-from .eventdefs import STATS, Condition, Effect, EventDef, OptionDef
+from .eventdefs import STATS, Condition, Effect, EventDef, OptionDef, TalkDef, TalkLine
 from .mathutil import clamp
 from .eventdefs import IntelDef
 from .models import (
@@ -25,6 +25,8 @@ from .models import (
     Matter,
     MatterIntel,
     MatterOption,
+    MatterTalk,
+    TalkEntry,
     Memory,
     NewsItem,
     Scheduled,
@@ -48,6 +50,7 @@ from .world import (
 WAIT = "wait"
 HIDDEN = ("health", "stash", "birth_year", "debts")
 SECRET = "?"  # binding keys starting with this hold a matter's secrets ("yes" / "no")
+FACT = SECRET + "fact:"  # ...and what you have learned on a primary issue ("yes")
 
 
 def cast_items(bindings: dict[str, str]) -> list[tuple[str, str]]:
@@ -99,6 +102,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
         return 1 if attr in state.flags else 0
     if head == "secret":
         return 1 if bindings.get(SECRET + attr) == "yes" else 0
+    if head == "knows":
+        return 1 if bindings.get(FACT + attr) == "yes" else 0
     target = resolve_id(state, bindings, head, self_id)
     if target in state.characters:
         c = state.characters[target]
@@ -230,13 +235,28 @@ def join_names(names: list[str]) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
+SENTENCE_START = (".", "!", "?", ":", "\"", "\n")
+
+
+def put_name(text: str, key: str, name: str) -> str:
+    """Put a name in place of key. "The Brancato Family" reads "the Brancato Family" mid-sentence."""
+    if not name.startswith("The "):
+        return text.replace(key, name)
+    parts = text.split(key)
+    out = parts[0]
+    for part in parts[1:]:
+        before = out.rstrip(" ")
+        out += (name if not before or before.endswith(SENTENCE_START) else "the" + name[3:]) + part
+    return out
+
+
 def fill(text: str, state: WorldState, bindings: dict[str, str], lists: dict[str, list[str]] | None = None) -> str:
     for name, slots in (lists or {}).items():
         names = sorted(name_of(state, bindings[slot]) for slot in slots)
         text = text.replace("{" + name + "}", join_names(names))
     for name, ref in cast_items(bindings):
         if exists(state, ref):  # a racket closed since, say
-            text = text.replace("{" + name + "}", name_of(state, ref))
+            text = put_name(text, "{" + name + "}", name_of(state, ref))
     family = state.player_family
     text = text.replace("{don}", state.characters[family.don_id].name)
     text = text.replace("{you}", state.player.name)
@@ -294,7 +314,8 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
         state.scheduled.append(Scheduled(event_id=value.event, month=state.month + delay, bindings=dict(bindings), when=value.when))
     elif kind == "add_expense":
         if all(e.id != value.id for e in family.expenses):
-            family.expenses.append(Expense(id=value.id, label=value.label, amount=value.amount, stipend=value.stipend))
+            family.expenses.append(Expense(id=value.id, label=fill(value.label, state, bindings, source.lists),
+                                           amount=value.amount, stipend=value.stipend))
     elif kind == "change_expense":
         for e in family.expenses:
             if e.id == value.id:
@@ -508,17 +529,124 @@ def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rn
         if report is not None:
             known.reports.append(report)
         intel.append(known)
-    return Matter(
+    matter = Matter(
         id=matter_id,
         event_id=event.id,
         month=state.month,
         title=fill(event.title, state, bindings, event.lists),
         text=fill(event.text, state, bindings, event.lists),
-        options=[MatterOption(id=o.id, label=fill(o.label, state, bindings, event.lists)) for o in event.options],
+        options=[MatterOption(id=o.id, label=fill(o.label, state, bindings, event.lists), needs=list(o.needs))
+                 for o in event.options],
         bindings=bindings,
         can_wait=event.patience > 0,
         intel=intel,
+        primary=event.primary,
     )
+    if event.primary:
+        open_talks(state, matter, event)
+    return matter
+
+
+# ---- conversations on a primary issue ----
+
+def knows(matter: Matter, fact: str) -> bool:
+    return matter.bindings.get(FACT + fact) == "yes"
+
+
+def option_open(matter: Matter, option: MatterOption | OptionDef) -> bool:
+    """An option that needs facts can only be put to the Don once you know them."""
+    return all(knows(matter, f) for f in option.needs)
+
+
+def learn(state: WorldState, matter: Matter, event: EventDef, fact: str) -> None:
+    if not knows(matter, fact):
+        matter.bindings[FACT + fact] = "yes"
+        matter.facts.append(fill(event.facts[fact], state, matter.bindings, event.lists))
+
+
+def open_talks(state: WorldState, matter: Matter, event: EventDef) -> None:
+    """Everyone you could see about it, each conversation at its opening line."""
+    for i, talk in enumerate(event.talks):
+        if not check_all(state, matter.bindings, talk.when):
+            continue
+        if talk.with_ == "other":
+            who, name = "", fill(talk.name, state, matter.bindings, event.lists)
+        else:
+            who = resolve_id(state, matter.bindings, talk.with_)
+            name = state.characters[who].name
+        matter.talks.append(MatterTalk(index=i, who=who, name=name, where=fill(talk.where, state, matter.bindings)))
+        enter(state, matter, event, matter.talks[-1], "start")
+    refresh_talks(state, matter, event)
+
+
+def enter(state: WorldState, matter: Matter, event: EventDef, mt: MatterTalk, node_id: str) -> None:
+    """Arrive at a node: they say the first variant that fits, and you learn what it tells you."""
+    node = event.talks[mt.index].nodes[node_id]
+    mt.node = node_id
+    if isinstance(node.says, str):
+        text = node.says
+    else:
+        text = next((v.text for v in node.says if check_all(state, matter.bindings, v.when)), node.says[-1].text)
+    mt.log.append(TalkEntry(speaker="them", text=fill(text, state, matter.bindings, event.lists)))
+    for fact in node.learn:
+        learn(state, matter, event, fact)
+
+
+def available_lines(state: WorldState, matter: Matter, event: EventDef, mt: MatterTalk) -> list[tuple[str, TalkLine]]:
+    if mt.node is None:
+        return []
+    nodes = event.talks[mt.index].nodes
+    sources = [mt.node] + ([nodes[mt.node].lines_from] if nodes[mt.node].lines_from else [])
+    found = []
+    for node_id in sources:
+        for j, line in enumerate(nodes[node_id].lines):
+            key = f"{node_id}/{j}"
+            if key not in mt.used and check_all(state, matter.bindings, line.when):
+                found.append((key, line))
+    return found
+
+
+def unsaid(event: EventDef, mt: MatterTalk) -> bool:
+    """Whether anything is left to say here, now or once you know more."""
+    nodes = event.talks[mt.index].nodes
+    sources = [mt.node] + ([nodes[mt.node].lines_from] if nodes[mt.node].lines_from else [])
+    return any(f"{node_id}/{j}" not in mt.used for node_id in sources for j in range(len(nodes[node_id].lines)))
+
+
+def refresh_talks(state: WorldState, matter: Matter, event: EventDef) -> None:
+    """What you could say next, everywhere: something learned in one room opens lines in another.
+    A conversation is over when nothing is left unsaid; lines waiting on facts keep it open."""
+    for mt in matter.talks:
+        if mt.node is not None and not unsaid(event, mt):
+            mt.node = None
+        lines = available_lines(state, matter, event, mt)
+        mt.lines = [fill(line.say, state, matter.bindings, event.lists) for _, line in lines]
+
+
+def can_talk(state: WorldState, matter: Matter, talk: int, line: int) -> bool:
+    return matter.primary and 0 <= talk < len(matter.talks) and 0 <= line < len(matter.talks[talk].lines)
+
+
+def talk(state: WorldState, rng: GameRNG, matter: Matter, talk_index: int, line_index: int,
+         evs: dict[str, EventDef] | None = None) -> None:
+    """Say one line in one conversation."""
+    evs = evs if evs is not None else events()
+    event = evs[matter.event_id]
+    mt = matter.talks[talk_index]
+    key, line = available_lines(state, matter, event, mt)[line_index]
+    mt.used.append(key)
+    mt.log.append(TalkEntry(speaker="you", text=fill(line.say, state, matter.bindings, event.lists)))
+    for fact in line.learn:
+        learn(state, matter, event, fact)
+    for effect in line.effects:
+        apply_effect(state, effect, matter.bindings, rng, event, matter.title)
+    for option_id, bonus in line.case.items():
+        matter.case[option_id] = matter.case.get(option_id, 0.0) + bonus
+    if line.to is None:
+        mt.node = None
+    else:
+        enter(state, matter, event, mt, line.to)
+    refresh_talks(state, matter, event)
 
 
 def print_headline(state: WorldState, text: str | None, bindings: dict[str, str], lists=None) -> None:
@@ -577,7 +705,11 @@ def begin_month(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs
     pool = eligible(state, rng, evs)
     for event, bindings in [p for p in pool if p[0].urgent]:
         state.matters.append(make_matter(event, bindings, state, rng))
-    pool = [p for p in pool if not p[0].urgent]
+    primaries = [p for p in pool if p[0].primary]
+    pool = [p for p in pool if not p[0].urgent and not p[0].primary]
+    if primaries and not any(m.primary for m in state.matters):
+        event, bindings = primaries[rng.weighted_index([e.weight for e, _ in primaries])]
+        state.matters.insert(0, make_matter(event, bindings, state, rng))
     for _ in range(min(count, len(pool))):
         event, bindings = pool.pop(rng.weighted_index([e.weight for e, _ in pool]))
         if event.kind == "news":
@@ -596,9 +728,20 @@ def follow_chance(state: WorldState, don: Character, bal: Balance) -> float:
     return clamp(p, adv.follow_min, adv.follow_max)
 
 
-def don_preference(event: EventDef, don: Character, rng: GameRNG, bal: Balance) -> str:
-    best, best_score = event.options[0].id, None
-    for option in event.options:
+def case_for(matter: Matter, option_id: str) -> float:
+    """How much your arguments help the option you recommend. He discounts a man who argued for the others too."""
+    others = 0.0
+    for other, value in matter.case.items():
+        if other != option_id and value > 0:
+            others += value
+    return matter.case.get(option_id, 0.0) - others
+
+
+def don_preference(event: EventDef, don: Character, rng: GameRNG, bal: Balance, matter: Matter | None = None) -> str:
+    """What the Don would do on his own. He can't act on what you never learned."""
+    options = [o for o in event.options if matter is None or option_open(matter, o)]
+    best, best_score = options[0].id, None
+    for option in options:
         score = option.don.get("base", 0.0) + sum(option.don.get(t.value, 0.0) for t in don.traits)
         score += rng.uniform(-bal.advice.don_noise, bal.advice.don_noise)
         if best_score is None or score > best_score:
@@ -636,10 +779,13 @@ def resolve(state: WorldState, matter: Matter, rng: GameRNG, bal: Balance, evs: 
         rec = rec if rec != WAIT else None
         choice, followed = (rec if rec is not None else event.default_option), None
     elif rec is None:
-        choice, followed = don_preference(event, don, rng, bal), None
+        choice, followed = don_preference(event, don, rng, bal, matter), None
     else:
-        own = don_preference(event, don, rng, bal)
-        if rng.chance(follow_chance(state, don, bal)):
+        own = don_preference(event, don, rng, bal, matter)
+        chance = follow_chance(state, don, bal)
+        if matter.case:
+            chance = clamp(chance + case_for(matter, rec), bal.advice.follow_min, bal.advice.follow_max)
+        if rng.chance(chance):
             choice, followed = rec, True
         else:
             choice, followed = own, own == rec

@@ -1,0 +1,246 @@
+id: desert_hotel
+title: A hotel in the desert
+text: |-
+  A developer named Morris Kale wants to build a casino hotel in Nevada, and he needs four million dollars that no bank will lend him. The Truck Drivers' pension fund could lend it, if the right trustees vote the right way. {capo} knows the right trustees.
+
+  For arranging the loan the family would get points in the casino: a share of the count room, every night, for as long as the place stands. Men have retired on less. Men have also gone to prison on less.
+primary: true
+cast:
+  capo:
+    role: [capo, underboss]
+  district:
+    district_of: family
+trigger: [[month, ">=", 18]]
+cooldown: 11
+patience: 0
+secrets:
+  front: 0.3   # Kale is cooperating with the Bureau
+  real: 0.65   # the skim is as rich as Kale says
+facts:
+  auditors: The pension fund's new auditors have started asking which loans were approved in a single afternoon.
+  names: Morris Kale wants to know, in writing, exactly who will hold the family's points.
+  numbers: Morris Kale showed you the count room plans. The skim he describes is real money.
+  thin: Kale's numbers are thin. The count room he describes would barely cover the loan.
+  vouch: "{capo} has known Morris Kale since the war and vouches for him."
+  doubt: "{capo} has only known Kale a year, and admits he found him through a friend of a friend."
+talks:
+  - with: other
+    name: Morris Kale
+    where: in a suite at the Carlton, with a model of the hotel on the coffee table
+    nodes:
+      start:
+        says: |-
+          Morris Kale is tanned in March. The model of the hotel has a little swimming pool made of blue glass. "Fourteen hundred rooms, consigliere. Eight hundred slot machines. And a count room nobody from the state will ever see inside."
+        lines:
+          - say: Show me the count room numbers.
+            when: [[secret.real, "==", 1]]
+            to: numbers
+          - say: Show me the count room numbers.
+            when: [[secret.real, "==", 0]]
+            to: thin
+          - say: How would the points be held?
+            when: [[secret.front, "==", 1]]
+            to: names
+          - say: How would the points be held?
+            when: [[secret.front, "==", 0]]
+            to: cutouts
+          - say: I'll think about it.
+      numbers:
+        says: |-
+          He unrolls a sheet of figures. They are detailed and plausible and very large: the drop, the hold, the skim, carried out of the count room in a suitcase twice a week. A man does not invent numbers like these. He would not know how.
+        learn: [numbers]
+        lines_from: start
+      thin:
+        says: |-
+          He unrolls a sheet of figures. They are optimistic in the way a man's figures are when he needs them to be. You do the sums twice. The skim would barely cover the vig on the loan.
+        learn: [thin]
+        lines_from: start
+      names:
+        says: |-
+          "In writing," he says. "Who holds what. Names, percentages. It's for your protection as much as mine." He smiles the whole time. It is the smile that stays with you on the ride home.
+        learn: [names]
+        lines_from: start
+      cutouts:
+        says: |-
+          "Through a holding company in Delaware that owns a holding company in Reno. Nobody's name is anywhere. That's the beauty of the desert." He seems pleased with himself, and has some reason to be.
+        lines_from: start
+  - with: other
+    name: Harold Bliss, a pension fund trustee
+    where: at a diner on the turnpike, halfway between his office and anywhere else
+    nodes:
+      start:
+        says: |-
+          Harold Bliss has ordered pie and not eaten it. "I can bring two votes. Maybe three. But I want you to know there's a problem, and I want it on record that I told you."
+        lines:
+          - say: What problem?
+            to: auditors
+          - say: What do you want for the votes?
+            to: price
+          - say: I'll be in touch.
+      auditors:
+        says: |-
+          "The fund has new auditors. Young men from Boston. They've started asking which loans were approved in a single afternoon." He finally eats some pie. "Ours would be approved in a single afternoon."
+        learn: [auditors]
+        lines_from: start
+      price:
+        says: |-
+          "A point. Mine. Held by my brother-in-law, who sells boats in Florida." He looks out at the turnpike. "Everybody wants to retire somewhere warm."
+        lines_from: start
+  - with: capo
+    where: walking along the river, where nobody can stand close enough to listen
+    nodes:
+      start:
+        says: |-
+          {capo} is excited and trying not to show it. "This is the one. This is the kind of thing that sets a family up for twenty years. Tell me the Don's going to say yes."
+        lines:
+          - say: How long have you known Kale?
+            when: [[secret.front, "==", 0]]
+            to: vouch
+          - say: How long have you known Kale?
+            when: [[secret.front, "==", 1]]
+            to: doubt
+          - say: What's in it for you?
+            to: his_cut
+          - say: I'll talk to the Don.
+      vouch:
+        says: |-
+          "Since Anzio. He carried me a mile with a hole in my leg. He's a dreamer, Morris, but he's no rat. I'd put my hand in the fire."
+        learn: [vouch]
+        lines_from: start
+      doubt:
+        says: |-
+          He hesitates. "A year, about. A friend of a friend introduced us at the track. But he's good people. He picked up every check."
+        learn: [doubt]
+        lines_from: start
+      his_cut:
+        says: |-
+          "A finder's point. That's fair, I found it." He catches your look. "Half a point. For the family's sake."
+        lines_from: start
+  - with: don
+    where: in the Don's study, with the radio playing to cover the talk
+    nodes:
+      start:
+        says: |-
+          The Don turns the radio up a little. "Nevada. My father thought Nevada was a kind of cheese." He does not laugh. "Tell me about this Kale."
+        lines:
+          - say: The numbers are real. I've seen them. This is money for twenty years.
+            when: [[knows.numbers, "==", 1]]
+            case: {invest: 0.2, broker: 0.05}
+            to: heard
+          - say: The numbers are thin. It would barely cover the loan.
+            when: [[knows.thin, "==", 1]]
+            case: {decline: 0.15, invest: -0.15}
+            to: heard
+          - say: Kale wants our names in writing. No honest man asks for that.
+            when: [[knows.names, "==", 1]]
+            case: {decline: 0.15, cutout: 0.2, invest: -0.2}
+            to: alarmed
+          - say: The fund's auditors are asking questions. Whatever we do, our names can't be anywhere near it.
+            when: [[knows.auditors, "==", 1]]
+            case: {cutout: 0.15, broker: 0.05}
+            to: heard
+          - say: "{capo} has known him since the war. He carried him a mile at Anzio."
+            when: [[knows.vouch, "==", 1]]
+            case: {invest: 0.1, broker: 0.05}
+            to: heard
+          - say: "{capo} met him at the track a year ago. That's all anyone knows about him."
+            when: [[knows.doubt, "==", 1]]
+            case: {decline: 0.1, cutout: 0.05}
+            to: heard
+          - say: Arrange the loan for a fee, and take no points. Less money, less trouble.
+            case: {broker: 0.1}
+            to: heard
+      heard:
+        says: |-
+          "Go on." The radio is playing Perry Lane, which the Don likes, and he does not seem to be listening to it.
+        lines_from: start
+      alarmed:
+        says: |-
+          The Don turns the radio off. The silence is very loud. "In writing," he says. "Go on."
+        lines_from: start
+options:
+  - id: invest
+    label: Arrange the loan and take the points, in our own people's names
+    don: {base: 0.5, greedy: 1.5, ambitious: 1}
+    advised_exposure: 2
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 0
+          - when: [[secret.real, "==", 0]]
+            mult: 0.3
+        text: The Starlight Sands opens in the desert eighteen months later. Twice a week a man gets off the train from Reno with a suitcase, and the suitcase is heavy.
+        effects:
+          - add_racket: {id: desert_points, name: Points in the Starlight Sands, kind: gambling, district: district, capo: capo, income: 4000, heat_per_month: 2, bind: points}
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 0
+        text: The hotel is built and loses money, or says it does. The points are worth less than the paper they were promised on. {capo} blames the desert.
+        effects:
+          - treasury: -5000
+      - tone: bad
+        weight: 0.1
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 100
+        text: Morris Kale's suite at the Carlton was wired from the beginning. The Bureau has the names of everyone holding points, in writing, because Kale asked for them in writing.
+        headline: "Pension Fund Loan Probe Names City Racketeers"
+        effects:
+          - heat: {who: family, delta: 9}
+          - standing: {exposure: 5}
+          - investigation: {who: capo, progress: 18}
+  - id: cutout
+    label: Arrange the loan through a holding company, with no names anywhere
+    needs: [auditors]
+    don: {base: 0.5, cautious: 1.5}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.real, "==", 0]]
+            mult: 0.4
+        text: The points are held by a company in Delaware that owns a company in Reno. When the auditors come, they find a great deal of paper and no people at all.
+        effects:
+          - add_racket: {id: desert_points, name: Points in the Starlight Sands, kind: gambling, district: district, capo: capo, income: 2500, heat_per_month: 1, bind: points}
+      - tone: neutral
+        weight: 1
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 3
+        text: Kale is arrested before the hotel is built, but the paper leads nowhere. The family loses its fee and keeps its name.
+        effects:
+          - treasury: -3000
+  - id: broker
+    label: Arrange the loan for a flat fee, and take no points
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: good
+        weight: 2
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 0.3
+        text: The loan goes through in an afternoon. {capo} brings the fee in a shoebox, and the family never thinks about Nevada again.
+        effects:
+          - treasury: 15000
+      - tone: bad
+        weight: 1
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 3
+        text: The fee is paid, and the loan goes through, and a year later the pension fund's auditors trace the afternoon vote back to {capo}'s friends.
+        headline: "Trustees Questioned in Pension Fund Loan"
+        effects:
+          - treasury: 15000
+          - heat: {who: family, delta: 5}
+  - id: decline
+    label: Stay out of the desert
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: The Don tells {capo} that the family has no business in the desert. {capo} takes it badly, and reads every article about Nevada for a year.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -4}
