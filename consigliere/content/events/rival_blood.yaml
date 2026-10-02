@@ -1,0 +1,62 @@
+id: rival_blood
+title: A question about {boss}
+text: |-
+  Some of the capos believe the trouble with {rival} would end if {boss} did. They have said so to you, carefully, and asked you to put it to the Don.
+
+  You know what a yes would start. So do they.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, ">=", 4], [self.stage, "<", 5], [self.tension, ">=", 70]]
+  boss:
+    boss_of: rival
+weight: 3
+cooldown: 6
+patience: 0
+options:
+  - id: hit
+    label: Put it to the Don as a yes
+    don: {base: 0, paranoid: 1.5}
+    advised_exposure: 5
+    outcomes:
+      - weight: 1
+        tone: good
+        text: "{boss} does not come home from Mass. Within a week the capos of {rival} ask, through the Commission, for peace."
+        effects:
+          - kill: boss
+          - rivalry: {who: rival, set_stage: 0, tension: -50}
+          - strength: {who: rival, delta: -15}
+          - heat: {who: family, delta: 12}
+      - weight: 1
+        tone: bad
+        text: "{boss} comes home from Mass with his coat torn and his driver dead. By Monday it is open war."
+        effects:
+          - rivalry: {who: rival, set_stage: 5, tension: 20}
+          - heat: {who: family, delta: 10}
+  - id: war
+    label: Tell the Don it is war, and fight it in the open
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: neutral
+        text: The mattresses come out. Men sleep in apartments that are not theirs, and the family goes to war with {rival}.
+        effects:
+          - rivalry: {who: rival, set_stage: 5}
+  - id: table
+    label: One more try at the table
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: You ask for one more sit-down. {boss} agrees, which surprises everyone, including {boss}.
+        effects:
+          - rivalry: {who: rival, set_stage: 2}
+          - sitdown: rival
+  - id: back_down
+    label: Pay for the peace and swallow it
+    don: {base: 0, cautious: 0.5, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Peace costs ten thousand dollars and a little of the family's name. The men will remember both.
+        effects:
+          - treasury: -10000
+          - rivalry: {who: rival, set_stage: 0, tension: -30}
+          - cohesion: -4

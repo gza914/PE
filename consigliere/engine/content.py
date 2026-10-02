@@ -90,6 +90,58 @@ class InformationBalance(Model):
     monthly_influence: int  # Influence that accrues each month
 
 
+class HeatBalance(Model):
+    racket_decay: Unit
+    family_follow: Unit
+    war_heat: int
+
+
+class LawBalance(Model):
+    open_threshold: int
+    open_scale: float = Field(gt=0)
+    open_max: Unit
+    base_progress: float
+    pressure_divisor: float = Field(gt=0)
+    decay: float
+    rat_bonus: float
+    turned_relief: float
+    learn_base: Unit
+    learn_police: Unit
+    family_support: int
+
+
+class RivalsBalance(Model):
+    aggression: dict[Trait, float] = Field(default_factory=dict)
+    aggression_weight: float
+    strength_divisor: float = Field(gt=0)
+    noise: float
+    calm_rate: Unit
+    base_strength: int
+    regen_rate: Unit
+    war_cost: int
+    war_loss_min: int
+    war_loss_max: int
+    war_end_strength: int
+
+
+class SitDownBalance(Model):
+    max_rounds: int
+    concession: int
+    ask_drop: int
+    hold_drop: int
+    threat_drop: int
+    threat_margin: int
+    red_line_min: int
+    red_line_max: int
+    stronger_premium: int
+    broke_discount: int
+    broke_treasury: int
+    opening_margin_min: int
+    opening_margin_max: int
+    patience: int
+    good_deal_margin: int
+
+
 class Balance(Model):
     economy: EconomyBalance
     loyalty: LoyaltyBalance
@@ -99,6 +151,10 @@ class Balance(Model):
     advice: AdviceBalance
     mood: MoodBalance
     information: InformationBalance
+    heat: HeatBalance
+    law: LawBalance
+    rivals: RivalsBalance
+    sitdown: SitDownBalance
 
 
 class LoyaltyBand(Model):
@@ -137,7 +193,8 @@ def check_event_references(events: dict[str, EventDef]) -> None:
     for event in events.values():
         names = set(event.cast) | set(event.carries)
         for name, slot in event.cast.items():
-            for ref in (slot.racket_of, slot.racket_not_of, slot.runs):
+            for ref in (slot.racket_of, slot.racket_not_of, slot.runs, slot.boss_of, slot.racket_in,
+                        None if slot.district_of == "family" else slot.district_of):
                 if ref is not None and ref not in names:
                     raise ContentError(f"{event.id}: cast slot {name} refers to unknown slot {ref}")
         names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
@@ -157,13 +214,13 @@ def check_event_references(events: dict[str, EventDef]) -> None:
             if effect.kind == "followup" and value.event not in events:
                 raise ContentError(f"{event.id}: follow-up to unknown event {value.event}")
             who = getattr(value, "who", None)
-            if who is not None and who not in names | {"crew", "don", "you"}:
+            if who is not None and who not in names | {"crew", "don", "you", "family"}:
                 raise ContentError(f"{event.id}: effect on unknown {who}")
             if effect.kind == "assign_roles":
                 names |= set(value.roles)
                 if not set(value.pool) <= names:
                     raise ContentError(f"{event.id}: assign_roles pool has unknown slots")
-            if effect.kind == "retire" and value not in names:
+            if effect.kind in ("retire", "kill") and value not in names:
                 raise ContentError(f"{event.id}: retire refers to unknown {value}")
             about = getattr(value, "about", None)
             if about is not None and about not in names | {"family", "don", "you"}:
@@ -185,3 +242,9 @@ def events() -> dict[str, EventDef]:
         loaded[event.id] = event
     check_event_references(loaded)
     return loaded
+
+
+@lru_cache
+def sitdown_lines() -> dict[str, str]:
+    """What gets said across the table, keyed by what just happened."""
+    return load_yaml("sitdown.yaml")

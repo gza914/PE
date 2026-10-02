@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Literal, Union
 
 from .matters import WAIT, can_verify, verify
+from .world import SITDOWN_ACTIONS, sitdown_act
 from .models import Model
 from .rng import GameRNG
 from .state import WorldState
@@ -31,7 +32,14 @@ class Verify(Model):
     intel_index: int
 
 
-Command = Union[EndMonth, Recommend, Verify]
+class SitDownAct(Model):
+    """One move at the table: concede, hold, threaten, or walk."""
+
+    kind: Literal["sitdown"] = "sitdown"
+    action: str
+
+
+Command = Union[EndMonth, Recommend, Verify, SitDownAct]
 
 
 class CommandError(ValueError):
@@ -60,5 +68,11 @@ def apply(state: WorldState, rng: GameRNG, command: Command) -> None:
         if not can_verify(state, matter, command.intel_index):
             raise CommandError("You can't check that further: no other source, or not enough Influence.")
         verify(state, rng, matter, command.intel_index)
+    elif isinstance(command, SitDownAct):
+        if state.sitdown is None:
+            raise CommandError("There is no sit-down under way.")
+        if command.action not in SITDOWN_ACTIONS:
+            raise CommandError(f"{command.action!r} is not something you can do at the table.")
+        sitdown_act(state, command.action)
     else:
         raise CommandError(f"Unknown command: {command!r}")

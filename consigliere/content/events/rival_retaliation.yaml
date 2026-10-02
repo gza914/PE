@@ -1,0 +1,60 @@
+id: rival_retaliation
+title: "{capo}'s car"
+text: |-
+  Someone set fire to {capo}'s Cadillac outside his house at three in the morning. His children watched it burn from an upstairs window.
+
+  Nobody had to sign it. Everyone knows the handwriting of {rival}.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, ">=", 3], [self.stage, "<", 5], [self.tension, ">=", 60]]
+  boss:
+    boss_of: rival
+  capo:
+    role: [capo]
+weight: 2
+cooldown: 6
+options:
+  - id: reply
+    label: Sanction a reply, in kind
+    don: {base: 0, paranoid: 1}
+    advised_exposure: 2
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[strength, "<", rival.strength]]
+            mult: 0.4
+        tone: good
+        text: Two of {boss}'s trucks do not finish their routes that week. {rival} gets the message, and so does everyone else.
+        effects:
+          - strength: {who: rival, delta: -6}
+          - rivalry: {who: rival, stage: 1, tension: 10}
+          - heat: {who: family, delta: 6}
+          - stat: {who: crew, stat: fear, delta: 3}
+      - weight: 1
+        tone: bad
+        text: The reply goes wrong. One of ours is arrested with a can of gasoline in his hand, and {boss} is laughing about it in the River Wards.
+        effects:
+          - strength: {who: family, delta: -4}
+          - heat: {who: family, delta: 8}
+          - rivalry: {who: rival, stage: 1, tension: 10}
+  - id: table
+    label: Go to the table instead
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: You send word that the family would rather talk. {boss} sends word that he is free on Thursday.
+        effects:
+          - rivalry: {who: rival, set_stage: 2, tension: -5}
+          - sitdown: rival
+  - id: absorb
+    label: Absorb it, this time
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The family buys {capo} a new car. He drives it carefully and does not look at anyone.
+        effects:
+          - treasury: -3000
+          - stat: {who: capo, stat: loyalty, delta: -8}
+          - cohesion: -3
+          - rivalry: {who: rival, tension: -10}

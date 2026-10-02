@@ -1,0 +1,40 @@
+id: judge_offer
+title: An invitation from {boss}
+text: |-
+  {boss} has sent a note in his own hand. A judge on the county bench is retiring, and the man who will replace him has expensive tastes.
+
+  {boss} proposes that the two families share the expense, and the friendship.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, "==", 0], [self.tension, "<", 20]]
+  boss:
+    boss_of: rival
+weight: 0.7
+cooldown: 24
+options:
+  - id: accept
+    label: Share the judge
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The new judge is grateful to two families now. Cases involving either one find their way to his courtroom.
+        effects:
+          - treasury: -5000
+          - standing: {influence: 6}
+          - rivalry: {who: rival, tension: -10}
+          - heat: {who: family, delta: -5}
+      - weight: 1
+        tone: bad
+        text: The new judge is grateful mostly to {rival}, who got to him first.
+        effects:
+          - treasury: -5000
+  - id: decline
+    label: Thank him, and decline
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: "{boss} replies that he understands completely. He seems, if anything, a little hurt."
+        effects:
+          - rivalry: {who: rival, tension: 5}

@@ -1,0 +1,54 @@
+id: grand_jury
+title: A grand jury for {target}
+text: |-
+  {target} has been subpoenaed. The grand jury meets on the fourth floor of the federal courthouse.
+
+  What is said there is secret, which only means it is secret from us.
+cast:
+  target:
+    investigated: true
+    role: [capo, underboss, don]
+    where: [[self.investigation, ">=", 3]]
+weight: 4
+cooldown: 4
+options:
+  - id: lawyer
+    label: Hire the best lawyer in the city
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The best lawyer in the city earns his fee. The grand jury goes home without an indictment, this time.
+        effects:
+          - treasury: -12000
+          - investigation: {who: target, progress: -50}
+      - weight: 1
+        tone: bad
+        text: The best lawyer in the city loses, expensively.
+        effects:
+          - treasury: -12000
+  - id: abroad
+    label: Get him out of the country
+    don: {base: 0, sentimental: -0.5, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{target} boards a ship on a Wednesday night and does not say where it is going. The government is left holding a subpoena with nobody's name on it."
+        effects:
+          - treasury: -5000
+          - retire: target
+  - id: witnesses
+    label: Make sure the witnesses remember nothing
+    don: {base: 0, paranoid: 1}
+    advised_exposure: 6
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Two witnesses develop poor memories. A third moves to California.
+        effects:
+          - investigation: {who: target, progress: -80}
+      - weight: 1
+        tone: bad
+        text: One witness goes straight to the prosecutor with a story about a visit from two men in good coats.
+        effects:
+          - standing: {exposure: 8}
+          - investigation: {who: target, progress: 25}

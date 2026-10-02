@@ -1,0 +1,37 @@
+id: your_file
+title: A file with your name on it
+text: |-
+  It is your name this time. Mr. Fessler says the government has started asking about the Don's advisor: where you go, whom you see, what you say on the telephone.
+
+  He suggests you say less on the telephone.
+cast:
+  target:
+    investigated: true
+    role: [consigliere]
+weight: 3
+cooldown: 4
+options:
+  - id: lie_low
+    label: Lie low for a while, and let others carry messages
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: You spend a quiet season. The men who carry your messages carry them slower, and the government finds you very boring.
+        effects:
+          - standing: {exposure: -8, influence: -5}
+          - investigation: {who: target, progress: -25}
+  - id: lawyers
+    label: Put Mr. Fessler on it
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        text: Mr. Fessler makes the government's life complicated, which is what he is for.
+        effects:
+          - treasury: -4000
+          - investigation: {who: target, progress: -35}
+  - id: carry_on
+    label: Carry on as before
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: neutral
+        text: You carry on. So does the government.

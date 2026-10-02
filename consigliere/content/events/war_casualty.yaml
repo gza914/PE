@@ -1,0 +1,19 @@
+id: war_casualty
+kind: news
+title: "{capo}"
+text: |-
+  {capo} was found on Sunday morning in his car, on a side street nobody uses. The war with {rival} has a price, and this month it was him.
+
+  The Don paid for the funeral. Half the city came, and the other half sent flowers and watched from across the street.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, "==", 5]]
+  capo:
+    role: [capo]
+weight: 2
+cooldown: 3
+effects:
+  - kill: capo
+  - cohesion: -3
+  - memory: {who: crew, about: family, weight: -3}

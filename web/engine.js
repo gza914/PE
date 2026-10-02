@@ -155,9 +155,12 @@
     return clamp(econ.max_skim * tendency * wobble, 0, econ.max_skim);
   }
 
-  function collect(racket, capo, econ, rng) {
+  function collect(racket, capo, econ, rng, rivalRun = false) {
     const swing = 1 + rng.uniform(-econ.income_variance, econ.income_variance);
-    if (!capo || !capo.alive) return [pyRound(racket.income * swing * UNATTENDED_YIELD), 0];
+    if (!capo || !capo.alive) {
+      if (rivalRun) return [pyRound(racket.income * swing * (1 - econ.capo_share)), 0];
+      return [pyRound(racket.income * swing * UNATTENDED_YIELD), 0];
+    }
     const competence = econ.competence_floor + 2 * (1 - econ.competence_floor) * capo.stats.competence / 100;
     const gross = racket.income * swing * competence;
     const owed = pyRound(gross * (1 - econ.capo_share));
@@ -186,7 +189,7 @@
     for (const racket of Object.values(state.rackets)) {
       if (racket.family_id !== family.id) continue;
       const capo = racket.capo_id ? state.characters[racket.capo_id] : null;
-      const [kickup, skim] = collect(racket, capo, bal.economy, rng);
+      const [kickup, skim] = collect(racket, capo, bal.economy, rng, family.id !== player(state).family_id);
       if (capo && capo.alive) {
         capo.hidden.stash += skim;
         entry.kickups.push({ label: `${racket.name} (${capo.name})`, amount: kickup, note: "" });
@@ -308,6 +311,7 @@
         treasury: family.treasury, cohesion: family.cohesion, month: state.month, year: yearOf(state.month),
         dons_trust: state.standing.dons_trust, influence: state.standing.influence,
         exposure: state.standing.exposure, don_mood: state.don_mood,
+        strength: family.strength, heat: family.heat,
       };
       return head in simple ? simple[head] : path;
     }
@@ -322,10 +326,23 @@
       if (attr === "rackets") return Object.values(state.rackets).filter((r) => r.capo_id === target).length;
       if (attr === "alive") return c.alive ? 1 : 0;
       if (attr === "allegiance") return c.hidden.allegiance;
+      if (attr === "heat") return pressure(state, target);
+      if (attr === "investigation") return investigationStage(state, target);
     } else if (target in state.rackets) {
       const r = state.rackets[target];
       if (attr === "income" || attr === "heat") return r[attr];
       if (attr === "kind") return r.kind;
+      if (attr === "unattended") return r.capo_id === null ? 1 : 0;
+      if (attr === "ours") return r.family_id === family.id ? 1 : 0;
+    } else if (target in state.families) {
+      const f = state.families[target];
+      if (["strength", "wealth", "cohesion", "heat", "treasury"].includes(attr)) return f[attr];
+      const rivalry = state.rivalries[target];
+      if (rivalry && ["stage", "tension", "war_months"].includes(attr)) return rivalry[attr];
+    } else if (target in state.districts) {
+      const d = state.districts[target];
+      if (attr === "heat") return districtHeat(state, target);
+      if (attr === "ours") return d.family_id === family.id ? 1 : 0;
     }
     throw new Error(`cannot resolve ${path}`);
   }
@@ -354,17 +371,32 @@
     return conds.every((c) => check(state, bindings, c, selfId));
   }
 
-  const isRacketSlot = (slot) => Boolean(slot.racket) || slot.racket_of != null || slot.racket_not_of != null;
+  const isRacketSlot = (slot) => Boolean(slot.racket) || slot.racket_of != null || slot.racket_not_of != null || slot.racket_in != null;
+  const slotKind = (slot) => slot.rival ? "family" : slot.district_of != null ? "district" : isRacketSlot(slot) ? "racket" : "character";
 
   function bind(event, state, rng) {
     const bindings = {};
     const family = playerFamily(state);
     for (const [name, slot] of Object.entries(event.cast)) {
       let candidates;
-      if (isRacketSlot(slot)) {
-        candidates = Object.values(state.rackets).filter((r) => r.family_id === family.id
+      const kind = slotKind(slot);
+      if (kind === "family") {
+        candidates = Object.keys(state.rivalries);
+      } else if (kind === "district") {
+        const owner = slot.district_of === "family" ? family.id : bindings[slot.district_of];
+        candidates = Object.values(state.districts).filter((d) => d.family_id === owner).map((d) => d.id);
+      } else if (kind === "racket") {
+        candidates = Object.values(state.rackets).filter((r) =>
+          (slot.racket_in == null ? r.family_id === family.id : r.district_id === bindings[slot.racket_in])
           && (slot.racket_of == null || r.capo_id === bindings[slot.racket_of])
           && (slot.racket_not_of == null || r.capo_id !== bindings[slot.racket_not_of])).map((r) => r.id);
+      } else if (slot.boss_of != null) {
+        const boss = state.characters[state.families[bindings[slot.boss_of]].don_id];
+        candidates = boss.alive ? [boss.id] : [];
+      } else if (slot.investigated) {
+        const taken = new Set(Object.values(bindings));
+        candidates = members(state, family.id).filter((m) => m.alive && m.id in state.knowledge.investigations
+          && !taken.has(m.id) && (slot.role == null || slot.role.includes(m.role))).map((m) => m.id);
       } else {
         const roles = slot.role || [];
         const taken = new Set(Object.values(bindings));
@@ -379,7 +411,7 @@
   }
 
   const castItems = (bindings) => Object.entries(bindings).filter(([k]) => !k.startsWith(SECRET));
-  const nameOf = (state, ref) => (state.characters[ref] || state.rackets[ref]).name;
+  const nameOf = (state, ref) => (state.characters[ref] || state.rackets[ref] || state.families[ref] || state.districts[ref]).name;
   const joinNames = (names) => names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
 
   function fill(text, state, bindings, lists) {
@@ -397,7 +429,7 @@
   }
 
   function bindingsAlive(state, bindings) {
-    return castItems(bindings).every(([, ref]) => ref in state.rackets || (ref in state.characters && state.characters[ref].alive));
+    return castItems(bindings).every(([, ref]) => !(ref in state.characters) || state.characters[ref].alive);
   }
 
   function targets(state, bindings, who) {
@@ -409,15 +441,6 @@
     const ledger = state.knowledge.ledger;
     for (let i = ledger.length - 1; i >= 0; i--) if (ledger[i].month === month) return ledger[i];
     return null;
-  }
-
-  function book(state, label, amount) {
-    const family = playerFamily(state);
-    family.treasury += amount;
-    const entry = ledgerFor(state, state.month);
-    const line = { label, amount, note: "" };
-    if (!entry) state.unbooked.push(line);
-    else { entry.other.push(line); entry.treasury_end = family.treasury; }
   }
 
   function applyEffect(state, effect, bindings, rng, source, label) {
@@ -490,33 +513,57 @@
       case "add_vice":
         for (const c of targets(state, bindings, v.who)) if (!c.hidden.vices.includes(v.vice)) c.hidden.vices.push(v.vice);
         break;
-      case "retire": {
-        const gone = state.characters[resolveId(state, bindings, v)];
-        gone.alive = false;
-        for (const r of Object.values(state.rackets)) if (r.capo_id === gone.id) r.capo_id = null;
-        for (const src of Object.values(state.sources)) {
-          if (src.character_id === gone.id) { src.active = false; state.knowledge.sources[src.id].active = false; }
-        }
+      case "retire":
+      case "kill":
+        removeFromPlay(state, state.characters[resolveId(state, bindings, v)], kind === "retire" ? "gone" : "killed");
         break;
-      }
       case "health":
         for (const c of targets(state, bindings, v.who)) c.hidden.health = Math.trunc(clamp(c.hidden.health + v.delta));
         break;
+      case "rivalry": {
+        const rivalry = state.rivalries[bindings[v.who]];
+        const stage = v.set_stage != null ? v.set_stage : Math.trunc(clamp(rivalry.stage + v.stage, 0, WAR));
+        rivalry.stage = stage;
+        if (stage !== WAR) rivalry.war_months = 0;
+        rivalry.tension = Math.trunc(clamp(rivalry.tension + v.tension));
+        break;
+      }
+      case "transfer_district": {
+        const district = state.districts[bindings[v.district]];
+        district.family_id = v.to === "family" ? family.id : bindings[v.to];
+        for (const r of Object.values(state.rackets)) {
+          if (r.district_id === district.id) { r.family_id = district.family_id; r.capo_id = null; }
+        }
+        break;
+      }
+      case "strength":
+      case "heat": {
+        const target = v.who === "family" ? family : state.families[bindings[v.who]];
+        target[kind] = Math.trunc(clamp(target[kind] + v.delta));
+        break;
+      }
+      case "sitdown": startSitdown(state, rng, bindings[v], CURRENT); break;
+      case "investigation": {
+        const inv = state.investigations[resolveId(state, bindings, v.who)];
+        if (inv) inv.progress = Math.trunc(clamp(inv.progress + v.progress, 0, 99));
+        break;
+      }
+      case "drop_investigation": {
+        const target = resolveId(state, bindings, v);
+        delete state.investigations[target];
+        delete state.knowledge.investigations[target];
+        break;
+      }
+      case "unassign": {
+        const target = resolveId(state, bindings, v);
+        for (const r of Object.values(state.rackets)) if (r.capo_id === target) r.capo_id = null;
+        break;
+      }
       default: throw new Error(`unknown effect ${kind}`);
     }
   }
 
   // ---- information (engine/matters.py) ----
-  function usableSources(state) {
-    return Object.values(state.sources).filter((s) => s.active && (s.character_id === null || state.characters[s.character_id].alive));
-  }
-
-  function isCompromised(state, source) {
-    if (source.compromised) return true;
-    if (source.character_id === null) return false;
-    return state.characters[source.character_id].hidden.allegiance !== "family";
-  }
-
   function otherSources(state, kinds, about, exclude) {
     const pool = usableSources(state).filter((s) => (s.character_id === null || s.character_id !== about) && !exclude.has(s.id));
     const fitting = pool.filter((s) => kinds.includes(s.kind)).map((s) => s.id);
@@ -612,20 +659,24 @@
     };
   }
 
+  function fireNews(state, rng, event, bindings) {
+    state.event_log[event.id] = state.month;
+    rollSecrets(event, bindings, rng);
+    const title = fill(event.title, state, bindings, event.lists);
+    for (const effect of event.effects) applyEffect(state, effect, bindings, rng, event, title);
+    const text = fill(event.text, state, bindings, event.lists);
+    state.knowledge.news.push({ month: state.month, title, text });
+  }
+
   function runScheduled(state, rng, evs) {
     const due = state.scheduled.filter((s) => s.month <= state.month);
     state.scheduled = state.scheduled.filter((s) => s.month > state.month);
     for (const item of due) {
       const event = evs.byId[item.event_id];
-      if (!bindingsAlive(state, item.bindings)) continue;
+      if (!event.even_if_gone && !bindingsAlive(state, item.bindings)) continue;
       if (!checkAll(state, item.bindings, item.when.concat(event.trigger))) continue;
       if (event.kind === "news") {
-        state.event_log[event.id] = state.month;
-        rollSecrets(event, item.bindings, rng);
-        const title = fill(event.title, state, item.bindings, event.lists);
-        for (const effect of event.effects) applyEffect(state, effect, item.bindings, rng, event, title);
-        const text = fill(event.text, state, item.bindings, event.lists);
-        state.knowledge.news.push({ month: state.month, title, text });
+        fireNews(state, rng, event, item.bindings);
       } else if (state.matters.every((m) => m.event_id !== event.id)) {
         state.matters.push(makeMatter(event, item.bindings, state, rng));
       }
@@ -636,7 +687,7 @@
     const pending = new Set(state.matters.map((m) => m.event_id));
     const found = [];
     for (const event of evs.list) {
-      if (event.kind !== "matter" || event.followup_only || event.weight <= 0 || pending.has(event.id)) continue;
+      if (event.followup_only || event.weight <= 0 || pending.has(event.id)) continue;
       const last = state.event_log[event.id];
       if (last !== undefined && (event.once || state.month - last < event.cooldown)) continue;
       const bindings = bind(event, state, rng);
@@ -655,7 +706,8 @@
     const n = Math.min(count, pool.length);
     for (let i = 0; i < n; i++) {
       const [[event, bindings]] = pool.splice(rng.weightedIndex(pool.map(([e]) => e.weight)), 1);
-      state.matters.push(makeMatter(event, bindings, state, rng));
+      if (event.kind === "news") fireNews(state, rng, event, bindings);
+      else state.matters.push(makeMatter(event, bindings, state, rng));
     }
   }
 
@@ -763,10 +815,296 @@
     matter.recommendation = choice;
   }
 
+  // ---- the world (engine/world.py) ----
+  const WAR = 5;
+  const INV_STAGES = ["surveillance", "informant_recruitment", "grand_jury", "indictment"];
+  const PUBLIC_STAGE = 2;
+  let CURRENT = null; // the content bundle of the call in progress, for effects that need balance or lines
+
+  function book(state, label, amount) {
+    const family = playerFamily(state);
+    family.treasury += amount;
+    const entry = ledgerFor(state, state.month);
+    const line = { label, amount, note: "" };
+    if (!entry) state.unbooked.push(line);
+    else { entry.other.push(line); entry.treasury_end = family.treasury; }
+  }
+
+  function usableSources(state) {
+    return Object.values(state.sources).filter((s) => s.active && (s.character_id === null || state.characters[s.character_id].alive));
+  }
+
+  function isCompromised(state, source) {
+    if (source.compromised) return true;
+    if (source.character_id === null) return false;
+    return state.characters[source.character_id].hidden.allegiance !== "family";
+  }
+
+  function scheduleNews(state, eventId, bindings) {
+    state.scheduled.push({ event_id: eventId, month: state.month, bindings, when: [] });
+  }
+
+  function removeFromPlay(state, man, fate) {
+    man.alive = false;
+    man.fate = fate;
+    for (const r of Object.values(state.rackets)) if (r.capo_id === man.id) r.capo_id = null;
+    for (const src of Object.values(state.sources)) {
+      if (src.character_id === man.id) { src.active = false; state.knowledge.sources[src.id].active = false; }
+    }
+    delete state.investigations[man.id];
+    delete state.knowledge.investigations[man.id];
+    if (man.id === playerFamily(state).don_id) state.flags.don_gone = state.month;
+    if (man.id === state.player_id) state.flags.you_gone = state.month;
+  }
+
+  function jail(state, man, bal) {
+    const family = playerFamily(state);
+    removeFromPlay(state, man, "jailed");
+    if (man.family_id === family.id && man.id !== state.player_id) {
+      const expenseId = `family_of_${man.id}`;
+      if (family.expenses.every((e) => e.id !== expenseId)) {
+        family.expenses.push({ id: expenseId, label: `The family of ${man.name}`, amount: bal.law.family_support, stipend: true });
+      }
+    }
+    if (man.id === state.player_id) state.flags.you_jailed = state.month;
+    scheduleNews(state, "indicted", { man: man.id });
+  }
+
+  function pressure(state, characterId) {
+    const family = playerFamily(state);
+    if (characterId === state.player_id) return state.standing.exposure;
+    if (characterId === family.don_id) return family.heat;
+    return sum(Object.values(state.rackets).filter((r) => r.capo_id === characterId).map((r) => r.heat));
+  }
+
+  function districtHeat(state, districtId) {
+    const rackets = Object.values(state.rackets).filter((r) => r.district_id === districtId).map((r) => r.heat);
+    return rackets.length ? pyRound(sum(rackets) / rackets.length) : 0;
+  }
+
+  function runHeat(state, rng, bal) {
+    const hb = bal.heat;
+    for (const racket of Object.values(state.rackets)) {
+      const cooled = rng.roundStochastic(racket.heat * hb.racket_decay);
+      racket.heat = Math.trunc(clamp(racket.heat + racket.heat_per_month - cooled));
+    }
+    for (const family of Object.values(state.families)) {
+      const rackets = Object.values(state.rackets).filter((r) => r.family_id === family.id).map((r) => r.heat);
+      const average = rackets.length ? sum(rackets) / rackets.length : 0;
+      family.heat = Math.trunc(clamp(family.heat + rng.roundStochastic((average - family.heat) * hb.family_follow)));
+    }
+  }
+
+  function investigationStage(state, characterId) {
+    const inv = state.investigations[characterId];
+    return inv ? INV_STAGES.indexOf(inv.stage) + 1 : 0;
+  }
+
+  function honestPoliceSource(state) {
+    return usableSources(state).some((s) => s.kind === "police" && !isCompromised(state, s));
+  }
+
+  function runLaw(state, rng, bal) {
+    const lb = bal.law;
+    const family = playerFamily(state);
+    for (const man of members(state, family.id)) {
+      if (!man.alive || man.id in state.investigations) continue;
+      const chance = clamp((pressure(state, man.id) - lb.open_threshold) / lb.open_scale, 0, lb.open_max);
+      if (chance > 0 && rng.chance(chance)) {
+        state.investigations[man.id] = {
+          id: `inv-${man.id}-${state.month}`, target_id: man.id, agency: "fbi", stage: "surveillance", progress: 0, opened_month: state.month,
+        };
+      }
+    }
+    for (const targetId of Object.keys(state.investigations)) {
+      const inv = state.investigations[targetId];
+      let step = lb.base_progress + pressure(state, targetId) / lb.pressure_divisor - lb.decay;
+      if ("rat_active" in state.flags) step += lb.rat_bonus;
+      if ("rat_turned" in state.flags) step -= lb.turned_relief;
+      const progress = inv.progress + rng.roundStochastic(step);
+      if (progress >= 100) {
+        if (inv.stage === "indictment") { jail(state, state.characters[targetId], bal); continue; }
+        inv.stage = INV_STAGES[INV_STAGES.indexOf(inv.stage) + 1];
+        inv.progress = 0;
+      } else if (progress < 0) {
+        if (inv.stage === "surveillance") {
+          delete state.investigations[targetId];
+          delete state.knowledge.investigations[targetId];
+          continue;
+        }
+        inv.progress = 0;
+      } else {
+        inv.progress = progress;
+      }
+    }
+    const learn = lb.learn_base + (honestPoliceSource(state) ? lb.learn_police : 0);
+    for (const [targetId, inv] of Object.entries(state.investigations)) {
+      const known = state.knowledge.investigations[targetId];
+      if (known) { known.stage = inv.stage; continue; }
+      if (INV_STAGES.indexOf(inv.stage) >= PUBLIC_STAGE || rng.chance(learn)) {
+        state.knowledge.investigations[targetId] = { target_id: targetId, stage: inv.stage, since: state.month };
+        scheduleNews(state, "investigation_learned", { man: targetId });
+      }
+    }
+  }
+
+  function atWar(state, familyId = null) {
+    return Object.values(state.rivalries).some((r) => r.stage === WAR && (familyId === null || r.family_id === familyId));
+  }
+
+  function runRivals(state, rng, bal) {
+    const rb = bal.rivals;
+    const ours = playerFamily(state);
+    for (const rivalry of Object.values(state.rivalries)) {
+      const them = state.families[rivalry.family_id];
+      if (rivalry.stage === WAR) {
+        rivalry.war_months += 1;
+        const ourLoss = rng.randint(rb.war_loss_min, rb.war_loss_max) + (them.strength > ours.strength + 10 ? 1 : 0);
+        const theirLoss = rng.randint(rb.war_loss_min, rb.war_loss_max) + (ours.strength > them.strength + 10 ? 1 : 0);
+        ours.strength = Math.trunc(clamp(ours.strength - ourLoss));
+        them.strength = Math.trunc(clamp(them.strength - theirLoss));
+        book(state, `The war with ${them.name}`, -rb.war_cost);
+        them.treasury -= rb.war_cost;
+        if (ours.strength <= rb.war_end_strength || them.strength <= rb.war_end_strength) {
+          const won = ours.strength > them.strength;
+          const loser = won ? them.id : ours.id;
+          const districts = Object.values(state.districts).filter((d) => d.family_id === loser).map((d) => d.id);
+          rivalry.stage = 0;
+          rivalry.tension = 30;
+          rivalry.war_months = 0;
+          if (districts.length) scheduleNews(state, won ? "war_won" : "war_lost", { rival: them.id, district: rng.choice(districts) });
+        }
+      } else {
+        const boss = state.characters[them.don_id];
+        const aggression = boss.alive ? sum(boss.traits.map((t) => rb.aggression[t] ?? 0.0)) : 0.0;
+        let drift = aggression * rb.aggression_weight + (them.strength - ours.strength) / rb.strength_divisor;
+        drift += rng.uniform(-rb.noise, rb.noise);
+        drift -= rivalry.tension * rb.calm_rate;
+        rivalry.tension = Math.trunc(clamp(rivalry.tension + rng.roundStochastic(drift)));
+      }
+    }
+    for (const family of Object.values(state.families)) {
+      const fighting = family.id === ours.id ? atWar(state) : atWar(state, family.id);
+      if (fighting) continue;
+      family.strength = Math.trunc(clamp(family.strength + rng.roundStochastic((rb.base_strength - family.strength) * rb.regen_rate)));
+    }
+    if (atWar(state)) {
+      for (const family of Object.values(state.families)) family.heat = Math.trunc(clamp(family.heat + bal.heat.war_heat));
+    }
+  }
+
+  function syncSitdown(state) {
+    const sd = state.sitdown;
+    if (!sd) { state.knowledge.sitdown = null; return; }
+    state.knowledge.sitdown = {
+      rival_id: sd.rival_id, rival_name: state.families[sd.rival_id].name, round: sd.round,
+      max_rounds: sd.max_rounds, ask: sd.ask, offer: sd.offer, patience: sd.patience, log: sd.log.slice(),
+    };
+  }
+
+  function say(content, key, values) {
+    let text = content.sitdown_lines[key];
+    for (const [name, value] of Object.entries(values)) {
+      text = text.split("{" + name + "}").join(typeof value === "number" ? "$" + value.toLocaleString("en-US") : String(value));
+    }
+    return text;
+  }
+
+  function startSitdown(state, rng, rivalId, content) {
+    const sb = content.balance.sitdown;
+    const them = state.families[rivalId], ours = playerFamily(state);
+    let redLine = rng.randint(sb.red_line_min, sb.red_line_max);
+    if (them.strength > ours.strength) redLine += sb.stronger_premium;
+    if (them.treasury < sb.broke_treasury) redLine -= sb.broke_discount;
+    redLine = Math.max(0, redLine);
+    const ask = redLine + rng.randint(sb.opening_margin_min, sb.opening_margin_max);
+    const boss = state.characters[them.don_id];
+    const patience = sb.patience + (boss.traits.includes("cautious") ? 1 : 0) - (boss.traits.includes("hothead") ? 1 : 0);
+    state.sitdown = {
+      rival_id: rivalId, month: state.month, round: 1, max_rounds: sb.max_rounds, ask, offer: 0,
+      patience, red_line: redLine, log: [say(content, "open", { family: them.name, ask })],
+    };
+    syncSitdown(state);
+  }
+
+  function endSitdown(state, deal, line, content) {
+    const sd = state.sitdown;
+    const them = state.families[sd.rival_id];
+    const rivalry = state.rivalries[sd.rival_id];
+    const family = playerFamily(state);
+    let trust = 0, chosen, tone;
+    if (deal) {
+      const expenseId = `tribute_${them.id}`;
+      family.expenses = family.expenses.filter((e) => e.id !== expenseId);
+      if (sd.offer > 0) family.expenses.push({ id: expenseId, label: `Tribute to ${them.name}`, amount: sd.offer, stipend: false });
+      rivalry.stage = 0;
+      rivalry.tension = Math.trunc(clamp(rivalry.tension - 40));
+      if (sd.offer - sd.red_line <= content.balance.sitdown.good_deal_margin) trust = 3;
+      chosen = sd.offer ? `A deal at $${sd.offer.toLocaleString("en-US")} a month` : "A deal for nothing";
+      tone = trust ? "good" : "neutral";
+    } else {
+      rivalry.stage = Math.min(WAR, Math.max(rivalry.stage, 2) + 1);
+      rivalry.tension = Math.trunc(clamp(rivalry.tension + 15));
+      trust = -2;
+      chosen = "No deal";
+      tone = "bad";
+    }
+    state.standing.dons_trust = Math.trunc(clamp(state.standing.dons_trust + trust));
+    state.knowledge.decisions.push({
+      month: state.month, matter_id: `sitdown-${them.id}-${sd.month}`, title: `Sit-down with ${them.name}`,
+      recommended: null, chosen, followed: null, tone, text: line, trust_delta: trust, revealed: [],
+    });
+    state.sitdown = null;
+    syncSitdown(state);
+  }
+
+  /** One round of the sit-down: "concede", "hold", "threaten" or "walk". */
+  function sitdownAct(state, action, content) {
+    const sb = content.balance.sitdown;
+    const sd = state.sitdown;
+    const them = state.families[sd.rival_id], ours = playerFamily(state);
+    const rivalry = state.rivalries[sd.rival_id];
+    if (action === "walk") { endSitdown(state, false, say(content, "you_walk", { family: them.name }), content); return; }
+    let key;
+    if (action === "concede") {
+      sd.offer += sb.concession;
+      sd.ask -= sb.ask_drop;
+      key = "concede";
+    } else if (action === "hold") {
+      sd.patience -= 1;
+      if (them.treasury < sb.broke_treasury) { sd.ask -= sb.hold_drop; key = "hold_gives"; } else key = "hold";
+    } else if (ours.strength >= them.strength + sb.threat_margin) {
+      sd.ask -= sb.threat_drop;
+      rivalry.tension = Math.trunc(clamp(rivalry.tension + 10));
+      key = "threat_lands";
+    } else {
+      sd.patience -= 2;
+      rivalry.tension = Math.trunc(clamp(rivalry.tension + 15));
+      key = "threat_fails";
+    }
+    sd.ask = Math.max(sd.ask, sd.red_line);
+    sd.log.push(say(content, key, { offer: sd.offer, ask: sd.ask, family: them.name }));
+    if (sd.offer >= sd.ask) endSitdown(state, true, say(content, "deal", { offer: sd.offer, family: them.name }), content);
+    else if (sd.patience <= 0 || sd.round >= sd.max_rounds) endSitdown(state, false, say(content, "they_walk", { family: them.name }), content);
+    else { sd.round += 1; syncSitdown(state); }
+  }
+
+  function world(state, rng, content) {
+    const bal = content.balance;
+    if (state.sitdown && state.sitdown.month < state.month) {
+      endSitdown(state, false, say(content, "abandoned", { family: state.families[state.sitdown.rival_id].name }), content);
+    }
+    runHeat(state, rng, bal);
+    runLaw(state, rng, bal);
+    runRivals(state, rng, bal);
+  }
+
   // ---- turn (engine/turn.py) ----
   function tick(state, rng, content) {
+    CURRENT = content;
     economy(state, rng, content.balance);
     decide(state, rng, content);
+    world(state, rng, content);
     characters(state, rng, content.balance);
     observation(state, rng, content.balance, content.observations);
     state.month += 1;
@@ -774,6 +1112,7 @@
   }
 
   function newGame(content, seed, scenario = "default") {
+    CURRENT = content;
     const state = JSON.parse(JSON.stringify(content.scenarios[scenario]));
     state.seed = seed;
     const rng = new GameRNG(seed);
@@ -783,7 +1122,8 @@
 
   const api = {
     GameRNG, pyRound, monthLabel, player, playerFamily, members, bandFor, tick, newGame, recommend, WAIT,
-    canVerify, verify, apparentTrust,
+    canVerify, verify, apparentTrust, sitdownAct, STAGES: ["peace", "insult", "sit-down", "retaliation", "blood", "war"],
+    INV_STAGES, districtHeat,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ConsigliereEngine = api;

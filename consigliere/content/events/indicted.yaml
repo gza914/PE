@@ -1,0 +1,10 @@
+id: indicted
+kind: news
+followup_only: true
+even_if_gone: true
+title: "{man} is indicted"
+text: |-
+  {man} was arraigned this morning in federal court. Mr. Fessler says the government's case is good, and Mr. Fessler does not say that lightly.
+
+  His family will need looking after. The men will be watching to see that they are.
+carries: [man]

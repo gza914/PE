@@ -12,8 +12,10 @@ from pydantic import Field
 from .models import (
     Character,
     Decision,
+    District,
     Family,
     Investigation,
+    KnownInvestigation,
     KnownSource,
     LedgerEntry,
     LedgerLine,
@@ -23,14 +25,17 @@ from .models import (
     Racket,
     Relationship,
     Report,
+    Rivalry,
     Scheduled,
+    SitDown,
+    SitDownView,
     Score,
     Source,
     Standing,
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -71,8 +76,19 @@ def _v3_to_v4(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v4_to_v5(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 6: districts, rivalries, heat, investigations, sit-downs. Old games have no rivals."""
+    data.setdefault("districts", {})
+    data.setdefault("rivalries", {})
+    data.setdefault("sitdown", None)
+    knowledge = data.setdefault("knowledge", {})
+    knowledge.setdefault("investigations", {})
+    knowledge.setdefault("sitdown", None)
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4}
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5}
 
 
 class PlayerKnowledge(Model):
@@ -85,6 +101,8 @@ class PlayerKnowledge(Model):
     decisions: list[Decision] = Field(default_factory=list)
     news: list[NewsItem] = Field(default_factory=list)
     sources: dict[str, KnownSource] = Field(default_factory=dict)
+    investigations: dict[str, KnownInvestigation] = Field(default_factory=dict)  # by target id
+    sitdown: SitDownView | None = None
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]
@@ -103,7 +121,10 @@ class WorldState(Model):
     characters: dict[str, Character] = Field(default_factory=dict)
     relationships: list[Relationship] = Field(default_factory=list)
     rackets: dict[str, Racket] = Field(default_factory=dict)
-    investigations: dict[str, Investigation] = Field(default_factory=dict)
+    investigations: dict[str, Investigation] = Field(default_factory=dict)  # by target id
+    districts: dict[str, District] = Field(default_factory=dict)
+    rivalries: dict[str, Rivalry] = Field(default_factory=dict)  # by rival family id
+    sitdown: SitDown | None = None
     sources: dict[str, Source] = Field(default_factory=dict)
     standing: Standing = Field(default_factory=Standing)
     don_mood: Score = 50

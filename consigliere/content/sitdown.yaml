@@ -1,0 +1,11 @@
+# What gets said across the table. {ask} and {offer} are monthly tribute; {family} is the rival family.
+open: "{family} opens by asking {ask} a month, for the peace and for the insult."
+concede: "You offer {offer} a month. They come down to {ask}."
+hold: "You hold. They look at each other and do not move from {ask}."
+hold_gives: "You hold. After a long silence they come down to {ask}. They need this more than they let on."
+threat_lands: "You mention, mildly, how many men the family has. They come down to {ask}, and nobody smiles."
+threat_fails: "You make a threat. They laugh at it, which is worse than anger. They stay at {ask}."
+deal: "Hands are shaken at {offer} a month. Nobody at the table believes it will last forever, which is how peace usually works."
+they_walk: "{family} stands up from the table. Coffee is left unfinished. Everyone knows what comes next."
+you_walk: "You stand up from the table. Before you reach the door, the next thing has already begun."
+abandoned: "Nobody from the family came back to the table. {family} took it as an answer."

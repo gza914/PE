@@ -73,3 +73,51 @@ information:
   prior_weight: 4             # your first impression of a source counts as this many reports
   reveal_chance: 0.6          # chance the truth comes out after a matter is settled
   monthly_influence: 1        # favors owed to you accrue slowly, month by month
+
+heat:
+  racket_decay: 0.08          # a racket sheds 8% of its heat a month; it settles near heat_per_month / 0.08
+  family_follow: 0.2          # family heat closes 20% of the gap to its rackets' average each month
+  war_heat: 4                 # every family's heat rises this much each month a war goes on
+
+law:
+  open_threshold: 45          # a person's heat above this can draw an investigation...
+  open_scale: 200             # ...with chance (heat - threshold) / scale a month...
+  open_max: 0.15              # ...up to this
+  base_progress: 2            # an investigation advances this much a month...
+  pressure_divisor: 6         # ...plus his heat divided by this...
+  decay: 6                    # ...minus this; below zero it loses ground, and at surveillance it closes
+  rat_bonus: 6                # extra progress a month while a rat is talking
+  turned_relief: 3            # less progress a month while the government is fed lies
+  learn_base: 0.15            # chance a month you hear of an investigation you didn't know about...
+  learn_police: 0.5           # ...plus this with an honest police source
+  family_support: 500         # monthly stipend owed to the family of a jailed man
+
+rivals:
+  aggression: {hothead: 3, ambitious: 2, greedy: 1, cautious: -2, pious: -1}
+  aggression_weight: 0.5      # tension a month per point of the rival boss's aggression
+  strength_divisor: 20        # plus (their strength - ours) / this
+  noise: 2.0
+  calm_rate: 0.05             # tension sheds 5% a month on its own
+  base_strength: 55           # strength recovers toward this in peacetime...
+  regen_rate: 0.05            # ...closing 5% of the gap a month
+  war_cost: 3000              # a month of war costs the family this much
+  war_loss_min: 1             # strength each side loses in a month of war
+  war_loss_max: 3
+  war_end_strength: 15        # a side this weak has lost the war
+
+sitdown:
+  max_rounds: 5
+  concession: 300             # each offer raises your tribute offer by this much a month
+  ask_drop: 200               # they come down this much when you concede...
+  hold_drop: 100              # ...or this much when you hold firm, if they need the peace
+  threat_drop: 400            # a credible threat brings their ask down this far
+  threat_margin: 10           # your strength must exceed theirs by this for a threat to be credible
+  red_line_min: 400           # the lowest tribute they would ever accept falls in this range...
+  red_line_max: 1400
+  stronger_premium: 500       # ...plus this if they are stronger than you...
+  broke_discount: 400         # ...minus this if their treasury is low
+  broke_treasury: 20000
+  opening_margin_min: 800     # they open this far above their red line
+  opening_margin_max: 1400
+  patience: 3
+  good_deal_margin: 400       # a deal within this of their red line pleases the Don

@@ -19,7 +19,6 @@ from .models import (
     Expense,
     IntelReport,
     KnownSource,
-    LedgerLine,
     Matter,
     MatterIntel,
     MatterOption,
@@ -30,6 +29,17 @@ from .models import (
 )
 from .rng import GameRNG
 from .state import WorldState
+from .world import (
+    WAR,
+    book,
+    district_heat,
+    investigation_stage,
+    is_compromised,
+    pressure,
+    remove_from_play,
+    start_sitdown,
+    usable_sources,
+)
 
 WAIT = "wait"
 HIDDEN = ("health", "stash", "birth_year", "debts")
@@ -74,6 +84,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
             "influence": state.standing.influence,
             "exposure": state.standing.exposure,
             "don_mood": state.don_mood,
+            "strength": family.strength,
+            "heat": family.heat,
         }
         if head in simple:
             return simple[head]
@@ -97,12 +109,33 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
             return 1 if c.alive else 0
         if attr == "allegiance":
             return c.hidden.allegiance.value
+        if attr == "heat":
+            return pressure(state, target)
+        if attr == "investigation":
+            return investigation_stage(state, target)
     elif target in state.rackets:
         r = state.rackets[target]
         if attr in ("income", "heat"):
             return getattr(r, attr)
         if attr == "kind":
             return r.kind.value
+        if attr == "unattended":
+            return 1 if r.capo_id is None else 0
+        if attr == "ours":
+            return 1 if r.family_id == family.id else 0
+    elif target in state.families:
+        f = state.families[target]
+        if attr in ("strength", "wealth", "cohesion", "heat", "treasury"):
+            return getattr(f, attr)
+        rivalry = state.rivalries.get(target)
+        if rivalry is not None and attr in ("stage", "tension", "war_months"):
+            return getattr(rivalry, attr)
+    elif target in state.districts:
+        d = state.districts[target]
+        if attr == "heat":
+            return district_heat(state, target)
+        if attr == "ours":
+            return 1 if d.family_id == family.id else 0
     raise ContentError(f"cannot resolve {path!r}")
 
 
@@ -140,12 +173,28 @@ def bind(event: EventDef, state: WorldState, rng: GameRNG) -> dict[str, str] | N
     bindings: dict[str, str] = {}
     family = state.player_family
     for name, slot in event.cast.items():
-        if slot.is_racket:
+        kind = slot.kind
+        if kind == "family":
+            candidates = list(state.rivalries)
+        elif kind == "district":
+            owner = family.id if slot.district_of == "family" else bindings[slot.district_of]
+            candidates = [d.id for d in state.districts.values() if d.family_id == owner]
+        elif kind == "racket":
             candidates = [
                 r.id for r in state.rackets.values()
-                if r.family_id == family.id
+                if (r.family_id == family.id if slot.racket_in is None else r.district_id == bindings[slot.racket_in])
                 and (slot.racket_of is None or r.capo_id == bindings[slot.racket_of])
                 and (slot.racket_not_of is None or r.capo_id != bindings[slot.racket_not_of])
+            ]
+        elif slot.boss_of is not None:
+            boss = state.characters[state.families[bindings[slot.boss_of]].don_id]
+            candidates = [boss.id] if boss.alive else []
+        elif slot.investigated:
+            taken = set(bindings.values())
+            candidates = [
+                m.id for m in state.members(family.id)
+                if m.alive and m.id in state.knowledge.investigations and m.id not in taken
+                and (slot.role is None or m.role in slot.role)
             ]
         else:
             roles = slot.role or []
@@ -163,7 +212,7 @@ def bind(event: EventDef, state: WorldState, rng: GameRNG) -> dict[str, str] | N
 
 
 def name_of(state: WorldState, ref: str) -> str:
-    return (state.characters.get(ref) or state.rackets[ref]).name
+    return (state.characters.get(ref) or state.rackets.get(ref) or state.families.get(ref) or state.districts[ref]).name
 
 
 def join_names(names: list[str]) -> str:
@@ -183,7 +232,7 @@ def fill(text: str, state: WorldState, bindings: dict[str, str], lists: dict[str
 
 
 def bindings_alive(state: WorldState, bindings: dict[str, str]) -> bool:
-    return all(ref in state.rackets or (ref in state.characters and state.characters[ref].alive) for _, ref in cast_items(bindings))
+    return all(ref not in state.characters or state.characters[ref].alive for _, ref in cast_items(bindings))
 
 
 # ---- effects ----
@@ -192,19 +241,6 @@ def targets(state: WorldState, bindings: dict[str, str], who: str) -> list[Chara
     if who == "crew":
         return crew(state)
     return [state.characters[resolve_id(state, bindings, who)]]
-
-
-def book(state: WorldState, label: str, amount: int) -> None:
-    """Record money a decision moved, in this month's books if they are open, else the next."""
-    family = state.player_family
-    family.treasury += amount
-    entry = state.knowledge.ledger_for(state.month)
-    line = LedgerLine(label=label, amount=amount)
-    if entry is None:
-        state.unbooked.append(line)
-    else:
-        entry.other.append(line)
-        entry.treasury_end = family.treasury
 
 
 def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rng: GameRNG, source: EventDef, label: str) -> None:
@@ -276,37 +312,47 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
         for c in targets(state, bindings, value.who):
             if value.vice not in c.hidden.vices:
                 c.hidden.vices.append(value.vice)
-    elif kind == "retire":
-        gone = state.characters[resolve_id(state, bindings, value)]
-        gone.alive = False
-        for racket in state.rackets.values():
-            if racket.capo_id == gone.id:
-                racket.capo_id = None
-        for src in state.sources.values():
-            if src.character_id == gone.id:
-                src.active = False
-                state.knowledge.sources[src.id].active = False
+    elif kind in ("retire", "kill"):
+        fate = "gone" if kind == "retire" else "killed"
+        remove_from_play(state, state.characters[resolve_id(state, bindings, value)], fate)
     elif kind == "health":
         for c in targets(state, bindings, value.who):
             c.hidden.health = int(clamp(c.hidden.health + value.delta))
+    elif kind == "rivalry":
+        rivalry = state.rivalries[bindings[value.who]]
+        stage = value.set_stage if value.set_stage is not None else int(clamp(rivalry.stage + value.stage, 0, WAR))
+        rivalry.stage = stage
+        if stage != WAR:
+            rivalry.war_months = 0
+        rivalry.tension = int(clamp(rivalry.tension + value.tension))
+    elif kind == "transfer_district":
+        district = state.districts[bindings[value.district]]
+        district.family_id = family.id if value.to == "family" else bindings[value.to]
+        for racket in state.rackets.values():
+            if racket.district_id == district.id:
+                racket.family_id = district.family_id
+                racket.capo_id = None
+    elif kind in ("strength", "heat"):
+        target = family if value.who == "family" else state.families[bindings[value.who]]
+        setattr(target, kind, int(clamp(getattr(target, kind) + value.delta)))
+    elif kind == "sitdown":
+        start_sitdown(state, rng, bindings[value], balance())
+    elif kind == "investigation":
+        inv = state.investigations.get(resolve_id(state, bindings, value.who))
+        if inv is not None:
+            inv.progress = int(clamp(inv.progress + value.progress, 0, 99))
+    elif kind == "drop_investigation":
+        target = resolve_id(state, bindings, value)
+        state.investigations.pop(target, None)
+        state.knowledge.investigations.pop(target, None)
+    elif kind == "unassign":
+        target = resolve_id(state, bindings, value)
+        for racket in state.rackets.values():
+            if racket.capo_id == target:
+                racket.capo_id = None
 
 
 # ---- information ----
-
-def usable_sources(state: WorldState) -> list[Source]:
-    return [
-        s for s in state.sources.values()
-        if s.active and (s.character_id is None or state.characters[s.character_id].alive)
-    ]
-
-
-def is_compromised(state: WorldState, source: Source) -> bool:
-    if source.compromised:
-        return True
-    if source.character_id is None:
-        return False
-    return state.characters[source.character_id].hidden.allegiance != Allegiance.FAMILY
-
 
 def other_sources(state: WorldState, kinds: list[str], about: str | None, exclude: set[str]) -> list[str]:
     """Sources that could speak to a claim: the right kinds first, anyone else if none of those."""
@@ -425,23 +471,27 @@ def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rn
     )
 
 
+def fire_news(state: WorldState, rng: GameRNG, event: EventDef, bindings: dict[str, str]) -> None:
+    state.event_log[event.id] = state.month
+    roll_secrets(event, bindings, rng)
+    title = fill(event.title, state, bindings, event.lists)
+    for effect in event.effects:
+        apply_effect(state, effect, bindings, rng, event, title)
+    text = fill(event.text, state, bindings, event.lists)
+    state.knowledge.news.append(NewsItem(month=state.month, title=title, text=text))
+
+
 def run_scheduled(state: WorldState, rng: GameRNG, evs: dict[str, EventDef]) -> None:
     due = [s for s in state.scheduled if s.month <= state.month]
     state.scheduled = [s for s in state.scheduled if s.month > state.month]
     for item in due:
         event = evs[item.event_id]
-        if not bindings_alive(state, item.bindings):
+        if not event.even_if_gone and not bindings_alive(state, item.bindings):
             continue
         if not check_all(state, item.bindings, item.when + event.trigger):
             continue
         if event.kind == "news":
-            state.event_log[event.id] = state.month
-            roll_secrets(event, item.bindings, rng)
-            title = fill(event.title, state, item.bindings, event.lists)
-            for effect in event.effects:
-                apply_effect(state, effect, item.bindings, rng, event, title)
-            text = fill(event.text, state, item.bindings, event.lists)
-            state.knowledge.news.append(NewsItem(month=state.month, title=title, text=text))
+            fire_news(state, rng, event, item.bindings)
         elif all(m.event_id != event.id for m in state.matters):
             state.matters.append(make_matter(event, item.bindings, state, rng))
 
@@ -450,7 +500,7 @@ def eligible(state: WorldState, rng: GameRNG, evs: dict[str, EventDef]) -> list[
     pending = {m.event_id for m in state.matters}
     found = []
     for event in evs.values():
-        if event.kind != "matter" or event.followup_only or event.weight <= 0 or event.id in pending:
+        if event.followup_only or event.weight <= 0 or event.id in pending:
             continue
         last = state.event_log.get(event.id)
         if last is not None and (event.once or state.month - last < event.cooldown):
@@ -471,7 +521,10 @@ def begin_month(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs
     pool = eligible(state, rng, evs)
     for _ in range(min(count, len(pool))):
         event, bindings = pool.pop(rng.weighted_index([e.weight for e, _ in pool]))
-        state.matters.append(make_matter(event, bindings, state, rng))
+        if event.kind == "news":
+            fire_news(state, rng, event, bindings)
+        else:
+            state.matters.append(make_matter(event, bindings, state, rng))
 
 
 # ---- the Don decides ----

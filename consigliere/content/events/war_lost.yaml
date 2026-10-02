@@ -1,0 +1,14 @@
+id: war_lost
+kind: news
+followup_only: true
+title: The war with {rival} is over
+text: |-
+  The family could not go on. Through the Commission, {district} goes to {rival}, and the men who worked there will have to find other work.
+
+  The Don has not come down to dinner for three nights.
+carries: [rival, district]
+effects:
+  - transfer_district: {district: district, to: rival}
+  - cohesion: -6
+  - don_mood: -10
+  - standing: {dons_trust: -5}

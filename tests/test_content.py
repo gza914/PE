@@ -26,8 +26,9 @@ def test_default_scenario_has_milestone_two_cast(game):
     family = state.player_family
     capos = [m for m in state.members(family.id) if m.role is Role.CAPO]
     assert len(capos) == 4
-    assert len(state.rackets) == 6
-    for racket in state.rackets.values():
+    ours = [r for r in state.rackets.values() if r.family_id == family.id]
+    assert len(ours) == 6
+    for racket in ours:
         assert state.characters[racket.capo_id].role is Role.CAPO
         assert racket.capo_id in family.member_ids
     assert any(e.stipend for e in family.expenses)

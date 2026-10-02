@@ -14,6 +14,8 @@ def load_scenario(name: str, seed: int) -> WorldState:
     data["families"] = {f["id"]: f for f in data.get("families", [])}
     data["characters"] = {c["id"]: c for c in data.get("characters", [])}
     data["rackets"] = {r["id"]: r for r in data.get("rackets", [])}
+    data["districts"] = {d["id"]: d for d in data.get("districts", [])}
+    data["rivalries"] = {r["family_id"]: r for r in data.get("rivalries", [])}
     sources = data.pop("sources", [])
     data["sources"] = {
         s["id"]: {k: s[k] for k in ("id", "name", "kind", "reliability")} | {"character_id": s.get("character")}

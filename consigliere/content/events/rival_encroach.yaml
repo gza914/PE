@@ -1,0 +1,61 @@
+id: rival_encroach
+title: "{rival} in {district}"
+text: |-
+  {boss}'s men have started collecting in {district}, a few doors at a time. {racket} is down, and the shopkeepers want to know who they are supposed to pay.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, ">=", 1], [self.stage, "<", 5], [self.tension, ">=", 45]]
+  boss:
+    boss_of: rival
+  district:
+    district_of: family
+  racket:
+    racket_in: district
+weight: 2
+cooldown: 6
+intel:
+  - claim: "{rival} is short of money and cannot afford a long fight."
+    denial: "{rival} has money put away and can afford to wait us out."
+    truth: [[rival.treasury, "<", 20000]]
+    sources: [street, police, press]
+options:
+  - id: sitdown
+    label: Ask for a sit-down
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: A table is booked at a restaurant on neutral ground. You will do the talking.
+        effects:
+          - rivalry: {who: rival, set_stage: 2}
+          - sitdown: rival
+  - id: push
+    label: Push them out of {district}
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[strength, "<", rival.strength]]
+            mult: 0.3
+        tone: good
+        text: "{boss}'s collectors are walked to the edge of {district} and told where it ends. They believe it."
+        effects:
+          - rivalry: {who: rival, stage: 1, tension: 10}
+          - strength: {who: rival, delta: -5}
+          - heat: {who: family, delta: 5}
+      - weight: 1
+        tone: bad
+        text: "{boss}'s men push back harder than anyone expected. Two of ours are in the hospital, and {district} is now a place where people get hurt."
+        effects:
+          - rivalry: {who: rival, stage: 2, tension: 15}
+          - strength: {who: family, delta: -5}
+          - heat: {who: family, delta: 5}
+  - id: give_way
+    label: Let them have a few doors
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: A few doors on the edge of {district} pay {rival} now. It is a small thing, the way the first crack in a wall is a small thing.
+        effects:
+          - racket_income: {racket: racket, pct: -15}
+          - rivalry: {who: rival, tension: -10}

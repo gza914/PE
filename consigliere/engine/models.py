@@ -104,7 +104,8 @@ class Character(Model):
     stats: Stats = Field(default_factory=Stats)
     hidden: HiddenState
     memory: list[Memory] = Field(default_factory=list)
-    alive: bool = True
+    alive: bool = True  # False once he is out of play: dead, jailed, or gone
+    fate: str | None = None  # why he is out of play: died, killed, jailed, gone
 
 
 class Relationship(Model):
@@ -137,6 +138,55 @@ class Family(Model):
     cohesion: Score = 50
     treasury: int = 0
     expenses: list[Expense] = Field(default_factory=list)
+    heat: Score = 0  # how much attention the law pays the family as a whole
+
+
+class District(Model):
+    id: str
+    name: str
+    family_id: str
+
+
+class Rivalry(Model):
+    """Where things stand with a rival family, on the ladder from peace to open war."""
+
+    family_id: str
+    stage: int = Field(default=0, ge=0, le=5)  # 0 peace, 1 insult, 2 sit-down, 3 retaliation, 4 blood, 5 war
+    tension: Score = 0
+    war_months: int = 0
+
+
+class SitDown(Model):
+    """A negotiation in progress. The red line is never shown to the player."""
+
+    rival_id: str
+    month: int
+    round: int = 1
+    max_rounds: int
+    ask: int  # the monthly tribute they are asking for now
+    offer: int = 0  # what you have offered so far
+    patience: int
+    red_line: int
+    log: list[str] = Field(default_factory=list)
+
+
+class SitDownView(Model):
+    """The sit-down as the player sees it across the table."""
+
+    rival_id: str
+    rival_name: str
+    round: int
+    max_rounds: int
+    ask: int
+    offer: int
+    patience: int
+    log: list[str] = Field(default_factory=list)
+
+
+class KnownInvestigation(Model):
+    target_id: str
+    stage: str
+    since: int  # month you learned of it
 
 
 class Racket(Model):
@@ -145,6 +195,7 @@ class Racket(Model):
     kind: RacketKind
     family_id: str
     capo_id: str | None = None
+    district_id: str | None = None
     income: int = 0  # typical gross per month, before the capo's share
     heat_per_month: int = 0
     heat: int = 0

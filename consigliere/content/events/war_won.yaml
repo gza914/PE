@@ -1,0 +1,13 @@
+id: war_won
+kind: news
+followup_only: true
+title: The war with {rival} is over
+text: |-
+  {rival} has asked for peace, through the Commission, on the Commission's terms. {district} is ours now.
+
+  There will be funerals on both sides of the river this week. The Don will go to ours.
+carries: [rival, district]
+effects:
+  - transfer_district: {district: district, to: family}
+  - cohesion: 5
+  - don_mood: 8

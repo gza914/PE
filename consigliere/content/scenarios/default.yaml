@@ -10,13 +10,56 @@ families:
     wealth: 55
     cohesion: 65
     treasury: 40000
+    heat: 15
     expenses:
       - {id: lawyers, label: Lawyers on retainer, amount: 3000}
       - {id: payoffs, label: "Envelopes at the precinct and City Hall", amount: 6000}
       - {id: house, label: The Don's household, amount: 3500}
       - {id: stipends, label: Stipends for the crews, amount: 3500, stipend: true}
 
+  # Across the river: hungry, quick to take offense, short of money.
+  - id: brancato
+    name: The Brancato Family
+    don_id: don_brancato
+    member_ids: [don_brancato]
+    strength: 55
+    wealth: 40
+    cohesion: 60
+    treasury: 18000
+    heat: 20
+    expenses:
+      - {id: upkeep, label: Upkeep, amount: 5100}
+
+  # Old money uptown: careful, proud, and stronger than they look.
+  - id: orsini
+    name: The Orsini Family
+    don_id: don_orsini
+    member_ids: [don_orsini]
+    strength: 65
+    wealth: 70
+    cohesion: 70
+    treasury: 60000
+    heat: 10
+    expenses:
+      - {id: upkeep, label: Upkeep, amount: 8300}
+
 characters:
+  - id: don_brancato
+    name: Carmine Brancato
+    role: rival_boss
+    family_id: brancato
+    traits: [ambitious, hothead, greedy]
+    stats: {loyalty: 100, fear: 75, respect: 55, competence: 60, greed: 80, discretion: 30}
+    hidden: {health: 90, birth_year: 1913}
+
+  - id: don_orsini
+    name: Giulio Orsini
+    role: rival_boss
+    family_id: orsini
+    traits: [cautious, vain, pious]
+    stats: {loyalty: 100, fear: 60, respect: 85, competence: 75, greed: 45, discretion: 85}
+    hidden: {health: 70, birth_year: 1891}
+
   - id: don_ferrante
     name: Aurelio Ferrante
     role: don
@@ -86,13 +129,31 @@ relationships:
   - {src: capo_amaro, dst: don_ferrante, trust: 80, affection: 70}
   - {src: capo_sabella, dst: capo_tessaro, trust: -20, affection: -30}
 
+districts:
+  - {id: eastside, name: The Eastside, family_id: ferrante}
+  - {id: garment, name: The Garment District, family_id: ferrante}
+  - {id: waterfront, name: The Waterfront, family_id: ferrante}
+  - {id: fulton, name: Fulton Avenue, family_id: ferrante}
+  - {id: river_wards, name: The River Wards, family_id: brancato}
+  - {id: south_docks, name: The South Docks, family_id: brancato}
+  - {id: hillcrest, name: Hillcrest, family_id: orsini}
+  - {id: downtown, name: Downtown, family_id: orsini}
+
 rackets:
-  - {id: numbers_eastside, name: Eastside numbers, kind: numbers, family_id: ferrante, capo_id: capo_amaro, income: 7000, heat_per_month: 2}
-  - {id: loans_garment, name: Garment district loans, kind: loansharking, family_id: ferrante, capo_id: capo_tessaro, income: 8000, heat_per_month: 3}
-  - {id: gambling_social_clubs, name: Social club card games, kind: gambling, family_id: ferrante, capo_id: capo_tessaro, income: 9000, heat_per_month: 3}
-  - {id: construction_bids, name: Construction bids, kind: construction, family_id: ferrante, capo_id: capo_marchetti, income: 7000, heat_per_month: 2}
-  - {id: docks_pier_9, name: Pier 9, kind: docks, family_id: ferrante, capo_id: capo_sabella, income: 6500, heat_per_month: 4}
-  - {id: protection_fulton, name: Fulton Avenue shops, kind: protection, family_id: ferrante, capo_id: capo_sabella, income: 3500, heat_per_month: 3}
+  - {id: numbers_eastside, name: Eastside numbers, kind: numbers, family_id: ferrante, capo_id: capo_amaro, district_id: eastside, income: 7000, heat_per_month: 2}
+  - {id: loans_garment, name: Garment district loans, kind: loansharking, family_id: ferrante, capo_id: capo_tessaro, district_id: garment, income: 8000, heat_per_month: 3}
+  - {id: gambling_social_clubs, name: Social club card games, kind: gambling, family_id: ferrante, capo_id: capo_tessaro, district_id: eastside, income: 9000, heat_per_month: 3}
+  - {id: construction_bids, name: Construction bids, kind: construction, family_id: ferrante, capo_id: capo_marchetti, district_id: garment, income: 7000, heat_per_month: 2}
+  - {id: docks_pier_9, name: Pier 9, kind: docks, family_id: ferrante, capo_id: capo_sabella, district_id: waterfront, income: 6500, heat_per_month: 4}
+  - {id: protection_fulton, name: Fulton Avenue shops, kind: protection, family_id: ferrante, capo_id: capo_sabella, district_id: fulton, income: 3500, heat_per_month: 3}
+  - {id: numbers_river, name: River Wards numbers, kind: numbers, family_id: brancato, district_id: river_wards, income: 5000, heat_per_month: 3}
+  - {id: docks_south, name: South Docks loading, kind: docks, family_id: brancato, district_id: south_docks, income: 5500, heat_per_month: 4}
+  - {id: gambling_downtown, name: Downtown card rooms, kind: gambling, family_id: orsini, district_id: downtown, income: 9000, heat_per_month: 2}
+  - {id: construction_hillcrest, name: Hillcrest contracts, kind: construction, family_id: orsini, district_id: hillcrest, income: 8000, heat_per_month: 1}
+
+rivalries:
+  - {family_id: brancato, stage: 0, tension: 25}
+  - {family_id: orsini, stage: 0, tension: 5}
 
 standing:
   dons_trust: 50

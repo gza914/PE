@@ -20,10 +20,13 @@ def skim_fraction(capo: Character, econ: EconomyBalance, rng: GameRNG) -> float:
     return clamp(econ.max_skim * tendency * wobble, 0, econ.max_skim)
 
 
-def collect(racket: Racket, capo: Character | None, econ: EconomyBalance, rng: GameRNG) -> tuple[int, int]:
-    """Returns (kicked up to the family, skimmed by the capo)."""
+def collect(racket: Racket, capo: Character | None, econ: EconomyBalance, rng: GameRNG,
+            rival_run: bool = False) -> tuple[int, int]:
+    """Returns (kicked up to the family, skimmed by the capo). Rival rackets are run without capos."""
     swing = 1 + rng.uniform(-econ.income_variance, econ.income_variance)
     if capo is None or not capo.alive:
+        if rival_run:
+            return round(racket.income * swing * (1 - econ.capo_share)), 0
         return round(racket.income * swing * UNATTENDED_YIELD), 0
     competence = econ.competence_floor + 2 * (1 - econ.competence_floor) * capo.stats.competence / 100
     gross = racket.income * swing * competence
@@ -54,7 +57,7 @@ def run_family(state: WorldState, family: Family, rng: GameRNG, bal: Balance) ->
         if racket.family_id != family.id:
             continue
         capo = state.characters.get(racket.capo_id) if racket.capo_id else None
-        kickup, skim = collect(racket, capo, bal.economy, rng)
+        kickup, skim = collect(racket, capo, bal.economy, rng, rival_run=family.id != state.player.family_id)
         if capo is not None and capo.alive:
             capo.hidden.stash += skim
             entry.kickups.append(LedgerLine(label=f"{racket.name} ({capo.name})", amount=kickup))

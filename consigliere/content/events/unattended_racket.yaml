@@ -1,0 +1,39 @@
+id: unattended_racket
+title: Nobody is running {racket}
+text: |-
+  {racket} has nobody running it. The money still comes in, a little of it, the way water still comes out of a pipe after the main is shut.
+cast:
+  racket:
+    racket: true
+    where: [[self.unattended, "==", 1]]
+  a:
+    role: [capo, underboss]
+  b:
+    role: [capo, underboss]
+weight: 3
+cooldown: 2
+options:
+  - id: give_a
+    label: Give it to {a}
+    don: {base: 0}
+    outcomes:
+      - tone: good
+        text: "{a} takes {racket} and thanks the Don twice."
+        effects:
+          - assign_racket: {racket: racket, to: a}
+          - stat: {who: a, stat: loyalty, delta: 3}
+  - id: give_b
+    label: Give it to {b}
+    don: {base: 0}
+    outcomes:
+      - tone: good
+        text: "{b} takes {racket} and thanks the Don twice."
+        effects:
+          - assign_racket: {racket: racket, to: b}
+          - stat: {who: b, stat: loyalty, delta: 3}
+  - id: leave
+    label: Leave it for now
+    don: {base: -0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{racket} goes on running itself, which is to say not very well."

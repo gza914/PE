@@ -1,0 +1,45 @@
+id: commission_settle
+title: The Commission
+text: |-
+  The Commission has had enough of the war with {rival}. Men from four families sat at a table on Sunday and decided that it ends this month.
+
+  They are willing to hear how.
+cast:
+  rival:
+    rival: true
+    where: [[self.war_months, ">=", 3]]
+  district:
+    district_of: family
+weight: 5
+cooldown: 3
+patience: 0
+options:
+  - id: accept
+    label: Accept their terms and give up {district}
+    don: {base: 0, cautious: 1.5}
+    outcomes:
+      - tone: neutral
+        text: "{district} goes to {rival}. The Commission thanks the Don for his wisdom, and everyone pretends it was his idea."
+        effects:
+          - transfer_district: {district: district, to: rival}
+          - rivalry: {who: rival, set_stage: 0, tension: -40}
+          - don_mood: -5
+  - id: table
+    label: Ask the Commission to oversee a sit-down
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Commission agrees to watch. A sit-down with the Commission watching is a different kind of sit-down.
+        effects:
+          - rivalry: {who: rival, set_stage: 2, tension: -10}
+          - sitdown: rival
+  - id: refuse
+    label: Tell the Commission the family will finish it
+    don: {base: 0, vain: 1, paranoid: 0.5}
+    outcomes:
+      - tone: bad
+        text: The Commission takes the answer badly. Friends stop returning calls, and the newspapers get a little more help than usual.
+        effects:
+          - heat: {who: family, delta: 10}
+          - strength: {who: family, delta: -6}
+          - standing: {influence: -8}

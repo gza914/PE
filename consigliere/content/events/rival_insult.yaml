@@ -1,0 +1,53 @@
+id: rival_insult
+title: An insult from {rival}
+text: |-
+  At a christening in the River Wards, one of {boss}'s men told {capo}, in front of his wife, that the Don was getting old and so was his family.
+
+  {capo} smiled and said nothing, as he was taught. He would like to know whether he was taught correctly.
+cast:
+  rival:
+    rival: true
+    where: [[self.stage, "==", 0], [self.tension, ">=", 35]]
+  boss:
+    boss_of: rival
+  capo:
+    role: [capo]
+weight: 2
+cooldown: 6
+options:
+  - id: let_go
+    label: Let it pass
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Nothing is said. {capo} learns what the family's silence costs, and it is something.
+        effects:
+          - rivalry: {who: rival, tension: -8}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: apology
+    label: Ask for an apology, through the proper people
+    don: {base: 0.5, vain: 0.5}
+    outcomes:
+      - weight: 2
+        weight_if:
+          - when: [[rival.strength, ">", strength]]
+            mult: 0.5
+        tone: good
+        text: An apology arrives with a bottle of Strega. {boss} says the man was drunk. The man is not seen at christenings again.
+        effects:
+          - rivalry: {who: rival, tension: -5}
+          - stat: {who: capo, stat: respect, delta: 3}
+      - weight: 1
+        tone: bad
+        text: "{boss} declines to apologize, and says so where people can hear."
+        effects:
+          - rivalry: {who: rival, stage: 1, tension: 10}
+  - id: answer
+    label: Answer in kind
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: Two of {boss}'s men are embarrassed in a bar on Union Avenue, in front of their girlfriends. Everyone understands why.
+        effects:
+          - rivalry: {who: rival, stage: 1, tension: 15}
+          - stat: {who: capo, stat: loyalty, delta: 4}

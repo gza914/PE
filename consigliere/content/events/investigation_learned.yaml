@@ -1,0 +1,9 @@
+id: investigation_learned
+kind: news
+followup_only: true
+title: The government is watching {man}
+text: |-
+  Word came through the precinct: the federal people have opened a file on {man}.
+
+  A gray sedan parked across from his club. A photographer who is not from any newspaper. Questions asked of his barber.
+carries: [man]

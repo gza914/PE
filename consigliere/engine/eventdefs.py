@@ -54,24 +54,41 @@ class CastSlot(Model):
 
     role: list[Role] | None = None
     runs: str | None = None
+    investigated: bool = False  # a man of yours the government is watching, as far as you know
+    boss_of: str | None = None  # the boss of the rival family in that slot
     racket: bool = False
     racket_of: str | None = None
     racket_not_of: str | None = None
+    racket_in: str | None = None  # a racket in the district in that slot
+    rival: bool = False  # a rival family
+    district_of: str | None = None  # a district held by the family in that slot, or "family" for yours
     where: list[Condition] = Field(default_factory=list)
 
     _check = field_validator("where")(check_conditions)
 
+    @property
+    def kind(self) -> str:
+        if self.rival:
+            return "family"
+        if self.district_of is not None:
+            return "district"
+        if self.is_racket:
+            return "racket"
+        return "character"
+
     @model_validator(mode="after")
     def one_kind(self) -> CastSlot:
-        if (self.role is not None) == self.is_racket:
-            raise ValueError("a cast slot is either a character (role) or a racket")
-        if self.is_racket and self.runs is not None:
+        kinds = [self.role is not None or self.investigated or self.boss_of is not None, self.is_racket,
+                 self.rival, self.district_of is not None]
+        if sum(kinds) != 1:
+            raise ValueError("a cast slot is exactly one of: a character, a racket, a rival family, a district")
+        if self.kind != "character" and self.runs is not None:
             raise ValueError("runs applies to character slots")
         return self
 
     @property
     def is_racket(self) -> bool:
-        return self.racket or self.racket_of is not None or self.racket_not_of is not None
+        return self.racket or self.racket_of is not None or self.racket_not_of is not None or self.racket_in is not None
 
 
 class StatEffect(Model):
@@ -163,6 +180,28 @@ class HealthEffect(Model):
     delta: int
 
 
+class RivalryEffect(Model):
+    who: str  # a rival family slot
+    stage: int = 0  # steps up (or down) the ladder
+    set_stage: int | None = Field(default=None, ge=0, le=5)
+    tension: int = 0
+
+
+class TransferDistrict(Model):
+    district: str
+    to: str  # a family slot, or "family" for yours
+
+
+class FamilyDelta(Model):
+    who: str  # "family" for yours, or a rival family slot
+    delta: int
+
+
+class InvestigationEffect(Model):
+    who: str
+    progress: int
+
+
 class Effect(Model):
     """Exactly one field is set."""
 
@@ -188,6 +227,15 @@ class Effect(Model):
     add_vice: AddVice | None = None
     retire: str | None = None  # he is gone from the family: dead, jailed, or far away
     health: HealthEffect | None = None
+    rivalry: RivalryEffect | None = None
+    transfer_district: TransferDistrict | None = None
+    strength: FamilyDelta | None = None
+    heat: FamilyDelta | None = None
+    sitdown: str | None = None  # open a sit-down with the rival family in that slot
+    investigation: InvestigationEffect | None = None
+    drop_investigation: str | None = None
+    unassign: str | None = None  # take every racket away from him; they run unattended
+    kill: str | None = None  # off the page, always
 
     @model_validator(mode="after")
     def exactly_one(self) -> Effect:
@@ -261,6 +309,7 @@ class EventDef(Model):
     intel: list[IntelDef] = Field(default_factory=list)
     lists: dict[str, list[str]] = Field(default_factory=dict)
     carries: list[str] = Field(default_factory=list)  # binding names a follow-up inherits from earlier events
+    even_if_gone: bool = False  # news that still runs when the people it names are out of play
 
     _check = field_validator("trigger")(check_conditions)
 

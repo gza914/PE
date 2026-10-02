@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from consigliere.engine.commands import Recommend, Verify, apply
+from consigliere.engine.commands import Recommend, SitDownAct, Verify, apply
 from consigliere.engine.matters import can_verify
 from consigliere.engine.rng import GameRNG
 from consigliere.engine.scenario import load_scenario, new_game
@@ -25,7 +25,10 @@ const input = JSON.parse(require("fs").readFileSync(0, "utf8"));
 let state, rng;
 if (input.fresh) ({ state, rng } = E.newGame(input.content, input.seed));
 else { state = input.state; rng = new E.GameRNG(input.seed); }
+const PLANS = [["concede"], ["hold", "concede", "threaten", "concede", "concede", "concede"], ["walk"]];
 for (let i = 0; i < input.months; i++) {
+  const plan = PLANS[state.month % 3];
+  for (let k = 0; state.sitdown && k < 6; k++) E.sitdownAct(state, plan[k % plan.length], input.content);
   state.matters.forEach((m, j) => {
     m.intel.forEach((_, i) => {
       if ((state.month + i + j) % 2 === 0 && E.canVerify(state, m, i, input.content)) E.verify(state, rng, m.id, i, input.content);
@@ -59,7 +62,13 @@ def run_py(state: dict | None, seed: int, months: int) -> dict:
         world, rng = new_game(seed)
     else:
         world, rng = WorldState.model_validate(state), GameRNG(seed)
+    plans = [["concede"], ["hold", "concede", "threaten", "concede", "concede", "concede"], ["walk"]]
     for _ in range(months):
+        plan = plans[world.month % 3]
+        for k in range(6):
+            if world.sitdown is None:
+                break
+            apply(world, rng, SitDownAct(action=plan[k % len(plan)]))
         for j, matter in enumerate(world.matters):
             for i in range(len(matter.intel)):
                 if (world.month + i + j) % 2 == 0 and can_verify(world, matter, i):
