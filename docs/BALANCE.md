@@ -1,47 +1,47 @@
-# Balance report: 1000 runs per strategy (457s)
+# Balance report: 1000 runs per strategy (540s)
 
 | Strategy | Win rate | Avg rank | Avg length | Wars | War months | Rat found | Final trust |
 |---|---|---|---|---|---|---|---|
-| cautious | 55% | 2.76 | 140 mo | 1% | 0.1 | 99% | 96.4 |
-| aggressive | 0% | 6.89 | 77 mo | 39% | 3.7 | 96% | 48.2 |
-| random | 0% | 8.98 | 40 mo | 6% | 0.4 | 76% | 0.4 |
-| ignore_law | 5% | 7.62 | 80 mo | 25% | 2.0 | 91% | 24.9 |
-| silent | 10% | 4.51 | 169 mo | 12% | 0.9 | 95% | 24.3 |
-| paper | 46% | 3.14 | 142 mo | 33% | 2.5 | 99% | 94.4 |
+| cautious | 49% | 4.14 | 134 mo | 1% | 0.1 | 92% | 89.8 |
+| aggressive | 0% | 8.34 | 49 mo | 17% | 1.5 | 82% | 13.4 |
+| random | 0% | 9.03 | 26 mo | 1% | 0.0 | 55% | 0.5 |
+| ignore_law | 0% | 8.93 | 37 mo | 3% | 0.2 | 70% | 1.7 |
+| silent | 0% | 8.27 | 107 mo | 15% | 1.3 | 90% | 24.8 |
+| paper | 14% | 6.08 | 120 mo | 34% | 2.9 | 92% | 86.9 |
 
 ## How runs end
 
 | Ending | cautious | aggressive | random | ignore_law | silent | paper |
 |---|---|---|---|---|---|---|
-| Retired, with the family intact | 30% | 0% | 0% | 4% | 0% | 28% |
-| The end of an era | 25% | 0% | 0% | 1% | 10% | 18% |
-| Retired, from a smaller family | 15% | 0% | 0% | 2% | 0% | 17% |
-| The end of an era, and not a good one | 6% | 1% | 0% | 2% | 77% | 11% |
-| Pushed out | 23% | 2% | 0% | 3% | 0% | 18% |
-| Gone to ground | 0% | 55% | 0% | 14% | 0% | 1% |
-| The federal penitentiary | 0% | 18% | 0% | 14% | 2% | 5% |
-| Sidelined, then disposed of | 0% | 22% | 98% | 60% | 0% | 0% |
-| The family's ruin | 2% | 3% | 1% | 0% | 10% | 2% |
+| Retired, with the family intact | 20% | 0% | 0% | 0% | 0% | 7% |
+| The end of an era | 29% | 0% | 0% | 0% | 0% | 7% |
+| Retired, from a smaller family | 7% | 0% | 0% | 0% | 0% | 8% |
+| The end of an era, and not a good one | 8% | 0% | 0% | 0% | 22% | 5% |
+| Pushed out | 13% | 0% | 0% | 0% | 0% | 13% |
+| Gone to ground | 0% | 20% | 0% | 2% | 2% | 3% |
+| The federal penitentiary | 3% | 5% | 0% | 1% | 12% | 36% |
+| Sidelined, then disposed of | 2% | 70% | 97% | 95% | 0% | 1% |
+| The family's ruin | 18% | 5% | 3% | 2% | 64% | 20% |
 
 ## Average treasury at year end ($ thousands, runs still going)
 
 | Year | cautious | aggressive | random | ignore_law | silent | paper |
 |---|---|---|---|---|---|---|
-| 1958 | 55 | 60 | 58 | 77 | 52 | 61 |
-| 1959 | 69 | 70 | 57 | 106 | 44 | 81 |
-| 1960 | 78 | 79 | 48 | 135 | 29 | 90 |
-| 1961 | 89 | 82 | 40 | 165 | 21 | 98 |
-| 1962 | 94 | 77 | 34 | 197 | 14 | 102 |
-| 1963 | 110 | 79 | 30 | 223 | 12 | 118 |
-| 1964 | 130 | 77 | 33 | 244 | 13 | 136 |
-| 1965 | 149 | 70 | 27 | 262 | 14 | 153 |
-| 1966 | 168 | 59 | 32 | 264 | 15 | 170 |
-| 1967 | 191 | 43 | 31 | 255 | 17 | 184 |
-| 1968 | 228 | 43 | 34 | 246 | 19 | 202 |
-| 1969 | 263 | 30 | 35 | 257 | 21 | 230 |
-| 1970 | 306 | 11 | 39 | 242 | 26 | 255 |
-| 1971 | 345 | 19 | 23 | 211 | 30 | 283 |
-| 1972 | 407 | 15 | 42 | 204 | 34 | 314 |
+| 1958 | 57 | 60 | 49 | 73 | 40 | 60 |
+| 1959 | 59 | 59 | 38 | 86 | 21 | 63 |
+| 1960 | 61 | 59 | 25 | 94 | 8 | 64 |
+| 1961 | 68 | 58 | 21 | 108 | 1 | 68 |
+| 1962 | 74 | 53 | 6 | 121 | -3 | 71 |
+| 1963 | 89 | 47 | -1 | 145 | -4 | 82 |
+| 1964 | 114 | 38 | 3 | 158 | -3 | 101 |
+| 1965 | 144 | 11 | -12 | 166 | -2 | 121 |
+| 1966 | 181 | 5 |  | 181 | -1 | 147 |
+| 1967 | 220 | 1 |  | 215 | -2 | 184 |
+| 1968 | 271 |  |  | 168 | -2 | 215 |
+| 1969 | 326 |  |  | 28 | -2 | 270 |
+| 1970 | 395 |  |  |  | -2 | 337 |
+| 1971 | 481 |  |  |  | -2 | 363 |
+| 1972 | 547 |  |  |  | -1 | 397 |
 
 Rare fallbacks that never fired (expected): first_morning
 

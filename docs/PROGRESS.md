@@ -18,7 +18,7 @@ Primary issues with conversations: **done** (a rework requested after Milestone 
 - **Also fixed:** "The Brancato Family" now reads "the Brancato Family" mid-sentence, everywhere. Expense labels are filled with names. The empty-chair recruiting matter is now urgent when the crew drops below four, since primary issues can retire men.
 - **Web:** the month's business sits above the desk, full width: people to see, the conversation (typewriter on each reply), what you know, and your advice, with locked options and how strong your case is for each.
 - **CLI:** `t N P` shows a conversation, `t N P L` says a line.
-- **Balance** (`docs/BALANCE.md`, 1,000 runs each): RESULTS2
+- **Balance** (`docs/BALANCE.md`, 1,000 runs each): cautious wins 49%, paper 14%, silent, ignore_law, aggressive and random 0%. No balance bugs. The bots say the first line every time and cannot tell which lines teach anything; a player who reads should do better. Silence is now ruinous: the Don alone pays for everything and knows nothing.
 
 ## Milestone 9: content pass
 - **151 events** (from 56), in four batches, with the balance check rerun after each.
