@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from .matters import WAIT
+from .matters import WAIT, can_verify, verify
 from .models import Model
 from .rng import GameRNG
 from .state import WorldState
@@ -23,7 +23,15 @@ class Recommend(Model):
     choice: str | None
 
 
-Command = Union[EndMonth, Recommend]
+class Verify(Model):
+    """Spend Influence to hear what another source says about one piece of intel on a matter."""
+
+    kind: Literal["verify"] = "verify"
+    matter_id: str
+    intel_index: int
+
+
+Command = Union[EndMonth, Recommend, Verify]
 
 
 class CommandError(ValueError):
@@ -42,5 +50,15 @@ def apply(state: WorldState, rng: GameRNG, command: Command) -> None:
         if command.choice is not None and command.choice not in allowed:
             raise CommandError(f"{command.choice!r} is not an option for {matter.title!r}.")
         matter.recommendation = command.choice
+    elif isinstance(command, Verify):
+        try:
+            matter = state.matter(command.matter_id)
+        except KeyError:
+            raise CommandError(f"No matter {command.matter_id!r} on your desk.") from None
+        if not 0 <= command.intel_index < len(matter.intel):
+            raise CommandError("No such piece of intel.")
+        if not can_verify(state, matter, command.intel_index):
+            raise CommandError("You can't check that further: no other source, or not enough Influence.")
+        verify(state, rng, matter, command.intel_index)
     else:
         raise CommandError(f"Unknown command: {command!r}")

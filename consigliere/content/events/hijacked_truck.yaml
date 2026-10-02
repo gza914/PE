@@ -1,0 +1,76 @@
+id: hijacked_truck
+title: A truckload of televisions
+text: |-
+  {capo}'s crew took a truck off the expressway last night: two hundred television sets, still in their boxes. {capo} is pleased with himself.
+
+  The trucking company is a family business in Linden Park. Some family businesses have friends.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.greed, ">=", 45]]
+secrets: {owner_connected: 0.4}
+cooldown: 12
+intel:
+  - claim: The trucking company pays for protection, to people who will take this personally.
+    denial: The trucking company has no friends worth worrying about.
+    truth: [[secret.owner_connected, "==", 1]]
+    sources: [street, police, family]
+options:
+  - id: sell
+    label: Sell the sets through the usual people
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.owner_connected, "==", 1]]
+            mult: 0
+        text: Two hundred sets go out the back doors of six stores by Friday.
+        effects:
+          - treasury: 5000
+      - tone: bad
+        weight_if:
+          - when: [[secret.owner_connected, "==", 0]]
+            mult: 0
+        text: The sets sell. Then a man in a good coat comes to the Don's house with a list of what was on the truck, and a number at the bottom.
+        effects:
+          - treasury: -4000
+          - don_mood: -5
+          - standing: {exposure: 2}
+  - id: return
+    label: Return the truck, with an apology
+    don: {base: 0, cautious: 1.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.owner_connected, "==", 0]]
+            mult: 0
+        text: The truck goes back with every box. The owner's friends send the Don a case of anisette and a note that says nothing in particular.
+        effects:
+          - standing: {influence: 4}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+      - tone: neutral
+        weight_if:
+          - when: [[secret.owner_connected, "==", 1]]
+            mult: 0
+        text: The truck goes back to people who did nothing to deserve the courtesy. {capo} tells his crew the Don has gone soft.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -6}
+          - memory: {who: capo, about: don, weight: -5}
+  - id: hold
+    label: Keep the sets in a warehouse until it cools off
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - weight: 2
+        weight_if:
+          - when: [[secret.owner_connected, "==", 1]]
+            mult: 0.3
+        tone: neutral
+        text: The sets sit under a tarp for three months, then go out a few at a time.
+        effects:
+          - treasury: 3000
+      - weight: 1
+        tone: bad
+        text: The owner's friends find the warehouse before it cools off. They take the sets, and two of {capo}'s men, who come back a week later and will not discuss it.
+        effects:
+          - standing: {exposure: 2}
+          - don_mood: -3

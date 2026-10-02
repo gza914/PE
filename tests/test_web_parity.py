@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from consigliere.engine.commands import Recommend, apply
+from consigliere.engine.commands import Recommend, Verify, apply
+from consigliere.engine.matters import can_verify
 from consigliere.engine.rng import GameRNG
 from consigliere.engine.scenario import load_scenario, new_game
 from consigliere.engine.state import WorldState
@@ -26,6 +27,9 @@ if (input.fresh) ({ state, rng } = E.newGame(input.content, input.seed));
 else { state = input.state; rng = new E.GameRNG(input.seed); }
 for (let i = 0; i < input.months; i++) {
   state.matters.forEach((m, j) => {
+    m.intel.forEach((_, i) => {
+      if ((state.month + i + j) % 2 === 0 && E.canVerify(state, m, i, input.content)) E.verify(state, rng, m.id, i, input.content);
+    });
     const choices = m.options.map((o) => o.id).concat(m.can_wait ? ["wait"] : [], [null]);
     E.recommend(state, m.id, choices[(state.month * 7 + j * 3) % choices.length]);
   });
@@ -56,8 +60,11 @@ def run_py(state: dict | None, seed: int, months: int) -> dict:
     else:
         world, rng = WorldState.model_validate(state), GameRNG(seed)
     for _ in range(months):
-        for i, matter in enumerate(world.matters):
-            apply(world, rng, Recommend(matter_id=matter.id, choice=bot_choice(world, matter, i)))
+        for j, matter in enumerate(world.matters):
+            for i in range(len(matter.intel)):
+                if (world.month + i + j) % 2 == 0 and can_verify(world, matter, i):
+                    apply(world, rng, Verify(matter_id=matter.id, intel_index=i))
+            apply(world, rng, Recommend(matter_id=matter.id, choice=bot_choice(world, matter, j)))
         tick(world, rng)
     return {"state": world.model_dump(mode="json"), "probe": rng.random()}
 

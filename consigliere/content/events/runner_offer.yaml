@@ -1,0 +1,45 @@
+id: runner_offer
+title: A runner with big ears
+text: |-
+  Tommy Vella runs numbers slips for {capo}. He hears everything, he says, from every stoop and kitchen on his route. For fifty dollars a week he would hear it for you.
+
+  Tommy is twenty and talks fast.
+cast:
+  capo:
+    role: [capo]
+secrets: {tommy_reliable: 0.55}
+once: true
+intel:
+  - about: capo
+    claim: Tommy Vella is as good as his word.
+    denial: Tommy Vella makes things up when he has nothing to sell.
+    truth: [[secret.tommy_reliable, "==", 1]]
+    sources: [street, family]
+    reveal: 0.3
+options:
+  - id: hire
+    label: Put Tommy on the payroll
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        weight_if:
+          - when: [[secret.tommy_reliable, "==", 0]]
+            mult: 0
+        text: Tommy starts bringing you things on Mondays. Some of them are even interesting.
+        effects:
+          - add_expense: {id: tommy_vella, label: Tommy Vella, amount: 200}
+          - add_source: {id: tommy, name: Tommy Vella, kind: street, reliability: 0.85, believed: 0.5}
+      - tone: neutral
+        weight_if:
+          - when: [[secret.tommy_reliable, "==", 1]]
+            mult: 0
+        text: Tommy starts bringing you things on Mondays. Some of them are even interesting.
+        effects:
+          - add_expense: {id: tommy_vella, label: Tommy Vella, amount: 200}
+          - add_source: {id: tommy, name: Tommy Vella, kind: street, reliability: 0.3, believed: 0.5}
+  - id: decline
+    label: Tell him to keep his ears on his own job
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Tommy says sure, sure. He offers the same deal to someone else by the end of the week.

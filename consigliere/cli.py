@@ -7,7 +7,9 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .engine.calendar import month_label
-from .engine.commands import CommandError, EndMonth, Recommend, apply
+from .engine.commands import CommandError, EndMonth, Recommend, Verify, apply
+from .engine.content import balance
+from .engine.matters import apparent_trust
 from .engine.content import observations
 from .engine.models import Role
 from .engine.rng import GameRNG, fresh_seed
@@ -15,7 +17,7 @@ from .engine.scenario import new_game
 from .engine.state import SaveError, WorldState, load_game, save_game
 
 DEFAULT_SAVE = Path("saves/save.json")
-HELP = "[d]esk  [a]dvise N choice  [n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
+HELP = "[d]esk  [a]dvise N choice  [v]erify N I  [n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
 WIDTH = 60
 
 
@@ -55,6 +57,7 @@ def monthly_report(state: WorldState, month: int) -> list[str]:
             advice = f"you advised: {d.recommended}" if d.recommended else "you kept quiet"
             lines.append(f"  {d.title}: {d.chosen} ({advice}; trust {d.trust_delta:+d})")
             lines.append(f"    {d.text}")
+            lines.extend(f"    {line}" for line in d.revealed)
     noticed = knowledge.reports_for(month)
     if noticed:
         lines.append("Around the family")
@@ -89,6 +92,14 @@ def desk_view(state: WorldState) -> list[str]:
     for i, matter in enumerate(state.matters, 1):
         lines.append(f"[{i}] {matter.title}")
         lines.extend(f"    {para}" for para in matter.text.split("\n") if para)
+        for k, item in enumerate(matter.intel, 1):
+            lines.append(f"    ({k}) What you've heard:")
+            for report in item.reports:
+                known = state.knowledge.sources[report.source_id]
+                trust = round(apparent_trust(known, balance()) * 100)
+                lines.append(f"        {known.name} ({trust}% trusted): {item.claim if report.says else item.denial}")
+            if not item.reports:
+                lines.append("        Nobody has said anything yet.")
         for j, option in enumerate(matter.options, 1):
             mark = "*" if matter.recommendation == option.id else " "
             lines.append(f"   {mark}{j}. {option.label}")
@@ -118,6 +129,19 @@ def advise(state: WorldState, rng: GameRNG, arg: str) -> str:
     except CommandError as exc:
         return str(exc)
     return f"Noted for {matter.title}."
+
+
+def check_intel(state: WorldState, rng: GameRNG, arg: str) -> str:
+    """Parse "N I": ask another source about intel item I on matter N."""
+    parts = arg.split()
+    if len(parts) != 2 or not all(p.isdigit() for p in parts) or not 1 <= int(parts[0]) <= len(state.matters):
+        return "Usage: v <matter number> <intel number>"
+    matter = state.matters[int(parts[0]) - 1]
+    try:
+        apply(state, rng, Verify(matter_id=matter.id, intel_index=int(parts[1]) - 1))
+    except CommandError as exc:
+        return str(exc)
+    return f"You ask around. Influence now {state.standing.influence}."
 
 
 def status_line(state: WorldState) -> str:
@@ -157,6 +181,8 @@ def run(
                 write(out)
         elif verb in ("a", "advise"):
             write(advise(state, rng, arg))
+        elif verb in ("v", "verify"):
+            write(check_intel(state, rng, arg))
         elif verb in ("r", "report"):
             for out in monthly_report(state, state.month - 1):
                 write(out)

@@ -1,0 +1,12 @@
+id: restaurant_repaid
+kind: news
+followup_only: true
+title: "{capo} pays his debt"
+text: |-
+  {capo} came to the house with an envelope and a tray of cannoli. Eleven thousand two hundred dollars, every point accounted for.
+cast:
+  capo:
+    role: [capo]
+effects:
+  - treasury: 11200
+  - stat: {who: capo, stat: loyalty, delta: 3}

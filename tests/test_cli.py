@@ -80,3 +80,19 @@ def test_desk_and_advice(game):
     assert "Usage: a <matter number>" in text
     assert "The Don's decisions" in text
     assert f"you advised: {first.options[0].label}" in text
+
+
+def test_intel_and_verify(game):
+    from consigliere.engine.scenario import new_game
+
+    for seed in range(50):
+        state, rng = new_game(seed)
+        if any(m.intel for m in state.matters):
+            break
+    n = next(i for i, m in enumerate(state.matters, 1) if m.intel)
+    out = []
+    run(state, rng, scripted(["d", f"v {n} 1", "v 9 9", "q"]), out.append)
+    text = "\n".join(out)
+    assert "What you've heard:" in text and "% trusted)" in text
+    assert "You ask around. Influence now 17." in text
+    assert "Usage: v <matter number> <intel number>" in text

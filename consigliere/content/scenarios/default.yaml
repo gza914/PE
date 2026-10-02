@@ -98,3 +98,11 @@ standing:
   dons_trust: 50
   influence: 20
   exposure: 5
+
+# Who tells you things. reliability is hidden; believed is how far you trust them at first.
+# Some are better or worse than their reputation.
+sources:
+  - {id: club_talk, name: Talk at the social club, kind: street, reliability: 0.5, believed: 0.6}
+  - {id: nunzio, name: Nunzio the barber, kind: street, reliability: 0.8, believed: 0.45}
+  - {id: lauro, name: Sal Lauro, kind: family, reliability: 0.75, believed: 0.7, character: underboss_lauro}
+  - {id: fessler, name: "Mr. Fessler, the lawyer", kind: lawyer, reliability: 0.85, believed: 0.75}

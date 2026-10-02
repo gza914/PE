@@ -105,6 +105,13 @@
       return weights.length - 1;
     }
 
+    shuffle(items) {
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = this.randint(0, i);
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+    }
+
     roundStochastic(value) {
       const whole = Math.floor(value);
       return whole + (this.random() < value - whole ? 1 : 0);
@@ -273,6 +280,7 @@
 
   // ---- matters (engine/matters.py) ----
   const WAIT = "wait";
+  const SECRET = "?";
   const STATS = ["loyalty", "fear", "respect", "competence", "greed", "discretion"];
   const HIDDEN = ["health", "stash", "birth_year", "debts"];
   const yearOf = (month) => 1958 + Math.floor(month / 12);
@@ -304,6 +312,7 @@
       return head in simple ? simple[head] : path;
     }
     if (head === "flag") return attr in state.flags ? 1 : 0;
+    if (head === "secret") return bindings[SECRET + attr] === "yes" ? 1 : 0;
     const target = resolveId(state, bindings, head, selfId);
     if (target in state.characters) {
       const c = state.characters[target];
@@ -312,6 +321,7 @@
       if (attr === "age") return yearOf(state.month) - c.hidden.birth_year;
       if (attr === "rackets") return Object.values(state.rackets).filter((r) => r.capo_id === target).length;
       if (attr === "alive") return c.alive ? 1 : 0;
+      if (attr === "allegiance") return c.hidden.allegiance;
     } else if (target in state.rackets) {
       const r = state.rackets[target];
       if (attr === "income" || attr === "heat") return r[attr];
@@ -321,6 +331,7 @@
   }
 
   function check(state, bindings, cond, selfId) {
+    if (!Array.isArray(cond)) return cond.any.some((c) => check(state, bindings, c, selfId));
     const [left, op, right] = cond;
     if (op === "has" || op === "lacks") {
       const c = state.characters[resolveId(state, bindings, left, selfId)];
@@ -367,10 +378,17 @@
     return bindings;
   }
 
-  function fill(text, state, bindings) {
-    for (const [name, ref] of Object.entries(bindings)) {
-      const thing = state.characters[ref] || state.rackets[ref];
-      text = text.split("{" + name + "}").join(thing.name);
+  const castItems = (bindings) => Object.entries(bindings).filter(([k]) => !k.startsWith(SECRET));
+  const nameOf = (state, ref) => (state.characters[ref] || state.rackets[ref]).name;
+  const joinNames = (names) => names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+
+  function fill(text, state, bindings, lists) {
+    for (const [name, slots] of Object.entries(lists || {})) {
+      const names = slots.map((slot) => nameOf(state, bindings[slot])).sort();
+      text = text.split("{" + name + "}").join(joinNames(names));
+    }
+    for (const [name, ref] of castItems(bindings)) {
+      text = text.split("{" + name + "}").join(nameOf(state, ref));
     }
     const family = playerFamily(state);
     text = text.split("{don}").join(state.characters[family.don_id].name);
@@ -379,7 +397,7 @@
   }
 
   function bindingsAlive(state, bindings) {
-    return Object.values(bindings).every((ref) => ref in state.rackets || (ref in state.characters && state.characters[ref].alive));
+    return castItems(bindings).every(([, ref]) => ref in state.rackets || (ref in state.characters && state.characters[ref].alive));
   }
 
   function targets(state, bindings, who) {
@@ -449,17 +467,145 @@
         for (const e of family.expenses) if (e.id === v.id) e.amount = Math.max(0, e.amount + v.delta);
         break;
       case "remove_expense": family.expenses = family.expenses.filter((e) => e.id !== v); break;
+      case "allegiance":
+        for (const c of targets(state, bindings, v.who)) { c.hidden.allegiance = v.to; c.hidden.allegiance_to = v.agency ?? null; }
+        break;
+      case "add_source":
+        if (!(v.id in state.sources)) {
+          const character = v.character ? bindings[v.character] : null;
+          state.sources[v.id] = { id: v.id, name: v.name, kind: v.kind, reliability: v.reliability, character_id: character, compromised: false, active: true };
+          state.knowledge.sources[v.id] = { name: v.name, kind: v.kind, believed: v.believed, right: 0, wrong: 0, active: true };
+        }
+        break;
+      case "compromise_source": if (v in state.sources) state.sources[v].compromised = true; break;
+      case "remove_source":
+        if (v in state.sources) { state.sources[v].active = false; state.knowledge.sources[v].active = false; }
+        break;
+      case "assign_roles": {
+        const pool = v.pool.map((slot) => bindings[slot]);
+        rng.shuffle(pool);
+        v.roles.forEach((role, i) => { bindings[role] = pool[i]; });
+        break;
+      }
+      case "add_vice":
+        for (const c of targets(state, bindings, v.who)) if (!c.hidden.vices.includes(v.vice)) c.hidden.vices.push(v.vice);
+        break;
+      case "retire": {
+        const gone = state.characters[resolveId(state, bindings, v)];
+        gone.alive = false;
+        for (const r of Object.values(state.rackets)) if (r.capo_id === gone.id) r.capo_id = null;
+        break;
+      }
+      case "health":
+        for (const c of targets(state, bindings, v.who)) c.hidden.health = Math.trunc(clamp(c.hidden.health + v.delta));
+        break;
       default: throw new Error(`unknown effect ${kind}`);
     }
   }
 
-  function makeMatter(event, bindings, state) {
+  // ---- information (engine/matters.py) ----
+  function usableSources(state) {
+    return Object.values(state.sources).filter((s) => s.active && (s.character_id === null || state.characters[s.character_id].alive));
+  }
+
+  function isCompromised(state, source) {
+    if (source.compromised) return true;
+    if (source.character_id === null) return false;
+    return state.characters[source.character_id].hidden.allegiance !== "family";
+  }
+
+  function otherSources(state, kinds, about, exclude) {
+    const pool = usableSources(state).filter((s) => (s.character_id === null || s.character_id !== about) && !exclude.has(s.id));
+    const fitting = pool.filter((s) => kinds.includes(s.kind)).map((s) => s.id);
+    return fitting.length ? fitting : pool.map((s) => s.id);
+  }
+
+  function reportOn(state, rng, intel, bindings, about, exclude) {
+    const candidates = otherSources(state, intel.sources, about, exclude);
+    if (!candidates.length) return null;
+    const source = state.sources[rng.choice(candidates)];
+    const truth = checkAll(state, bindings, intel.truth);
+    let says;
+    if (isCompromised(state, source)) says = !truth;
+    else says = rng.chance(source.reliability) ? truth : !truth;
+    return { source_id: source.id, says, month: state.month };
+  }
+
+  function apparentTrust(known, bal) {
+    const w = bal.information.prior_weight;
+    return (known.right + w * known.believed) / (known.right + known.wrong + w);
+  }
+
+  function canVerify(state, matter, index, content) {
+    const item = matter.intel[index];
+    const def = indexEvents(content).byId[matter.event_id].intel[index];
+    const used = new Set(item.reports.map((r) => r.source_id));
+    return state.standing.influence >= content.balance.information.verify_cost
+      && otherSources(state, def.sources, item.about, used).length > 0;
+  }
+
+  /** Spend Influence to hear what a second source says about a claim. */
+  function verify(state, rng, matterId, index, content) {
+    const cost = content.balance.information.verify_cost;
+    const matter = state.matters.find((m) => m.id === matterId);
+    if (!matter || state.standing.influence < cost) return null;
+    const item = matter.intel[index];
+    const def = indexEvents(content).byId[matter.event_id].intel[index];
+    const report = reportOn(state, rng, def, matter.bindings, item.about, new Set(item.reports.map((r) => r.source_id)));
+    if (report !== null) {
+      state.standing.influence -= cost;
+      item.reports.push(report);
+    }
+    return report;
+  }
+
+  function reveal(state, rng, matter, event, bal) {
+    const lines = [];
+    matter.intel.forEach((item, i) => {
+      const def = event.intel[i];
+      if (!item.reports.length) return;
+      const chance = def.reveal != null ? def.reveal : bal.information.reveal_chance;
+      if (!rng.chance(chance)) return;
+      const truth = checkAll(state, matter.bindings, def.truth);
+      const right = [], wrong = [];
+      for (const report of item.reports) {
+        const known = state.knowledge.sources[report.source_id];
+        if (report.says === truth) { known.right += 1; right.push(known.name); }
+        else { known.wrong += 1; wrong.push(known.name); }
+      }
+      let line = `It came out: ${truth ? item.claim : item.denial}`;
+      if (right.length) line += ` ${joinNames(right)} had it right.`;
+      if (wrong.length) line += ` ${joinNames(wrong)} had it wrong.`;
+      lines.push(line);
+    });
+    return lines;
+  }
+
+  function rollSecrets(event, bindings, rng) {
+    for (const [name, p] of Object.entries(event.secrets)) {
+      if (!((SECRET + name) in bindings)) bindings[SECRET + name] = rng.chance(p) ? "yes" : "no";
+    }
+  }
+
+  function makeMatter(event, bindings, state, rng) {
     state.event_log[event.id] = state.month;
+    rollSecrets(event, bindings, rng);
+    for (const effect of event.arise_effects) {
+      applyEffect(state, effect, bindings, rng, event, fill(event.title, state, bindings, event.lists));
+    }
+    const intel = [];
+    for (const item of event.intel) {
+      const about = item.about ? bindings[item.about] : null;
+      const known = { claim: fill(item.claim, state, bindings, event.lists), denial: fill(item.denial, state, bindings, event.lists), about, reports: [] };
+      const report = reportOn(state, rng, item, bindings, about, new Set());
+      if (report !== null) known.reports.push(report);
+      intel.push(known);
+    }
     return {
       id: `${event.id}-${state.month}`, event_id: event.id, month: state.month,
-      title: fill(event.title, state, bindings), text: fill(event.text, state, bindings),
-      options: event.options.map((o) => ({ id: o.id, label: fill(o.label, state, bindings) })),
-      bindings, waited: 0, can_wait: event.patience > 0, recommendation: null,
+      title: fill(event.title, state, bindings, event.lists), text: fill(event.text, state, bindings, event.lists),
+      options: event.options.map((o) => ({ id: o.id, label: fill(o.label, state, bindings, event.lists) })),
+      bindings, waited: 0, can_wait: event.patience > 0, recommendation: null, intel,
     };
   }
 
@@ -472,11 +618,13 @@
       if (!checkAll(state, item.bindings, item.when.concat(event.trigger))) continue;
       if (event.kind === "news") {
         state.event_log[event.id] = state.month;
-        const title = fill(event.title, state, item.bindings);
+        rollSecrets(event, item.bindings, rng);
+        const title = fill(event.title, state, item.bindings, event.lists);
         for (const effect of event.effects) applyEffect(state, effect, item.bindings, rng, event, title);
-        state.knowledge.news.push({ month: state.month, title, text: fill(event.text, state, item.bindings) });
+        const text = fill(event.text, state, item.bindings, event.lists);
+        state.knowledge.news.push({ month: state.month, title, text });
       } else if (state.matters.every((m) => m.event_id !== event.id)) {
-        state.matters.push(makeMatter(event, item.bindings, state));
+        state.matters.push(makeMatter(event, item.bindings, state, rng));
       }
     }
   }
@@ -504,7 +652,7 @@
     const n = Math.min(count, pool.length);
     for (let i = 0; i < n; i++) {
       const [[event, bindings]] = pool.splice(rng.weightedIndex(pool.map(([e]) => e.weight)), 1);
-      state.matters.push(makeMatter(event, bindings, state));
+      state.matters.push(makeMatter(event, bindings, state, rng));
     }
   }
 
@@ -558,7 +706,7 @@
       state.knowledge.decisions.push({
         month: state.month, matter_id: matter.id, title: matter.title, recommended: labelOf(matter, rec),
         chosen: labelOf(matter, WAIT), followed, tone: "waiting",
-        text: "The Don lets it sit another month.", trust_delta: 0,
+        text: "The Don lets it sit another month.", trust_delta: 0, revealed: [],
       });
       return true;
     }
@@ -578,7 +726,8 @@
     state.knowledge.decisions.push({
       month: state.month, matter_id: matter.id, title: matter.title, recommended: labelOf(matter, rec),
       chosen: labelOf(matter, choice), followed, tone: outcome.tone,
-      text: fill(outcome.text, state, matter.bindings), trust_delta: trust,
+      text: fill(outcome.text, state, matter.bindings, event.lists), trust_delta: trust,
+      revealed: reveal(state, rng, matter, event, bal),
     });
     return false;
   }
@@ -628,7 +777,10 @@
     return { state, rng };
   }
 
-  const api = { GameRNG, pyRound, monthLabel, player, playerFamily, members, bandFor, tick, newGame, recommend, WAIT };
+  const api = {
+    GameRNG, pyRound, monthLabel, player, playerFamily, members, bandFor, tick, newGame, recommend, WAIT,
+    canVerify, verify, apparentTrust,
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ConsigliereEngine = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

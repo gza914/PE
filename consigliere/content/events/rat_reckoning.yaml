@@ -1,0 +1,70 @@
+id: rat_reckoning
+title: What to do about {rat}
+text: |-
+  There is no longer any question about {rat}. The Don has known him for twenty years.
+
+  He asks you what should be done, which is not the same as asking you what he should do.
+followup_only: true
+carries: [a, b, c, rat, hiding, innocent]
+trigger: [[flag.rat_active, "==", 1]]
+patience: 0
+options:
+  - id: exile
+    label: Send him far away, with a warning
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: "{rat} and his family leave for Arizona on a Thursday. Nobody comes to say goodbye, and nobody asks why."
+        effects:
+          - retire: rat
+          - clear_flag: rat_active
+          - standing: {exposure: -3}
+      - weight: 1
+        tone: bad
+        text: "{rat} goes to Arizona and keeps talking from there. In the spring the grand jury hears from him by telephone."
+        effects:
+          - retire: rat
+          - clear_flag: rat_active
+          - standing: {exposure: 6}
+          - don_mood: -5
+  - id: turn
+    label: Leave him in place, and feed the government what we choose
+    don: {base: 0, cautious: 0.5, paranoid: -0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: For months the government chases shipments that never come and meetings that never happen. {rat} never learns that you know.
+        effects:
+          - clear_flag: rat_active
+          - flag: rat_turned
+          - standing: {exposure: -5, influence: 5}
+      - weight: 1
+        tone: bad
+        text: "{rat} works out that he has been made. He walks into the federal building on a Monday morning and does not walk out."
+        effects:
+          - retire: rat
+          - clear_flag: rat_active
+          - standing: {exposure: 8}
+          - don_mood: -8
+  - id: old_way
+    label: Let the Don settle it the old way
+    don: {base: 0, paranoid: 1.5}
+    advised_exposure: 4
+    outcomes:
+      - weight: 2
+        tone: neutral
+        text: "{rat} goes fishing on a Sunday and does not come back. Nobody at the club mentions him. Everybody at the club understands."
+        effects:
+          - retire: rat
+          - clear_flag: rat_active
+          - stat: {who: crew, stat: fear, delta: 8}
+          - standing: {exposure: 2}
+      - weight: 1
+        tone: bad
+        text: "{rat} does not come back from fishing. The government was expecting him on Monday, and now it is expecting answers."
+        effects:
+          - retire: rat
+          - clear_flag: rat_active
+          - standing: {exposure: 8}
+          - don_mood: -6

@@ -49,6 +49,12 @@ class GameRNG:
                 return i
         return len(weights) - 1
 
+    def shuffle(self, items: list) -> None:
+        """Fisher-Yates in place, drawing with randint so web/engine.js can mirror it."""
+        for i in range(len(items) - 1, 0, -1):
+            j = self.randint(0, i)
+            items[i], items[j] = items[j], items[i]
+
     def round_stochastic(self, value: float) -> int:
         """Round so that small deltas still add up: 0.3 becomes 1 thirty percent of the time."""
         whole = int(value // 1)

@@ -1,0 +1,69 @@
+id: reporter_sniffing
+title: A reporter named Hartigan
+text: |-
+  Ellen Hartigan of the Herald has been asking about the Don: his businesses, his friends at City Hall, the night the warehouse on Pier 9 burned.
+
+  She is polite, she is patient, and she does not scare.
+secrets: {has_family_source: 0.35}
+once: true
+trigger: [[month, ">=", 3]]
+intel:
+  - claim: Hartigan has someone inside the family talking to her.
+    denial: Hartigan is working from public records and barroom gossip.
+    truth: [[secret.has_family_source, "==", 1]]
+    sources: [street, lawyer, police]
+options:
+  - id: cultivate
+    label: Trade her small truths for what she hears at City Hall
+    don: {base: 0, paranoid: -1}
+    advised_exposure: 2
+    outcomes:
+      - weight: 2
+        weight_if:
+          - when: [[secret.has_family_source, "==", 1]]
+            mult: 0.5
+        tone: good
+        text: Hartigan takes the first meeting in a diner on the far side of town. She hears everything at City Hall a week before it happens, and now so do you.
+        effects:
+          - add_source: {id: hartigan, name: Ellen Hartigan of the Herald, kind: press, reliability: 0.8, believed: 0.5}
+          - standing: {influence: 2}
+      - weight: 1
+        tone: bad
+        text: Hartigan takes the meetings, and then prints a long piece with details that only someone in the family could have given her. People wonder who.
+        effects:
+          - add_source: {id: hartigan, name: Ellen Hartigan of the Herald, kind: press, reliability: 0.8, believed: 0.5}
+          - standing: {exposure: 5, dons_trust: -3}
+  - id: editor
+    label: Have a word with her editor
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Her editor discovers that the city's water mains deserve a twelve-part series. Hartigan is given all twelve parts.
+        effects:
+          - treasury: -3000
+      - weight: 1
+        tone: bad
+        text: Her editor tells her who called. She takes the story to a paper in another city, where nobody's editor owes anybody.
+        effects:
+          - treasury: -3000
+          - standing: {exposure: 3}
+  - id: ignore
+    label: Let her write what she wants
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[secret.has_family_source, "==", 1]]
+            mult: 0
+        tone: neutral
+        text: Hartigan's piece runs on a Sunday. It is mostly about City Hall, and the Don is mentioned once, as a businessman.
+      - weight: 1
+        weight_if:
+          - when: [[secret.has_family_source, "==", 0]]
+            mult: 0
+        tone: bad
+        text: Hartigan's piece runs on a Sunday. It describes the back room of the social club, and who sits where.
+        effects:
+          - standing: {exposure: 4}
+          - don_mood: -4

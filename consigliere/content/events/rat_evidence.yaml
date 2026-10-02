@@ -1,0 +1,132 @@
+id: rat_evidence
+title: What the street says about three men
+text: |-
+  A month of quiet questions about {suspects}. Here is what has come back.
+
+  None of it would stand up in a courtroom. This is not a courtroom.
+followup_only: true
+carries: [a, b, c, rat, hiding, innocent]
+lists: {suspects: [a, b, c]}
+trigger: [[flag.rat_active, "==", 1]]
+patience: 0
+intel:
+  - about: a
+    claim: "{a} has been lying about where he goes at night."
+    denial: "{a} is where he says he is, every night."
+    truth: [{any: [[a.allegiance, "==", informant], [a, has, secret_meetings]]}]
+    sources: [street, family, police]
+    reveal: 0
+  - about: b
+    claim: "{b} has been lying about where he goes at night."
+    denial: "{b} is where he says he is, every night."
+    truth: [{any: [[b.allegiance, "==", informant], [b, has, secret_meetings]]}]
+    sources: [street, family, police]
+    reveal: 0
+  - about: c
+    claim: "{c} has been lying about where he goes at night."
+    denial: "{c} is where he says he is, every night."
+    truth: [{any: [[c.allegiance, "==", informant], [c, has, secret_meetings]]}]
+    sources: [street, family, police]
+    reveal: 0
+options:
+  - id: canary
+    label: Tell each of them a different story, and see which one reaches the government
+    don: {base: 0.5, cautious: 0.5, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: Three stories go out. A shipment on Tuesday, a meeting on Thursday, a card game moved to Saturday. Each man hears only one. Now you wait.
+        effects:
+          - followup: {event: rat_canary, after: [1, 2]}
+  - id: accuse_a
+    label: Put the question to {a}
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[a.allegiance, "!=", informant]]
+            mult: 0
+        text: "{a} lasts until about midnight. By one in the morning he is telling you the agent's name, and the name of the agent's wife."
+        effects:
+          - flag: rat_known
+          - followup: {event: rat_reckoning, after: [1, 1]}
+      - tone: bad
+        weight_if:
+          - when: [[a, lacks, secret_meetings]]
+            mult: 0
+        text: "{a} swears he is no rat, and then, red in the face, explains where he really goes at night. Her name is Gloria. He will not forgive you for making him say it."
+        effects:
+          - stat: {who: a, stat: loyalty, delta: -10}
+          - memory: {who: a, about: you, weight: -12, decay: 0.01}
+          - followup: {event: rat_damage, after: [1, 2]}
+      - tone: bad
+        weight_if:
+          - when: [{any: [[a, has, secret_meetings], [a.allegiance, "==", informant]]}]
+            mult: 0
+        text: "{a} swears on his children. He is telling the truth, and now he knows that you thought he wasn't."
+        effects:
+          - stat: {who: a, stat: loyalty, delta: -15}
+          - memory: {who: a, about: family, weight: -15, decay: 0.01}
+          - cohesion: -3
+          - followup: {event: rat_damage, after: [1, 2]}
+  - id: accuse_b
+    label: Put the question to {b}
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[b.allegiance, "!=", informant]]
+            mult: 0
+        text: "{b} lasts until about midnight. By one in the morning he is telling you the agent's name, and the name of the agent's wife."
+        effects:
+          - flag: rat_known
+          - followup: {event: rat_reckoning, after: [1, 1]}
+      - tone: bad
+        weight_if:
+          - when: [[b, lacks, secret_meetings]]
+            mult: 0
+        text: "{b} swears he is no rat, and then, red in the face, explains where he really goes at night. Her name is Gloria. He will not forgive you for making him say it."
+        effects:
+          - stat: {who: b, stat: loyalty, delta: -10}
+          - memory: {who: b, about: you, weight: -12, decay: 0.01}
+          - followup: {event: rat_damage, after: [1, 2]}
+      - tone: bad
+        weight_if:
+          - when: [{any: [[b, has, secret_meetings], [b.allegiance, "==", informant]]}]
+            mult: 0
+        text: "{b} swears on his children. He is telling the truth, and now he knows that you thought he wasn't."
+        effects:
+          - stat: {who: b, stat: loyalty, delta: -15}
+          - memory: {who: b, about: family, weight: -15, decay: 0.01}
+          - cohesion: -3
+          - followup: {event: rat_damage, after: [1, 2]}
+  - id: accuse_c
+    label: Put the question to {c}
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[c.allegiance, "!=", informant]]
+            mult: 0
+        text: "{c} lasts until about midnight. By one in the morning he is telling you the agent's name, and the name of the agent's wife."
+        effects:
+          - flag: rat_known
+          - followup: {event: rat_reckoning, after: [1, 1]}
+      - tone: bad
+        weight_if:
+          - when: [[c, lacks, secret_meetings]]
+            mult: 0
+        text: "{c} swears he is no rat, and then, red in the face, explains where he really goes at night. Her name is Gloria. He will not forgive you for making him say it."
+        effects:
+          - stat: {who: c, stat: loyalty, delta: -10}
+          - memory: {who: c, about: you, weight: -12, decay: 0.01}
+          - followup: {event: rat_damage, after: [1, 2]}
+      - tone: bad
+        weight_if:
+          - when: [{any: [[c, has, secret_meetings], [c.allegiance, "==", informant]]}]
+            mult: 0
+        text: "{c} swears on his children. He is telling the truth, and now he knows that you thought he wasn't."
+        effects:
+          - stat: {who: c, stat: loyalty, delta: -15}
+          - memory: {who: c, about: family, weight: -15, decay: 0.01}
+          - cohesion: -3
+          - followup: {event: rat_damage, after: [1, 2]}

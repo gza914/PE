@@ -1,0 +1,72 @@
+id: don_doctor
+title: The Don's doctor
+text: |-
+  Dr. Abruzzi has been the Don's doctor for thirty years. He stopped you on the stairs, said the Don should slow down, and then said that he had not said anything.
+cast:
+  underboss:
+    role: [underboss]
+secrets: {serious: 0.5}
+once: true
+trigger: [[month, ">=", 3]]
+intel:
+  - claim: The Don's heart is worse than he lets anyone see.
+    denial: The Don has a tired heart, and nothing more.
+    truth: [[secret.serious, "==", 1]]
+    sources: [family, lawyer]
+options:
+  - id: rest
+    label: Urge him to rest, and let {underboss} carry more
+    don: {base: -1, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.serious, "==", 0]]
+            mult: 0
+        text: The Don sulks for a month. Dr. Abruzzi tells you, privately, that it was the right call.
+        effects:
+          - health: {who: don, delta: 8}
+          - don_mood: -4
+          - stat: {who: underboss, stat: loyalty, delta: 3}
+      - tone: neutral
+        weight_if:
+          - when: [[secret.serious, "==", 1]]
+            mult: 0
+        text: The Don sulks for a month, then goes back to work, rested and annoyed with you.
+        effects:
+          - don_mood: -6
+  - id: specialist
+    label: Bring in a specialist from the city hospital, quietly
+    don: {base: 0, paranoid: -1, cautious: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.serious, "==", 0]]
+            mult: 0
+        text: The specialist is discreet and expensive, and he changes the Don's pills. The Don sleeps better.
+        effects:
+          - treasury: -2000
+          - health: {who: don, delta: 10}
+      - tone: neutral
+        weight_if:
+          - when: [[secret.serious, "==", 1]]
+            mult: 0
+        text: The specialist is discreet and expensive, and finds nothing Dr. Abruzzi hadn't.
+        effects:
+          - treasury: -2000
+  - id: silent
+    label: It's his heart. It's his business.
+    don: {base: 0.5}
+    outcomes:
+      - tone: bad
+        weight_if:
+          - when: [[secret.serious, "==", 0]]
+            mult: 0
+        text: In June the Don has a spell at the dinner table. He is fine, he says, and everyone watching knows that he is not.
+        effects:
+          - health: {who: don, delta: -12}
+          - don_mood: -5
+      - tone: neutral
+        weight_if:
+          - when: [[secret.serious, "==", 1]]
+            mult: 0
+        text: Nothing happens. Dr. Abruzzi stops mentioning it.

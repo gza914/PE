@@ -1,0 +1,59 @@
+id: rat_warning
+title: Mr. Fessler's question
+text: |-
+  Mr. Fessler came to the house with his hat in his hands. A friend at the federal courthouse let him read part of an affidavit. It quotes, nearly word for word, a conversation from the back room of the social club in the spring.
+
+  Three men were in that room besides the Don and you: {suspects}.
+cast:
+  a:
+    role: [capo, underboss]
+  b:
+    role: [capo, underboss]
+  c:
+    role: [capo, underboss]
+lists: {suspects: [a, b, c]}
+arise_effects:
+  - assign_roles: {pool: [a, b, c], roles: [rat, hiding, innocent]}
+  - allegiance: {who: rat, to: informant, agency: fbi}
+  - add_vice: {who: hiding, vice: secret_meetings}
+  - flag: rat_active
+trigger: [[month, ">=", 5]]
+weight: 4
+once: true
+patience: 0
+intel:
+  - claim: The government's source is one of the three men who were in that room.
+    denial: The government could have bugged the back room. It may not be one of our own at all.
+    truth: [[flag.rat_active, "==", 1]]
+    sources: [lawyer, police, family]
+    reveal: 0
+options:
+  - id: quiet
+    label: Look into all three, quietly
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The Don nods once. Nothing changes at Sunday dinner, which is the point.
+        effects:
+          - followup: {event: rat_evidence, after: [1, 1]}
+  - id: freeze
+    label: Cut all three out of family business until it's settled
+    don: {base: 0, paranoid: 2}
+    outcomes:
+      - tone: neutral
+        text: Three men find themselves with nothing to do and nobody to tell why. Whoever is talking has less to say. So does everyone else.
+        effects:
+          - stat: {who: a, stat: loyalty, delta: -6}
+          - stat: {who: b, stat: loyalty, delta: -6}
+          - stat: {who: c, stat: loyalty, delta: -6}
+          - cohesion: -4
+          - standing: {exposure: -2}
+          - followup: {event: rat_evidence, after: [1, 1]}
+  - id: dismiss
+    label: Mr. Fessler is a nervous man
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - tone: bad
+        text: Nobody looks into anything. Somebody keeps talking.
+        effects:
+          - followup: {event: rat_damage, after: [2, 3]}

@@ -1,0 +1,68 @@
+id: capo_restaurant
+title: "{capo}'s restaurant"
+text: |-
+  {capo} wants to borrow ten thousand dollars from the family to open a restaurant on Union Avenue. Veal, a good wine list, a room in the back for private parties.
+
+  He will pay it back within a year, with a point a month.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.competence, ">=", 55]]
+secrets: {front: 0.3}
+trigger: [[treasury, ">", 25000]]
+cooldown: 24
+intel:
+  - about: capo
+    claim: The room in the back is for a book {capo} means to run on his own.
+    denial: "{capo} really does want to sell veal and wine."
+    truth: [[secret.front, "==", 1]]
+    sources: [street, family]
+options:
+  - id: lend
+    label: Lend him the ten thousand
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 0
+        text: The restaurant opens in the spring. The Don has a corner table for life.
+        effects:
+          - treasury: -10000
+          - stat: {who: capo, stat: loyalty, delta: 4}
+          - followup: {event: restaurant_repaid, after: [8, 12]}
+      - tone: bad
+        weight_if:
+          - when: [[secret.front, "==", 0]]
+            mult: 0
+        text: The restaurant opens in the spring. Within months the back room is taking bets that never reach the family's books.
+        effects:
+          - treasury: -10000
+          - stat: {who: capo, stat: greed, delta: 10}
+          - stat: {who: capo, stat: loyalty, delta: -5}
+  - id: refuse
+    label: The family is not a bank
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        weight_if:
+          - when: [[secret.front, "==", 1]]
+            mult: 0
+        text: "{capo} says he understands. He finds the money from a bank, at a worse rate, and mentions the rate often."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -4}
+      - tone: good
+        weight_if:
+          - when: [[secret.front, "==", 0]]
+            mult: 0
+        text: "{capo} says he understands. Without the money, the back room never opens."
+  - id: partner
+    label: Lend it, and put a family man at the register
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: good
+        text: "{capo} smiles and agrees to everything. The man at the register sends a report every Friday."
+        effects:
+          - treasury: -10000
+          - stat: {who: capo, stat: loyalty, delta: -2}
+          - followup: {event: restaurant_repaid, after: [8, 12]}

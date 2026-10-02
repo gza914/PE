@@ -1,0 +1,60 @@
+id: raid_tip
+title: Word of a raid
+text: |-
+  Word has come that the vice squad will hit the card game at the social club next Friday night.
+
+  If it's true, closing for the week costs three thousand dollars. If it isn't, closing costs three thousand dollars and makes the family look jumpy.
+secrets: {raid_real: 0.5}
+cooldown: 12
+intel:
+  - claim: The vice squad really is coming on Friday.
+    denial: There is no raid. Somebody wants to see how jumpy the family is.
+    truth: [[secret.raid_real, "==", 1]]
+    sources: [police, street]
+    reveal: 1.0
+options:
+  - id: close
+    label: Close the game for the week
+    don: {base: 0, cautious: 1, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.raid_real, "==", 0]]
+            mult: 0
+        text: On Friday night the vice squad finds an empty room and a bowl of peanuts.
+        effects:
+          - treasury: -3000
+      - tone: neutral
+        weight_if:
+          - when: [[secret.raid_real, "==", 1]]
+            mult: 0
+        text: Nothing happens on Friday. The game reopens the next week, and the players tease the doorman.
+        effects:
+          - treasury: -3000
+          - don_mood: -2
+  - id: stay_open
+    label: Keep the game open
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.raid_real, "==", 1]]
+            mult: 0
+        text: Friday passes like any other Friday.
+      - tone: bad
+        weight_if:
+          - when: [[secret.raid_real, "==", 0]]
+            mult: 0
+        text: The vice squad takes eleven men, the table and the cash box. Mr. Fessler spends the weekend in night court.
+        effects:
+          - treasury: -5000
+          - standing: {exposure: 3}
+          - don_mood: -5
+  - id: move
+    label: Move the game to the back of the bakery for a week
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The game spends a week among the flour sacks. Everyone goes home smelling of bread.
+        effects:
+          - treasury: -1000

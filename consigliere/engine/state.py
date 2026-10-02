@@ -14,6 +14,7 @@ from .models import (
     Decision,
     Family,
     Investigation,
+    KnownSource,
     LedgerEntry,
     LedgerLine,
     Matter,
@@ -24,11 +25,12 @@ from .models import (
     Report,
     Scheduled,
     Score,
+    Source,
     Standing,
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -60,8 +62,17 @@ def _v2_to_v3(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v3_to_v4(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 4: sources and intel. Old games start with no sources."""
+    data.setdefault("sources", {})
+    data.setdefault("knowledge", {}).setdefault("sources", {})
+    for matter in data.get("matters", []):
+        matter.setdefault("intel", [])
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3}
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4}
 
 
 class PlayerKnowledge(Model):
@@ -73,6 +84,7 @@ class PlayerKnowledge(Model):
     impressions: dict[str, str] = Field(default_factory=dict)
     decisions: list[Decision] = Field(default_factory=list)
     news: list[NewsItem] = Field(default_factory=list)
+    sources: dict[str, KnownSource] = Field(default_factory=dict)
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]
@@ -92,6 +104,7 @@ class WorldState(Model):
     relationships: list[Relationship] = Field(default_factory=list)
     rackets: dict[str, Racket] = Field(default_factory=dict)
     investigations: dict[str, Investigation] = Field(default_factory=dict)
+    sources: dict[str, Source] = Field(default_factory=dict)
     standing: Standing = Field(default_factory=Standing)
     don_mood: Score = 50
     matters: list[Matter] = Field(default_factory=list)

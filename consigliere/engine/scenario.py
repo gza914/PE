@@ -14,6 +14,14 @@ def load_scenario(name: str, seed: int) -> WorldState:
     data["families"] = {f["id"]: f for f in data.get("families", [])}
     data["characters"] = {c["id"]: c for c in data.get("characters", [])}
     data["rackets"] = {r["id"]: r for r in data.get("rackets", [])}
+    sources = data.pop("sources", [])
+    data["sources"] = {
+        s["id"]: {k: s[k] for k in ("id", "name", "kind", "reliability")} | {"character_id": s.get("character")}
+        for s in sources
+    }
+    data.setdefault("knowledge", {})["sources"] = {
+        s["id"]: {"name": s["name"], "kind": s["kind"], "believed": s["believed"]} for s in sources
+    }
     state = WorldState.model_validate({**data, "seed": seed})
     initial_impressions(state)
     return state

@@ -1,0 +1,62 @@
+id: cop_shakedown
+title: A patrolman with a new price
+text: |-
+  A patrolman named Corrigan stopped {capo}'s collector and explained that the old arrangement was too cheap. He wants a hundred dollars a week, delivered to him personally.
+cast:
+  capo:
+    role: [capo]
+secrets: {wired: 0.25}
+cooldown: 18
+intel:
+  - claim: Corrigan is working for Internal Affairs, and he is wearing a wire.
+    denial: Corrigan is a greedy cop and nothing more.
+    truth: [[secret.wired, "==", 1]]
+    sources: [police, lawyer, street]
+options:
+  - id: pay
+    label: Pay him his hundred a week
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.wired, "==", 1]]
+            mult: 0
+        text: Corrigan gets his hundred a week, and {capo}'s collectors get left alone.
+        effects:
+          - add_expense: {id: corrigan, label: Patrolman Corrigan, amount: 400}
+      - tone: bad
+        weight_if:
+          - when: [[secret.wired, "==", 0]]
+            mult: 0
+        text: Corrigan's first envelope is photographed from across the street. {capo}'s collector is arrested before he reaches the corner.
+        effects:
+          - standing: {exposure: 6}
+          - stat: {who: capo, stat: respect, delta: -5}
+          - don_mood: -5
+  - id: captain
+    label: Take it up with his captain
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: good
+        weight: 3
+        weight_if:
+          - when: [[secret.wired, "==", 1]]
+            mult: 0.2
+        text: The captain explains to Corrigan how things are done in his precinct. Corrigan transfers to the harbor patrol.
+        effects:
+          - treasury: -1000
+          - standing: {influence: 1}
+      - tone: bad
+        weight: 1
+        text: The captain is not the man Corrigan answers to this month. He says so, on the record.
+        effects:
+          - treasury: -1000
+          - standing: {exposure: 3}
+  - id: refuse
+    label: Tell him the old price stands
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Corrigan writes a great many parking tickets on {capo}'s blocks. It is annoying, and it is all he does.
+        effects:
+          - stat: {who: capo, stat: respect, delta: -2}

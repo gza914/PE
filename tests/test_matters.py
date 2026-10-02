@@ -241,7 +241,7 @@ def test_scheduled_matter_reaches_the_desk(fresh):
 # ---- the Don decides ----
 
 def desk(state, e, recommendation):
-    m = matters.make_matter(e, {"capo": "capo_amaro"}, state)
+    m = matters.make_matter(e, {"capo": "capo_amaro"}, state, GameRNG(0))
     m.recommendation = recommendation
     state.matters = [m]
     return m

@@ -200,6 +200,19 @@ class MatterOption(Model):
     label: str
 
 
+class IntelReport(Model):
+    source_id: str
+    says: bool  # True: the source backs the claim; False: the source denies it
+    month: int
+
+
+class MatterIntel(Model):
+    claim: str
+    denial: str
+    about: str | None = None  # character id
+    reports: list[IntelReport] = Field(default_factory=list)
+
+
 class Matter(Model):
     """A decision on the consigliere's desk this month. Text is resolved when it arises."""
 
@@ -213,6 +226,7 @@ class Matter(Model):
     waited: int = 0
     can_wait: bool = True
     recommendation: str | None = None  # option id, "wait", or None for silence
+    intel: list[MatterIntel] = Field(default_factory=list)
 
 
 class Scheduled(Model):
@@ -236,6 +250,30 @@ class Decision(Model):
     tone: str  # good, bad, neutral, or waiting
     text: str
     trust_delta: int = 0
+    revealed: list[str] = Field(default_factory=list)  # what came out afterwards, and who had it right
+
+
+class Source(Model):
+    """The truth about a source of information. Never shown to the player."""
+
+    id: str
+    name: str
+    kind: str
+    reliability: Unit
+    character_id: str | None = None
+    compromised: bool = False
+    active: bool = True
+
+
+class KnownSource(Model):
+    """A source as the player knows it: who he is, how far you trusted him at first, his record."""
+
+    name: str
+    kind: str
+    believed: Unit
+    right: int = 0
+    wrong: int = 0
+    active: bool = True
 
 
 class NewsItem(Model):

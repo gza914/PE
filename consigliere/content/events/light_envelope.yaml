@@ -15,6 +15,12 @@ cast:
 trigger: [[month, ">=", 2]]
 weight: 3
 cooldown: 6
+intel:
+  - about: capo
+    claim: "{capo} has been living above his means."
+    denial: "{capo} lives like a man on a capo's share."
+    truth: [[capo.stash, ">", 15000]]
+    sources: [street, family]
 options:
   - id: accept
     label: Take him at his word

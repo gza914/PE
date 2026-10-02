@@ -67,3 +67,8 @@ mood:                         # the Don's mood after a matter turns out...
   bad: -5
   neutral: 0
   drift_rate: 0.1             # ...and how fast it returns to even
+
+information:
+  verify_cost: 3              # Influence spent to hear from a second source
+  prior_weight: 4             # your first impression of a source counts as this many reports
+  reveal_chance: 0.6          # chance the truth comes out after a matter is settled

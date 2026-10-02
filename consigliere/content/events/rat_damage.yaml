@@ -1,0 +1,14 @@
+id: rat_damage
+kind: news
+followup_only: true
+title: A subpoena for the social club
+text: |-
+  A federal grand jury has subpoenaed the social club's lease, its liquor license and its bartender. The bartender has taken his family to visit relatives.
+
+  Whoever was talking is still talking.
+carries: [a, b, c, rat, hiding, innocent]
+trigger: [[flag.rat_active, "==", 1]]
+effects:
+  - standing: {exposure: 5, dons_trust: -4}
+  - don_mood: -6
+  - followup: {event: rat_evidence, after: [2, 3]}

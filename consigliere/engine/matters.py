@@ -11,12 +11,34 @@ from .calendar import year_of
 from .content import Balance, ContentError, balance, events
 from .eventdefs import STATS, Condition, Effect, EventDef, OptionDef
 from .mathutil import clamp
-from .models import Character, Decision, Expense, LedgerLine, Matter, MatterOption, Memory, NewsItem, Scheduled
+from .eventdefs import IntelDef
+from .models import (
+    Allegiance,
+    Character,
+    Decision,
+    Expense,
+    IntelReport,
+    KnownSource,
+    LedgerLine,
+    Matter,
+    MatterIntel,
+    MatterOption,
+    Memory,
+    NewsItem,
+    Scheduled,
+    Source,
+)
 from .rng import GameRNG
 from .state import WorldState
 
 WAIT = "wait"
 HIDDEN = ("health", "stash", "birth_year", "debts")
+SECRET = "?"  # binding keys starting with this hold a matter's secrets ("yes" / "no")
+
+
+def cast_items(bindings: dict[str, str]) -> list[tuple[str, str]]:
+    """Bindings that name characters or rackets, without the secrets."""
+    return [(k, v) for k, v in bindings.items() if not k.startswith(SECRET)]
 
 
 # ---- conditions ----
@@ -58,6 +80,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
         return path  # a plain string literal
     if head == "flag":
         return 1 if attr in state.flags else 0
+    if head == "secret":
+        return 1 if bindings.get(SECRET + attr) == "yes" else 0
     target = resolve_id(state, bindings, head, self_id)
     if target in state.characters:
         c = state.characters[target]
@@ -71,6 +95,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
             return sum(1 for r in state.rackets.values() if r.capo_id == target)
         if attr == "alive":
             return 1 if c.alive else 0
+        if attr == "allegiance":
+            return c.hidden.allegiance.value
     elif target in state.rackets:
         r = state.rackets[target]
         if attr in ("income", "heat"):
@@ -81,6 +107,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
 
 
 def check(state: WorldState, bindings: dict[str, str], cond: Condition, self_id: str | None = None) -> bool:
+    if isinstance(cond, dict):
+        return any(check(state, bindings, c, self_id) for c in cond["any"])
     left, op, right = cond
     if op in ("has", "lacks"):
         target = resolve_id(state, bindings, left, self_id)
@@ -134,10 +162,20 @@ def bind(event: EventDef, state: WorldState, rng: GameRNG) -> dict[str, str] | N
     return bindings
 
 
-def fill(text: str, state: WorldState, bindings: dict[str, str]) -> str:
-    for name, ref in bindings.items():
-        thing = state.characters.get(ref) or state.rackets.get(ref)
-        text = text.replace("{" + name + "}", thing.name)
+def name_of(state: WorldState, ref: str) -> str:
+    return (state.characters.get(ref) or state.rackets[ref]).name
+
+
+def join_names(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def fill(text: str, state: WorldState, bindings: dict[str, str], lists: dict[str, list[str]] | None = None) -> str:
+    for name, slots in (lists or {}).items():
+        names = sorted(name_of(state, bindings[slot]) for slot in slots)
+        text = text.replace("{" + name + "}", join_names(names))
+    for name, ref in cast_items(bindings):
+        text = text.replace("{" + name + "}", name_of(state, ref))
     family = state.player_family
     text = text.replace("{don}", state.characters[family.don_id].name)
     text = text.replace("{you}", state.player.name)
@@ -145,7 +183,7 @@ def fill(text: str, state: WorldState, bindings: dict[str, str]) -> str:
 
 
 def bindings_alive(state: WorldState, bindings: dict[str, str]) -> bool:
-    return all(ref in state.rackets or (ref in state.characters and state.characters[ref].alive) for ref in bindings.values())
+    return all(ref in state.rackets or (ref in state.characters and state.characters[ref].alive) for _, ref in cast_items(bindings))
 
 
 # ---- effects ----
@@ -212,21 +250,174 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
                 e.amount = max(0, e.amount + value.delta)
     elif kind == "remove_expense":
         family.expenses = [e for e in family.expenses if e.id != value]
+    elif kind == "allegiance":
+        for c in targets(state, bindings, value.who):
+            c.hidden.allegiance = value.to
+            c.hidden.allegiance_to = value.agency
+    elif kind == "add_source":
+        if value.id not in state.sources:
+            character = bindings[value.character] if value.character else None
+            state.sources[value.id] = Source(id=value.id, name=value.name, kind=value.kind,
+                                             reliability=value.reliability, character_id=character)
+            state.knowledge.sources[value.id] = KnownSource(name=value.name, kind=value.kind, believed=value.believed)
+    elif kind == "compromise_source":
+        if value in state.sources:
+            state.sources[value].compromised = True
+    elif kind == "remove_source":
+        if value in state.sources:
+            state.sources[value].active = False
+            state.knowledge.sources[value].active = False
+    elif kind == "assign_roles":
+        pool = [bindings[slot] for slot in value.pool]
+        rng.shuffle(pool)
+        for role, ref in zip(value.roles, pool):
+            bindings[role] = ref
+    elif kind == "add_vice":
+        for c in targets(state, bindings, value.who):
+            if value.vice not in c.hidden.vices:
+                c.hidden.vices.append(value.vice)
+    elif kind == "retire":
+        gone = state.characters[resolve_id(state, bindings, value)]
+        gone.alive = False
+        for racket in state.rackets.values():
+            if racket.capo_id == gone.id:
+                racket.capo_id = None
+    elif kind == "health":
+        for c in targets(state, bindings, value.who):
+            c.hidden.health = int(clamp(c.hidden.health + value.delta))
+
+
+# ---- information ----
+
+def usable_sources(state: WorldState) -> list[Source]:
+    return [
+        s for s in state.sources.values()
+        if s.active and (s.character_id is None or state.characters[s.character_id].alive)
+    ]
+
+
+def is_compromised(state: WorldState, source: Source) -> bool:
+    if source.compromised:
+        return True
+    if source.character_id is None:
+        return False
+    return state.characters[source.character_id].hidden.allegiance != Allegiance.FAMILY
+
+
+def other_sources(state: WorldState, kinds: list[str], about: str | None, exclude: set[str]) -> list[str]:
+    """Sources that could speak to a claim: the right kinds first, anyone else if none of those."""
+    pool = [s for s in usable_sources(state) if s.character_id is None or s.character_id != about]
+    pool = [s for s in pool if s.id not in exclude]
+    fitting = [s.id for s in pool if s.kind in kinds]
+    return fitting or [s.id for s in pool]
+
+
+def report_on(state: WorldState, rng: GameRNG, intel: IntelDef, bindings: dict[str, str], about: str | None,
+              exclude: set[str]) -> IntelReport | None:
+    candidates = other_sources(state, intel.sources, about, exclude)
+    if not candidates:
+        return None
+    source = state.sources[rng.choice(candidates)]
+    truth = check_all(state, bindings, intel.truth)
+    if is_compromised(state, source):
+        says = not truth
+    else:
+        says = truth if rng.chance(source.reliability) else not truth
+    return IntelReport(source_id=source.id, says=says, month=state.month)
+
+
+def apparent_trust(known: KnownSource, bal: Balance) -> float:
+    """How far you trust a source: your first impression, revised by what he got right and wrong."""
+    w = bal.information.prior_weight
+    return (known.right + w * known.believed) / (known.right + known.wrong + w)
+
+
+def can_verify(state: WorldState, matter: Matter, index: int, bal: Balance | None = None) -> bool:
+    bal = bal or balance()
+    item = matter.intel[index]
+    event = events()[matter.event_id]
+    used = {r.source_id for r in item.reports}
+    return state.standing.influence >= bal.information.verify_cost and bool(
+        other_sources(state, event.intel[index].sources, item.about, used))
+
+
+def verify(state: WorldState, rng: GameRNG, matter: Matter, index: int, bal: Balance | None = None,
+           evs: dict[str, EventDef] | None = None) -> IntelReport | None:
+    """Spend Influence to hear what a second source says about a claim."""
+    bal = bal or balance()
+    evs = evs if evs is not None else events()
+    if state.standing.influence < bal.information.verify_cost:
+        return None
+    item = matter.intel[index]
+    report = report_on(state, rng, evs[matter.event_id].intel[index], matter.bindings, item.about,
+                       {r.source_id for r in item.reports})
+    if report is not None:
+        state.standing.influence -= bal.information.verify_cost
+        item.reports.append(report)
+    return report
+
+
+def reveal(state: WorldState, rng: GameRNG, matter: Matter, event: EventDef, bal: Balance) -> list[str]:
+    """After a matter is settled the truth sometimes comes out, and you learn who to believe."""
+    lines = []
+    for item, intel in zip(matter.intel, event.intel):
+        if not item.reports:
+            continue
+        chance = intel.reveal if intel.reveal is not None else bal.information.reveal_chance
+        if not rng.chance(chance):
+            continue
+        truth = check_all(state, matter.bindings, intel.truth)
+        right, wrong = [], []
+        for report in item.reports:
+            known = state.knowledge.sources[report.source_id]
+            if report.says == truth:
+                known.right += 1
+                right.append(known.name)
+            else:
+                known.wrong += 1
+                wrong.append(known.name)
+        line = f"It came out: {item.claim if truth else item.denial}"
+        if right:
+            line += f" {join_names(right)} had it right."
+        if wrong:
+            line += f" {join_names(wrong)} had it wrong."
+        lines.append(line)
+    return lines
 
 
 # ---- arising ----
 
-def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState) -> Matter:
+def roll_secrets(event: EventDef, bindings: dict[str, str], rng: GameRNG) -> None:
+    for name, p in event.secrets.items():
+        if SECRET + name not in bindings:
+            bindings[SECRET + name] = "yes" if rng.chance(p) else "no"
+
+
+def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rng: GameRNG) -> Matter:
+    """Secrets are rolled, arising effects apply, then your sources tell you what they know."""
     state.event_log[event.id] = state.month
+    roll_secrets(event, bindings, rng)
+    for effect in event.arise_effects:
+        apply_effect(state, effect, bindings, rng, event, fill(event.title, state, bindings, event.lists))
+    intel = []
+    for item in event.intel:
+        about = bindings[item.about] if item.about else None
+        known = MatterIntel(claim=fill(item.claim, state, bindings, event.lists),
+                            denial=fill(item.denial, state, bindings, event.lists), about=about)
+        report = report_on(state, rng, item, bindings, about, set())
+        if report is not None:
+            known.reports.append(report)
+        intel.append(known)
     return Matter(
         id=f"{event.id}-{state.month}",
         event_id=event.id,
         month=state.month,
-        title=fill(event.title, state, bindings),
-        text=fill(event.text, state, bindings),
-        options=[MatterOption(id=o.id, label=fill(o.label, state, bindings)) for o in event.options],
+        title=fill(event.title, state, bindings, event.lists),
+        text=fill(event.text, state, bindings, event.lists),
+        options=[MatterOption(id=o.id, label=fill(o.label, state, bindings, event.lists)) for o in event.options],
         bindings=bindings,
         can_wait=event.patience > 0,
+        intel=intel,
     )
 
 
@@ -241,12 +432,14 @@ def run_scheduled(state: WorldState, rng: GameRNG, evs: dict[str, EventDef]) -> 
             continue
         if event.kind == "news":
             state.event_log[event.id] = state.month
-            title = fill(event.title, state, item.bindings)
+            roll_secrets(event, item.bindings, rng)
+            title = fill(event.title, state, item.bindings, event.lists)
             for effect in event.effects:
                 apply_effect(state, effect, item.bindings, rng, event, title)
-            state.knowledge.news.append(NewsItem(month=state.month, title=title, text=fill(event.text, state, item.bindings)))
+            text = fill(event.text, state, item.bindings, event.lists)
+            state.knowledge.news.append(NewsItem(month=state.month, title=title, text=text))
         elif all(m.event_id != event.id for m in state.matters):
-            state.matters.append(make_matter(event, item.bindings, state))
+            state.matters.append(make_matter(event, item.bindings, state, rng))
 
 
 def eligible(state: WorldState, rng: GameRNG, evs: dict[str, EventDef]) -> list[tuple[EventDef, dict[str, str]]]:
@@ -274,7 +467,7 @@ def begin_month(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs
     pool = eligible(state, rng, evs)
     for _ in range(min(count, len(pool))):
         event, bindings = pool.pop(rng.weighted_index([e.weight for e, _ in pool]))
-        state.matters.append(make_matter(event, bindings, state))
+        state.matters.append(make_matter(event, bindings, state, rng))
 
 
 # ---- the Don decides ----
@@ -355,7 +548,8 @@ def resolve(state: WorldState, matter: Matter, rng: GameRNG, bal: Balance, evs: 
     state.knowledge.decisions.append(Decision(
         month=state.month, matter_id=matter.id, title=matter.title, recommended=label_of(matter, rec),
         chosen=label_of(matter, choice), followed=followed, tone=outcome.tone,
-        text=fill(outcome.text, state, matter.bindings), trust_delta=trust,
+        text=fill(outcome.text, state, matter.bindings, event.lists), trust_delta=trust,
+        revealed=reveal(state, rng, matter, event, bal),
     ))
     return False
 

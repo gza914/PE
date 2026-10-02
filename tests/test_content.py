@@ -39,15 +39,17 @@ def test_event_placeholders_all_resolve():
     from consigliere.engine.content import events
 
     for event in events().values():
-        names = set(event.cast) | {"don", "you", "family"}
+        names = set(event.cast) | set(event.carries) | set(event.lists) | {"don", "you", "family"}
+        names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
         texts = [event.title, event.text] + [o.label for o in event.options]
         texts += [out.text for o in event.options for out in o.outcomes]
+        texts += [t for i in event.intel for t in (i.claim, i.denial)]
         for text in texts:
             for found in re.findall(r"\{(\w+)\}", text):
                 assert found in names, f"{event.id}: {{{found}}} is not in its cast"
 
 
-def test_milestone_three_has_fifteen_events():
+def test_vertical_slice_has_thirty_events():
     from consigliere.engine.content import events
 
-    assert len(events()) >= 15
+    assert len(events()) >= 30

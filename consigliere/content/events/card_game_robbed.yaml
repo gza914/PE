@@ -1,0 +1,68 @@
+id: card_game_robbed
+title: The game on Garrick Street
+text: |-
+  Two men in stocking masks walked into {capo}'s card game on Garrick Street and walked out with six thousand dollars of the family's money. Nobody was hurt. Nobody recognized them, they say.
+
+  {capo} wants to know what the Don would like done.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.rackets, ">=", 1]]
+secrets: {inside_job: 0.45}
+arise_effects:
+  - treasury: -6000
+cooldown: 12
+intel:
+  - claim: Someone inside the game told the robbers when the pot was biggest.
+    denial: The robbers were strangers who got lucky.
+    truth: [[secret.inside_job, "==", 1]]
+    sources: [street, family]
+options:
+  - id: inside
+    label: Find the man inside the game
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.inside_job, "==", 0]]
+            mult: 0
+        text: The dealer breaks first. Most of the money comes back, and the dealer leaves town with a limp.
+        effects:
+          - treasury: 4000
+          - stat: {who: capo, stat: fear, delta: 5}
+      - tone: bad
+        weight_if:
+          - when: [[secret.inside_job, "==", 1]]
+            mult: 0
+        text: "{capo}'s men lean on everyone who works the game. Nobody knows anything, because nobody did anything. Two good dealers quit."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -4}
+          - cohesion: -2
+  - id: outside
+    label: Put the word out on the street for two men in masks
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.inside_job, "==", 1]]
+            mult: 0
+        text: The street gives up two brothers from out of town within the week. They will not be robbing card games again.
+        effects:
+          - treasury: 3000
+          - stat: {who: capo, stat: respect, delta: 3}
+      - tone: bad
+        weight_if:
+          - when: [[secret.inside_job, "==", 0]]
+            mult: 0
+        text: The street finds nobody, because the man who did it never left the room. The game is robbed again a month later.
+        effects:
+          - treasury: -3000
+          - stat: {who: capo, stat: respect, delta: -5}
+  - id: absorb
+    label: Take the loss and double the men at the door
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Two more men at the door. Six thousand dollars is a lesson, and an expensive one.
+        effects:
+          - treasury: -1000

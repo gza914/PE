@@ -16,6 +16,7 @@ options:
         text: Dolan's first tip arrives within the month. A raid on one of the card games finds a room full of men playing gin for matchsticks.
         effects:
           - add_expense: {id: sgt_dolan, label: Sgt. Dolan, amount: 600}
+          - add_source: {id: dolan, name: Sgt. Ray Dolan, kind: police, reliability: 0.85, believed: 0.6}
           - standing: {influence: 5}
           - flag: dolan_on_payroll
       - weight: 1
@@ -23,6 +24,8 @@ options:
         text: Dolan takes the first envelope to his lieutenant. The lieutenant tells him to keep taking them, and to keep notes.
         effects:
           - add_expense: {id: sgt_dolan, label: Sgt. Dolan, amount: 600}
+          - add_source: {id: dolan, name: Sgt. Ray Dolan, kind: police, reliability: 0.85, believed: 0.6}
+          - compromise_source: dolan
           - standing: {exposure: 5}
           - flag: dolan_double
   - id: decline

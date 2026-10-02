@@ -83,6 +83,12 @@ class MoodBalance(Model):
     drift_rate: Unit
 
 
+class InformationBalance(Model):
+    verify_cost: int = Field(ge=0)  # Influence spent to hear from a second source
+    prior_weight: float = Field(gt=0)  # how many reports your first impression of a source is worth
+    reveal_chance: Unit  # chance the truth behind a claim comes out once a matter is settled
+
+
 class Balance(Model):
     economy: EconomyBalance
     loyalty: LoyaltyBalance
@@ -91,6 +97,7 @@ class Balance(Model):
     matters: MattersBalance
     advice: AdviceBalance
     mood: MoodBalance
+    information: InformationBalance
 
 
 class LoyaltyBand(Model):
@@ -127,12 +134,20 @@ class ContentError(ValueError):
 def check_event_references(events: dict[str, EventDef]) -> None:
     """Catch broken references between events, casts and effects at load time."""
     for event in events.values():
-        names = set(event.cast)
+        names = set(event.cast) | set(event.carries)
         for name, slot in event.cast.items():
             for ref in (slot.racket_of, slot.racket_not_of, slot.runs):
                 if ref is not None and ref not in names:
                     raise ContentError(f"{event.id}: cast slot {name} refers to unknown slot {ref}")
-        effects = list(event.effects)
+        names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
+        for intel in event.intel:
+            if intel.about is not None and intel.about not in names:
+                raise ContentError(f"{event.id}: intel about unknown {intel.about}")
+        for listed in event.lists.values():
+            for name in listed:
+                if name not in names:
+                    raise ContentError(f"{event.id}: list names unknown {name}")
+        effects = list(event.arise_effects) + list(event.effects)
         for option in event.options:
             for outcome in option.outcomes:
                 effects.extend(outcome.effects)
@@ -143,10 +158,17 @@ def check_event_references(events: dict[str, EventDef]) -> None:
             who = getattr(value, "who", None)
             if who is not None and who not in names | {"crew", "don", "you"}:
                 raise ContentError(f"{event.id}: effect on unknown {who}")
+            if effect.kind == "assign_roles":
+                names |= set(value.roles)
+                if not set(value.pool) <= names:
+                    raise ContentError(f"{event.id}: assign_roles pool has unknown slots")
+            if effect.kind == "retire" and value not in names:
+                raise ContentError(f"{event.id}: retire refers to unknown {value}")
             about = getattr(value, "about", None)
             if about is not None and about not in names | {"family", "don", "you"}:
                 raise ContentError(f"{event.id}: memory about unknown {about}")
-            for ref in (getattr(value, "racket", None), getattr(value, "to", None)):
+            refs = (value.racket, getattr(value, "to", None)) if effect.kind in ("assign_racket", "racket_income") else ()
+            for ref in refs:
                 if isinstance(ref, str) and ref not in names:
                     raise ContentError(f"{event.id}: effect refers to unknown {ref}")
 

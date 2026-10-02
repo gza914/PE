@@ -1,0 +1,40 @@
+id: nephew_job
+title: The Don's nephew
+text: |-
+  Paulie, the Don's sister's boy, is twenty-two and wants in. He has a sharp suit, a soft chin, and a mother who has asked the Don twice.
+cast:
+  capo:
+    role: [capo]
+once: true
+options:
+  - id: with_capo
+    label: Put him with {capo}, who will look after him
+    don: {base: 0, sentimental: 2}
+    outcomes:
+      - weight: 2
+        tone: neutral
+        text: Paulie learns to carry envelopes and keep his mouth shut, more or less in that order.
+        effects:
+          - don_mood: 3
+      - weight: 1
+        tone: bad
+        text: Paulie talks too much in a bar on Union Avenue about who his uncle is. {capo} has to make two apologies and one threat.
+        effects:
+          - standing: {exposure: 3}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: legit
+    label: Find him a job in a legitimate business
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: good
+        text: Paulie sells Buicks at a dealership the family owns a piece of. He sells a great many Buicks.
+        effects:
+          - don_mood: 2
+  - id: say_no
+    label: Tell his mother no
+    don: {base: -1}
+    outcomes:
+      - tone: bad
+        text: His mother does not speak to the Don at Easter. The Don does not speak to you for most of April.
+        effects:
+          - don_mood: -6

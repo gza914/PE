@@ -1,0 +1,11 @@
+id: rat_canary
+kind: news
+followup_only: true
+title: The Tuesday shipment
+text: |-
+  On Tuesday night two men in a gray sedan watched an empty warehouse for six hours. There was never a shipment. There was only a story, and only {rat} was told it.
+carries: [a, b, c, rat, hiding, innocent]
+trigger: [[flag.rat_active, "==", 1]]
+effects:
+  - flag: rat_known
+  - followup: {event: rat_reckoning, after: [1, 1]}
