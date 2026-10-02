@@ -1,0 +1,45 @@
+id: union_strike
+title: Dunn calls a strike
+text: |-
+  Frank Dunn has called a strike against every contractor that does business with the family. The pickets are polite, sober, and photographed by the Herald every morning.
+
+  {racket} is losing money every day it goes on.
+followup_only: true
+carries: [racket]
+options:
+  - id: break
+    label: Break the strike
+    don: {base: 0, paranoid: 1}
+    advised_exposure: 3
+    outcomes:
+      - tone: neutral
+        text: The pickets break up after a night nobody describes in detail. Work resumes. The Herald writes three editorials.
+        headline: "Picket Line Attacked at Dawn; Strike Collapses"
+        effects:
+          - heat: {who: family, delta: 8}
+          - racket_income: {racket: racket, pct: 10}
+  - id: pay
+    label: Find out what Dunn's price is
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Every reformer has a price. Dunn's turns out to be a new house for his mother and a quiet year. The strike ends on Friday.
+        effects:
+          - treasury: -5000
+          - racket_income: {racket: racket, pct: 10}
+      - weight: 1
+        tone: bad
+        text: Dunn has no price. He has a tape recorder, and an appointment with the Herald.
+        headline: "Union Chief Dunn Says Mob Tried to Buy Him"
+        effects:
+          - standing: {exposure: 5}
+          - heat: {who: family, delta: 6}
+  - id: wait_out
+    label: Wait him out
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The strike runs eleven weeks and ends from exhaustion on both sides. Nobody wins, which is what strikes are for.
+        effects:
+          - racket_income: {racket: racket, pct: -5}

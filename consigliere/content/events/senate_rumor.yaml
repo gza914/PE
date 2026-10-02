@@ -1,0 +1,46 @@
+id: senate_rumor
+title: The Senate comes to town
+text: |-
+  A Senate committee on organized crime is coming to the city in the spring, with television cameras. Mr. Fessler says they have a list.
+
+  Every family in the city wants to know who is on it, and every family is pretending not to.
+trigger: [[month, ">=", 48]]
+weight: 3
+once: true
+intel:
+  - claim: The Don is on the committee's list.
+    denial: The committee is after bigger fish than the Don.
+    truth: [[heat, ">=", 30]]
+    sources: [lawyer, press, police]
+    reveal: 1.0
+options:
+  - id: prepare
+    label: Hire the best lawyers in Washington, now
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: Two men from Washington arrive with leather briefcases and very large bills. They seem to know everyone on the committee by their first names.
+        effects:
+          - treasury: -8000
+          - flag: senate_prepared
+          - followup: {event: senate_subpoena, after: [2, 3], when: [[heat, ">=", 30]]}
+          - followup: {event: senate_televised, after: [3, 4]}
+  - id: away
+    label: Send the Don south for his health until it's over
+    don: {base: 0, vain: -1, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: The Don goes to a hotel by the sea, complains about the food, and calls every evening. The committee's subpoena finds an empty house.
+        effects:
+          - don_mood: -6
+          - flag: senate_absent
+          - followup: {event: senate_televised, after: [3, 4]}
+  - id: nothing
+    label: Let them come
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: neutral
+        text: The family waits to see what the Senate wants.
+        effects:
+          - followup: {event: senate_subpoena, after: [2, 3], when: [[heat, ">=", 30]]}
+          - followup: {event: senate_televised, after: [3, 4]}

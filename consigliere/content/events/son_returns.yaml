@@ -1,0 +1,48 @@
+id: son_returns
+title: The Don's son comes home
+text: |-
+  Vincent, the Don's son, is home from the Army with a medal, a good suit and no plans. He has asked his father to bring him into the business.
+
+  The Don has always said he wanted something different for Vincent. He has also never said no to him.
+cast:
+  son:
+    role: [family_member]
+    where: [[self.id, "==", vincent_ferrante]]
+  capo:
+    role: [capo]
+    where: [[self.loyalty, ">=", 60]]
+trigger: [[month, ">=", 4]]
+weight: 3
+once: true
+options:
+  - id: bring_in
+    label: Bring him in, under {capo}
+    don: {base: 0, sentimental: 1.5}
+    outcomes:
+      - tone: neutral
+        text: Vincent starts with {capo} on Monday. {capo} looks like a man who has been handed a lit stick of dynamite and told to hold it carefully.
+        effects:
+          - flag: son_in
+          - don_mood: 5
+          - followup: {event: son_first_job, after: [2, 4]}
+  - id: keep_out
+    label: Find him something clean
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Vincent is given a car dealership and told to be grateful. He is grateful for about a month.
+        effects:
+          - flag: son_out
+          - stat: {who: son, stat: loyalty, delta: -6}
+          - followup: {event: son_restless, after: [6, 10]}
+  - id: law_school
+    label: Send him to law school
+    don: {base: 0.5, pious: 0.5, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: Vincent goes off to law school with a new briefcase. The Don tells everyone, twice.
+        effects:
+          - treasury: -6000
+          - flag: son_law
+          - don_mood: 6
+          - followup: {event: son_lawyer, after: [30, 36]}

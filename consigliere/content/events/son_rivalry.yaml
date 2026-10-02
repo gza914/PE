@@ -1,0 +1,51 @@
+id: son_rivalry
+title: Vincent and {underboss}
+text: |-
+  Vincent and {underboss} no longer speak. At Sunday dinner they sit at opposite ends of the table and talk to the people beside them about the weather.
+
+  Everyone understands what it is really about: who sits at the head of the table when the Don no longer can.
+cast:
+  son:
+    role: [capo, family_member]
+    where: [[self.id, "==", vincent_ferrante]]
+  underboss:
+    role: [underboss]
+trigger: [[flag.son_in, "==", 1], [month, ">=", 30]]
+weight: 2
+once: true
+options:
+  - id: son
+    label: Let it be known the family is behind Vincent
+    don: {base: 0, sentimental: 1.5}
+    outcomes:
+      - tone: neutral
+        text: The Don makes his feelings plain. {underboss} accepts it the way a man accepts a diagnosis.
+        effects:
+          - stat: {who: underboss, stat: loyalty, delta: -12}
+          - memory: {who: underboss, about: don, weight: -12, decay: 0.01}
+          - stat: {who: son, stat: respect, delta: 10}
+  - id: underboss
+    label: Remind Vincent who has earned what
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Vincent is reminded. He listens politely and remembers who reminded him.
+        effects:
+          - stat: {who: underboss, stat: loyalty, delta: 5}
+          - memory: {who: son, about: you, weight: -8}
+  - id: peace
+    label: Put them at the same table, with the Don between them
+    don: {base: 0.5, sentimental: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: A long dinner, a great deal of wine, and something like a truce. It may even hold.
+        effects:
+          - treasury: -1000
+          - cohesion: 4
+      - weight: 1
+        tone: bad
+        text: The dinner ends with a broken glass and both men leaving early. Everyone at the club hears a different version by morning.
+        effects:
+          - treasury: -1000
+          - cohesion: -4

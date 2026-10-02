@@ -1,0 +1,12 @@
+id: union_won
+kind: news
+followup_only: true
+title: Kerrigan holds Local 312
+headline: "Kerrigan Re-elected at Local 312"
+text: |-
+  Joe Kerrigan was re-elected president of Local 312. At his victory party he thanked his mother, his parish priest, and "friends who prefer not to be named."
+
+  {racket} will have all the work it can handle.
+carries: [racket]
+effects:
+  - racket_income: {racket: racket, pct: 15}

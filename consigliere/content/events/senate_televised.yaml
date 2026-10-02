@@ -1,0 +1,12 @@
+id: senate_televised
+kind: news
+followup_only: true
+title: The hearings on television
+headline: "Senate Crime Hearings Grip the City"
+text: |-
+  The hearings ran for nine days. Bars put televisions on the counter. Housewives ironed in front of them. A man from another family wept on camera about his mother.
+
+  Everyone in the city now knows words they didn't know a month ago, and some of those words are names.
+effects:
+  - heat: {who: family, delta: 6}
+  - followup: {event: senate_witness, after: [1, 2]}

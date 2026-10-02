@@ -1,0 +1,48 @@
+id: narcotics_heat
+title: The Bureau of Narcotics comes to town
+text: |-
+  The Federal Bureau of Narcotics has rented an office two blocks from the courthouse. Its agents are young, and they do not take envelopes.
+
+  The heroin money is the best the family has ever seen. It is also the reason they are here.
+followup_only: true
+carries: [capo, district, dope]
+options:
+  - id: out
+    label: Get out of the business while it can still be done quietly
+    don: {base: 0.5, cautious: 1.5}
+    outcomes:
+      - tone: good
+        text: The family steps out of the business over a single weekend. {capo} complains about the money for a year. The agents find nothing to find.
+        effects:
+          - remove_racket: dope
+          - clear_flag: narcotics_open
+          - heat: {who: family, delta: -6}
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: insulate
+    label: Stay in, and keep {capo} three steps from the product
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: Couriers, cutouts, a laundromat. The money keeps coming, a little thinner. So does the attention.
+        effects:
+          - racket_income: {racket: dope, pct: -20}
+          - followup: {event: narcotics_overdose, after: [3, 6]}
+      - weight: 1
+        tone: bad
+        text: One of the couriers is arrested on his first run. He knows {capo}'s name, because everyone does.
+        effects:
+          - heat: {who: family, delta: 10}
+          - standing: {exposure: 4}
+          - followup: {event: narcotics_overdose, after: [3, 6]}
+  - id: more
+    label: Stay in, and pay whoever needs paying
+    don: {base: -0.5, greedy: 1}
+    advised_exposure: 3
+    outcomes:
+      - tone: bad
+        text: The family pays. The young agents cannot be paid, it turns out, and they keep a careful list of who tried.
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: 8}
+          - followup: {event: narcotics_overdose, after: [2, 5]}

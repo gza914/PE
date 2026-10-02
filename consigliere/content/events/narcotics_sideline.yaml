@@ -1,0 +1,44 @@
+id: narcotics_sideline
+title: "{capo}'s side business"
+text: |-
+  The Don said no. {capo} heard it, and then went into the heroin business anyway, with his own men and his own money, in {district}.
+
+  Everyone knows. Nobody has told the Don, because nobody wants to be the one.
+followup_only: true
+carries: [capo, district]
+intel:
+  - about: capo
+    claim: "{capo} is making real money from it already."
+    denial: "{capo} is small-time at it, and losing money."
+    truth: [[capo.stash, ">", 5000]]
+    sources: [street, police]
+options:
+  - id: confront
+    label: Tell the Don, and let him deal with {capo}
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: good
+        text: The Don deals with it in a single conversation. {capo} closes up shop. He will never forgive whoever told, and he knows exactly who that was.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -10}
+          - memory: {who: capo, about: you, weight: -12, decay: 0.01}
+          - stat: {who: capo, stat: fear, delta: 10}
+  - id: cut
+    label: Take a cut, and keep it off the books
+    don: {base: -0.5}
+    advised_exposure: 3
+    outcomes:
+      - tone: neutral
+        text: The family takes a cut and asks no questions. The money is good. The kind of attention it brings is not.
+        effects:
+          - add_racket: {id: side_heroin, name: "{capo}'s side business", kind: narcotics, district: district, capo: capo, income: 7000, heat_per_month: 8, bind: dope}
+          - heat: {who: family, delta: 6}
+  - id: ignore
+    label: Say nothing, and let it be his problem
+    don: {base: 0}
+    outcomes:
+      - tone: bad
+        text: It stays {capo}'s problem for about six weeks. Then the federal narcotics people make it everyone's.
+        effects:
+          - heat: {who: family, delta: 8}
+          - followup: {event: narcotics_bust, after: [2, 5]}

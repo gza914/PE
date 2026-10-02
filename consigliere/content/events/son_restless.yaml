@@ -1,0 +1,38 @@
+id: son_restless
+title: Vincent's other friends
+text: |-
+  Vincent has been playing cards at clubs the family doesn't own, with men the family doesn't know. He owes six thousand dollars to people who know exactly whose son he is.
+
+  The car dealership is doing badly. Vincent does not seem to have noticed.
+followup_only: true
+carries: [son, capo]
+options:
+  - id: pay
+    label: Pay the debt, quietly, and say nothing to the Don
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: neutral
+        text: The debt disappears. Vincent assumes it disappeared on its own, which tells you something about Vincent.
+        effects:
+          - treasury: -6000
+          - add_vice: {who: son, vice: cards}
+  - id: tell
+    label: Tell the Don
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        text: The Don pays, and then has a conversation with his son that the whole house hears through the walls. Vincent stays home for a while.
+        effects:
+          - treasury: -6000
+          - don_mood: -5
+          - stat: {who: son, stat: discretion, delta: 10}
+  - id: bring_in
+    label: Bring him into the business after all, where you can watch him
+    don: {base: 0, sentimental: 1}
+    outcomes:
+      - tone: neutral
+        text: Vincent is brought in, and is delighted, and is watched.
+        effects:
+          - treasury: -6000
+          - flag: son_in
+          - followup: {event: son_made, after: [6, 10]}

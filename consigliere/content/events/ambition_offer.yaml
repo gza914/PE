@@ -1,0 +1,43 @@
+id: ambition_offer
+title: "{boss}'s offer to {capo}"
+text: |-
+  It is no longer a rumor. {boss} has offered {capo} a place in {rival}, and his rackets are welcome to come with him.
+
+  {capo} has not said yes. He has not said no either, and he has let the family find out, which is its own kind of message.
+followup_only: true
+carries: [capo, rival, boss]
+patience: 0
+options:
+  - id: match
+    label: Match the offer, and then some
+    don: {base: 0, sentimental: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} stays, for money and a promise. The other capos do the arithmetic and draw their own conclusions."
+        effects:
+          - treasury: -8000
+          - stat: {who: capo, stat: loyalty, delta: 15}
+          - stat: {who: crew, stat: greed, delta: 3}
+  - id: let_go
+    label: Let him go, and be glad to know
+    don: {base: 0, vain: -1, cautious: 1}
+    outcomes:
+      - tone: bad
+        text: "{capo} goes over to {rival}, and his rackets go with him. At least now everyone knows where he stands."
+        headline: "Reputed Mob Lieutenant Switches Sides"
+        effects:
+          - defect: {who: capo, to: rival}
+          - cohesion: -5
+          - rivalry: {who: rival, tension: 10}
+  - id: old_way
+    label: Let the Don settle it the old way
+    don: {base: 0, paranoid: 1.5}
+    advised_exposure: 5
+    outcomes:
+      - tone: neutral
+        text: "{capo} does not make it to his meeting with {boss}. {boss} understands the message, and so does everyone else."
+        effects:
+          - kill: capo
+          - rivalry: {who: rival, tension: 20}
+          - heat: {who: family, delta: 6}
+          - stat: {who: crew, stat: fear, delta: 8}

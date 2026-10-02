@@ -1,0 +1,13 @@
+id: narcotics_quiet_money
+kind: news
+followup_only: true
+title: "{capo}'s new car"
+text: |-
+  {capo} has a new Cadillac, a new house in Linden Park, and a new way of not meeting anyone's eye at the club.
+
+  The money is not coming through the family. The attention will.
+carries: [capo, district]
+effects:
+  - stat: {who: capo, stat: greed, delta: 5}
+  - heat: {who: family, delta: 6}
+  - followup: {event: narcotics_bust, after: [3, 7]}

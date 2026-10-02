@@ -114,6 +114,8 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
             return 1 if c.alive else 0
         if attr == "allegiance":
             return c.hidden.allegiance.value
+        if attr == "id":
+            return c.id
         if attr == "heat":
             return pressure(state, target)
         if attr == "investigation":
@@ -216,6 +218,10 @@ def bind(event: EventDef, state: WorldState, rng: GameRNG) -> dict[str, str] | N
     return bindings
 
 
+def exists(state: WorldState, ref: str) -> bool:
+    return ref in state.characters or ref in state.rackets or ref in state.families or ref in state.districts
+
+
 def name_of(state: WorldState, ref: str) -> str:
     return (state.characters.get(ref) or state.rackets.get(ref) or state.families.get(ref) or state.districts[ref]).name
 
@@ -229,7 +235,8 @@ def fill(text: str, state: WorldState, bindings: dict[str, str], lists: dict[str
         names = sorted(name_of(state, bindings[slot]) for slot in slots)
         text = text.replace("{" + name + "}", join_names(names))
     for name, ref in cast_items(bindings):
-        text = text.replace("{" + name + "}", name_of(state, ref))
+        if exists(state, ref):  # a racket closed since, say
+            text = text.replace("{" + name + "}", name_of(state, ref))
     family = state.player_family
     text = text.replace("{don}", state.characters[family.don_id].name)
     text = text.replace("{you}", state.player.name)
@@ -362,6 +369,18 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
         bindings[value.bind] = racket_id
     elif kind == "remove_racket":
         state.rackets.pop(bindings.get(value, ""), None)
+    elif kind == "defect":
+        man = state.characters[resolve_id(state, bindings, value.who)]
+        rival = state.families[bindings[value.to]]
+        family.member_ids = [m for m in family.member_ids if m != man.id]
+        rival.member_ids.append(man.id)
+        man.family_id = rival.id
+        man.role = Role.ASSOCIATE
+        for racket in state.rackets.values():
+            if racket.capo_id == man.id:
+                racket.family_id = rival.id
+                racket.capo_id = None
+        state.knowledge.impressions.pop(man.id, None)
     elif kind == "promote":
         state.characters[resolve_id(state, bindings, value.who)].role = value.role
     elif kind == "recruit":

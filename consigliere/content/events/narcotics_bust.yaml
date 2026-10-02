@@ -1,0 +1,14 @@
+id: narcotics_bust
+kind: news
+followup_only: true
+title: Two kilos in a trunk
+headline: "Narcotics Agents Seize Heroin in {district} Raid"
+text: |-
+  One of {capo}'s men was stopped on the expressway with two kilos in the trunk of a car registered to {capo}'s brother-in-law.
+
+  The papers have a photograph of the trunk. Everyone in the city has seen it.
+carries: [capo, district]
+effects:
+  - heat: {who: family, delta: 10}
+  - standing: {exposure: 3}
+  - stat: {who: capo, stat: respect, delta: -6}

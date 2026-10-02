@@ -327,6 +327,7 @@
       if (attr === "rackets") return Object.values(state.rackets).filter((r) => r.capo_id === target).length;
       if (attr === "alive") return c.alive ? 1 : 0;
       if (attr === "allegiance") return c.hidden.allegiance;
+      if (attr === "id") return c.id;
       if (attr === "heat") return pressure(state, target);
       if (attr === "investigation") return investigationStage(state, target);
     } else if (target in state.rackets) {
@@ -421,7 +422,9 @@
       text = text.split("{" + name + "}").join(joinNames(names));
     }
     for (const [name, ref] of castItems(bindings)) {
-      text = text.split("{" + name + "}").join(nameOf(state, ref));
+      if (ref in state.characters || ref in state.rackets || ref in state.families || ref in state.districts) {
+        text = text.split("{" + name + "}").join(nameOf(state, ref));
+      }
     }
     const family = playerFamily(state);
     text = text.split("{don}").join(state.characters[family.don_id].name);
@@ -573,6 +576,19 @@
       }
       case "remove_racket": delete state.rackets[bindings[v] ?? ""]; break;
       case "promote": state.characters[resolveId(state, bindings, v.who)].role = v.role; break;
+      case "defect": {
+        const man = state.characters[resolveId(state, bindings, v.who)];
+        const rival = state.families[bindings[v.to]];
+        family.member_ids = family.member_ids.filter((m) => m !== man.id);
+        rival.member_ids.push(man.id);
+        man.family_id = rival.id;
+        man.role = "associate";
+        for (const r of Object.values(state.rackets)) {
+          if (r.capo_id === man.id) { r.family_id = rival.id; r.capo_id = null; }
+        }
+        delete state.knowledge.impressions[man.id];
+        break;
+      }
       case "unassign": {
         const target = resolveId(state, bindings, v);
         for (const r of Object.values(state.rackets)) if (r.capo_id === target) r.capo_id = null;

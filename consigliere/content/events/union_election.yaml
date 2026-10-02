@@ -1,0 +1,73 @@
+id: union_election
+title: The election at Local 312
+text: |-
+  Local 312 elects its president next month. The family's man, Joe Kerrigan, has held the job for eleven years. His challenger is a reformer named Frank Dunn, who gives speeches about clean unions and does not drink.
+
+  The docks and {racket} depend on who wins.
+cast:
+  racket:
+    racket: true
+    where: [{any: [[self.kind, "==", docks], [self.kind, "==", construction]]}]
+secrets: {dunn_popular: 0.5}
+trigger: [[month, ">=", 12]]
+weight: 2
+once: true
+intel:
+  - claim: Dunn has the votes, if the vote is honest.
+    denial: The men will stick with Kerrigan, whatever Dunn says.
+    truth: [[secret.dunn_popular, "==", 1]]
+    sources: [street, press]
+options:
+  - id: money
+    label: Back Kerrigan with money
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.dunn_popular, "==", 1]]
+            mult: 0.4
+        text: Kerrigan's campaign has turkeys at Thanksgiving and an open bar every Friday. He wins by six hundred votes.
+        effects:
+          - treasury: -6000
+          - followup: {event: union_won, after: [1, 1]}
+      - tone: bad
+        text: Kerrigan spends the family's money like water and loses anyway. The men took the turkeys and voted for Dunn.
+        effects:
+          - treasury: -6000
+          - followup: {event: union_lost, after: [1, 1]}
+  - id: muscle
+    label: Make sure the right men vote, and the wrong ones stay home
+    don: {base: 0, paranoid: 1}
+    advised_exposure: 4
+    outcomes:
+      - tone: good
+        weight: 2
+        text: Turnout is low among Dunn's people. Some of them had car trouble. Kerrigan wins comfortably.
+        effects:
+          - heat: {who: family, delta: 6}
+          - followup: {event: union_won, after: [1, 1]}
+      - tone: bad
+        weight: 1
+        text: A Herald photographer catches two men blocking the door of the union hall. Dunn wins in a landslide and gives the photograph to the newspapers.
+        headline: "Union Vote Marred by Intimidation, Dunn Wins"
+        effects:
+          - heat: {who: family, delta: 8}
+          - followup: {event: union_lost, after: [1, 1]}
+  - id: stay_out
+    label: Let the men decide
+    don: {base: 0, cautious: 1, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        weight_if:
+          - when: [[secret.dunn_popular, "==", 0]]
+            mult: 0
+        text: The men decide. They decide on Dunn.
+        effects:
+          - followup: {event: union_lost, after: [1, 1]}
+      - tone: good
+        weight_if:
+          - when: [[secret.dunn_popular, "==", 1]]
+            mult: 0
+        text: The men decide, and they decide on Kerrigan, who is grateful in a way that money could not buy.
+        effects:
+          - followup: {event: union_won, after: [1, 1]}

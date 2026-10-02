@@ -1,0 +1,49 @@
+id: narcotics_offer
+title: The question nobody wanted asked
+text: |-
+  {capo} has brought the Don a proposal from a man named Delmonte, who has friends overseas and a ship that docks in the spring. Heroin. The money is ten times anything the numbers ever paid.
+
+  For twenty years the Don has said the family does not touch it. Half the capos now say, quietly, that times have changed, and that if the family won't, someone else will, in {district}.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.greed, ">=", 55]]
+  district:
+    district_of: family
+trigger: [[month, ">=", 18]]
+weight: 3
+once: true
+options:
+  - id: refuse
+    label: Tell {capo} the family does not touch it
+    don: {base: 0.5, cautious: 1, pious: 1, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don says no, and says it in front of the other capos so that nobody misunderstands. {capo} says he understands. His face says something else.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -6}
+          - memory: {who: capo, about: don, weight: -6, decay: 0.02}
+          - flag: narcotics_refused
+          - followup: {event: narcotics_sideline, after: [3, 6], when: [[capo, has, greedy]]}
+  - id: quiet
+    label: Let {capo} do it on his own, and know nothing about it
+    don: {base: 0, paranoid: -0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don says nothing, which {capo} takes as permission, which is what it was.
+        effects:
+          - stat: {who: capo, stat: greed, delta: 5}
+          - flag: narcotics_quiet
+          - followup: {event: narcotics_quiet_money, after: [2, 4]}
+  - id: open
+    label: Bring the family into it, properly
+    don: {base: -1.5, cautious: -1}
+    advised_exposure: 4
+    outcomes:
+      - tone: good
+        text: The family goes into the business. The first month's money comes in a suitcase, and two of the old capos stop coming to Sunday dinner.
+        effects:
+          - add_racket: {id: heroin, name: "Heroin in {district}", kind: narcotics, district: district, capo: capo, income: 16000, heat_per_month: 9, bind: dope}
+          - flag: narcotics_open
+          - cohesion: -5
+          - followup: {event: narcotics_heat, after: [4, 8]}

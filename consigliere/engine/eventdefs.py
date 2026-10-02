@@ -192,6 +192,11 @@ class TransferDistrict(Model):
     to: str  # a family slot, or "family" for yours
 
 
+class Defect(Model):
+    who: str
+    to: str  # a rival family slot
+
+
 class FamilyDelta(Model):
     who: str  # "family" for yours, or a rival family slot
     delta: int
@@ -273,6 +278,7 @@ class Effect(Model):
     add_racket: AddRacket | None = None
     remove_racket: str | None = None
     promote: Promote | None = None
+    defect: Defect | None = None  # he goes over to a rival family, rackets and all
 
     @model_validator(mode="after")
     def exactly_one(self) -> Effect:

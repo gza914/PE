@@ -1,0 +1,26 @@
+id: kidnapping_second
+title: A second note
+text: |-
+  The second note asks for twenty thousand more. It is written in the same careful hand, by men who have now learned that the family pays.
+followup_only: true
+carries: [capo]
+patience: 0
+options:
+  - id: pay
+    label: Pay again
+    don: {base: 0, sentimental: 1.5}
+    outcomes:
+      - tone: neutral
+        text: The family pays again. The boy comes home. Nobody pretends this is the end of the story.
+        effects:
+          - treasury: -20000
+          - stat: {who: capo, stat: loyalty, delta: 10}
+  - id: hunt
+    label: No more money. Find them.
+    don: {base: 0, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        text: The men who wrote the notes are found waiting at the second locker. The boy comes home that night.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 12}
+          - heat: {who: family, delta: 4}

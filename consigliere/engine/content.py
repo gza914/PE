@@ -279,6 +279,8 @@ def check_event_references(events: dict[str, EventDef]) -> None:
             if about is not None and about not in names | {"family", "don", "you"}:
                 raise ContentError(f"{event.id}: memory about unknown {about}")
             refs = (value.racket, getattr(value, "to", None)) if effect.kind in ("assign_racket", "racket_income") else ()
+            if effect.kind == "defect":
+                refs = (value.to,)
             for ref in refs:
                 if isinstance(ref, str) and ref not in names:
                     raise ContentError(f"{event.id}: effect refers to unknown {ref}")

@@ -1,0 +1,13 @@
+id: son_lawyer
+kind: news
+followup_only: true
+title: Vincent Ferrante, Esquire
+headline: "Ferrante Son Admitted to the Bar"
+text: |-
+  Vincent passed the bar on his first try. The Don threw a party for two hundred people and cried at it.
+
+  Vincent says he will practice criminal law. He says it with a straight face.
+carries: [son, capo]
+effects:
+  - don_mood: 10
+  - add_source: {id: vincent, name: "Vincent Ferrante, Esq.", kind: lawyer, reliability: 0.85, believed: 0.6, character: son}

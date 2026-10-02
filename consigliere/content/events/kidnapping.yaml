@@ -1,0 +1,71 @@
+id: kidnapping
+title: "{capo}'s boy"
+text: |-
+  {capo}'s youngest boy did not come home from school on Tuesday. A note came instead, asking for twenty thousand dollars and no police.
+
+  {capo} has not slept. He is waiting in the outer office to hear what the Don will do.
+cast:
+  capo:
+    role: [capo, underboss]
+secrets: {outsiders: 0.6}
+trigger: [[month, ">=", 24]]
+weight: 2
+once: true
+patience: 0
+intel:
+  - claim: The kidnappers are amateurs from out of town, in over their heads.
+    denial: The kidnappers are professionals, and someone local told them where to look.
+    truth: [[secret.outsiders, "==", 1]]
+    sources: [street, police]
+    reveal: 1.0
+options:
+  - id: pay
+    label: Pay, and get the boy home
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The money goes into a locker at the train station. The boy is found the next morning in a church, cold and hungry and unharmed.
+        effects:
+          - treasury: -20000
+          - stat: {who: capo, stat: loyalty, delta: 15}
+          - memory: {who: capo, about: family, weight: 15, decay: 0.005}
+      - weight: 1
+        weight_if:
+          - when: [[secret.outsiders, "==", 1]]
+            mult: 0.3
+        tone: bad
+        text: The money goes into the locker. A second note comes, asking for twenty thousand more.
+        effects:
+          - treasury: -20000
+          - followup: {event: kidnapping_second, after: [1, 1]}
+  - id: hunt
+    label: Find them, quietly, before anything happens to him
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.outsiders, "==", 0]]
+            mult: 0.3
+        text: The family finds a rented room in a motor court out by the airport within two days. The boy comes home. The men who took him do not go anywhere again.
+        headline: "Kidnapped Boy Home Safe; Abductors Never Found"
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 15}
+          - stat: {who: crew, stat: fear, delta: 5}
+          - heat: {who: family, delta: 4}
+      - tone: bad
+        text: The hunt is noisy, and the kidnappers hear it coming. The boy is found alive, but frightened in a way that will not pass, and {capo} knows whose hunt it was.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -10}
+          - heat: {who: family, delta: 6}
+  - id: police
+    label: Let the FBI handle it, as the note said not to
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The FBI gets the boy back in four days, on television. The agents are very interested in {capo}, now that they have met him.
+        headline: "FBI Rescues Kidnapped Boy, 9"
+        effects:
+          - standing: {exposure: 4}
+          - heat: {who: family, delta: 6}
+          - stat: {who: capo, stat: loyalty, delta: 5}

@@ -1,0 +1,14 @@
+id: narcotics_overdose
+kind: news
+followup_only: true
+title: A boy in a stairwell
+headline: "Teen Found Dead of Overdose in {district}"
+text: |-
+  A seventeen-year-old from {district} was found in a stairwell on Saturday morning. His mother goes to St. Anselm's. So does the Don.
+
+  Father Cerrone's sermon on Sunday is about Cain. Nobody at the club talks about anything else all week.
+carries: [capo, district, dope]
+effects:
+  - heat: {who: family, delta: 10}
+  - don_mood: -8
+  - cohesion: -4

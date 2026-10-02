@@ -5,7 +5,7 @@ families:
   - id: ferrante
     name: The Ferrante Family
     don_id: don_ferrante
-    member_ids: [don_ferrante, underboss_lauro, you, capo_amaro, capo_tessaro, capo_marchetti, capo_sabella]
+    member_ids: [don_ferrante, underboss_lauro, you, capo_amaro, capo_tessaro, capo_marchetti, capo_sabella, vincent_ferrante]
     strength: 60
     wealth: 55
     cohesion: 65
@@ -100,6 +100,15 @@ characters:
     traits: [cautious, loyal, vain]
     stats: {loyalty: 80, fear: 20, respect: 60, competence: 75, greed: 30, discretion: 85}
     hidden: {health: 100, birth_year: 1912}
+
+  # The Don's son, back from the Army, and not suited for it.
+  - id: vincent_ferrante
+    name: Vincent Ferrante
+    role: family_member
+    family_id: ferrante
+    traits: [vain, ambitious, sentimental]
+    stats: {loyalty: 85, fear: 30, respect: 40, competence: 40, greed: 45, discretion: 35}
+    hidden: {health: 100, birth_year: 1933}
 
   # The steady old hand: loyal, careful, earns less than he could.
   - id: capo_amaro

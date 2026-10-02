@@ -1,0 +1,38 @@
+id: son_first_job
+title: Vincent's first collection
+text: |-
+  Vincent's first job was a collection on Fulton Avenue. He collected. He also broke the man's arm, which nobody had asked him to do, and then told the story at the club.
+
+  {capo} wants to know what the Don would like done with his son.
+followup_only: true
+carries: [son, capo]
+options:
+  - id: praise
+    label: Tell the Don his son has the stomach for it
+    don: {base: 0, sentimental: 1, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don is proud, and lets it show. Vincent takes it as permission. {capo} takes it as a warning.
+        effects:
+          - stat: {who: son, stat: fear, delta: 10}
+          - add_vice: {who: son, vice: temper}
+          - followup: {event: son_made, after: [4, 8]}
+  - id: discipline
+    label: Have {capo} teach him the difference between a collection and a beating
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: "{capo} has a long talk with Vincent in a parked car. Vincent comes out quieter, and a better collector."
+        effects:
+          - stat: {who: son, stat: competence, delta: 10}
+          - stat: {who: son, stat: discretion, delta: 10}
+          - followup: {event: son_made, after: [6, 10]}
+  - id: out
+    label: Take him out of it, now
+    don: {base: 0, pious: 1}
+    outcomes:
+      - tone: neutral
+        text: Vincent is taken off the street. He does not speak to his father for a month, and does not speak to you at all.
+        effects:
+          - memory: {who: son, about: you, weight: -10, decay: 0.01}
+          - clear_flag: son_in

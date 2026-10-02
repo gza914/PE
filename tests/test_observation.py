@@ -11,7 +11,7 @@ def test_starting_impressions_are_accurate(game):
     state, _ = game
     obs = observations()
     watched = observation.watched(state)
-    assert {m.id for m in watched} == {"underboss_lauro", "capo_amaro", "capo_tessaro", "capo_marchetti", "capo_sabella"}
+    assert {m.id for m in watched} == {"underboss_lauro", "capo_amaro", "capo_tessaro", "capo_marchetti", "capo_sabella", "vincent_ferrante"}
     for member in watched:
         assert state.knowledge.impressions[member.id] == obs.band_for(member.stats.loyalty).id
 

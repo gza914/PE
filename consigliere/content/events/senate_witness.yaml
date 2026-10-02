@@ -1,0 +1,46 @@
+id: senate_witness
+title: A soldier named Bartolo
+text: |-
+  A soldier named Bartolo, who drives for one of the capos, has been subpoenaed to appear before the committee's staff in private. He is a good driver. He is not a strong man.
+
+  He has asked to see you. He seems frightened.
+followup_only: true
+patience: 0
+options:
+  - id: away
+    label: Send Bartolo and his family away, somewhere warm
+    don: {base: 0.5, cautious: 1, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: Bartolo's family moves to the other end of the country with enough money to start over. The committee's staff finds an empty apartment.
+        effects:
+          - treasury: -5000
+          - followup: {event: senate_aftermath, after: [2, 3]}
+  - id: trust
+    label: Trust him, and tell him what to say
+    don: {base: 0, vain: 0.5, sentimental: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Bartolo says exactly what he was told to say, which is nothing, for three hours. He comes home and sleeps for a day.
+        effects:
+          - stat: {who: crew, stat: loyalty, delta: 2}
+          - followup: {event: senate_aftermath, after: [2, 3]}
+      - weight: 1
+        tone: bad
+        text: Bartolo cracks in the second hour. What he knows is not much, but it has names in it, and one of them is yours.
+        effects:
+          - standing: {exposure: 8}
+          - heat: {who: family, delta: 6}
+          - followup: {event: senate_aftermath, after: [2, 3]}
+  - id: certain
+    label: Make certain he says nothing
+    don: {base: 0, paranoid: 1.5}
+    advised_exposure: 6
+    outcomes:
+      - tone: neutral
+        text: Bartolo does not appear before the committee. Nobody asks where he is, in a way that makes it clear everyone knows.
+        effects:
+          - stat: {who: crew, stat: fear, delta: 8}
+          - stat: {who: crew, stat: loyalty, delta: -3}
+          - followup: {event: senate_aftermath, after: [2, 3]}

@@ -1,0 +1,50 @@
+id: senate_subpoena
+title: A subpoena with the Don's name on it
+text: |-
+  The committee has subpoenaed the Don. He will sit at a table in front of the cameras, with a microphone and a glass of water, and senators will ask him what he does for a living.
+
+  The family must decide how he answers.
+followup_only: true
+patience: 0
+options:
+  - id: fifth
+    label: He takes the Fifth, on every question, politely
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The Don declines to answer on the grounds that it might tend to incriminate him, forty-one times. The country learns his face.
+        headline: "Ferrante Takes the Fifth 41 Times"
+        effects:
+          - heat: {who: family, delta: 6}
+          - standing: {exposure: 3}
+  - id: testify
+    label: He answers, and gives them nothing true
+    don: {base: 0, vain: 1.5}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[flag.senate_prepared, "==", 1]]
+            mult: 3
+        tone: good
+        text: The Don answers every question, warmly and at length, about olive oil imports. A senator calls him charming. The committee gets nothing.
+        headline: "Witness Ferrante Charms, Confounds Senators"
+        effects:
+          - don_mood: 8
+      - weight: 1
+        tone: bad
+        text: The Don answers, and a staff lawyer catches him in a lie about a property deed. The word perjury is used on the evening news.
+        headline: "Senators Accuse Ferrante of Perjury"
+        effects:
+          - heat: {who: family, delta: 12}
+          - standing: {exposure: 6, dons_trust: -4}
+          - don_mood: -8
+  - id: refuse
+    label: He refuses to appear
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: bad
+        text: The Don does not appear. The committee votes to hold him in contempt, on television.
+        headline: "Committee Cites Absent Ferrante for Contempt"
+        effects:
+          - heat: {who: family, delta: 10}
+          - standing: {exposure: 5}

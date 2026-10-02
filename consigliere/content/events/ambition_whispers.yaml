@@ -1,0 +1,59 @@
+id: ambition_whispers
+title: "{capo} at {boss}'s table"
+text: |-
+  {capo} was seen at dinner in the River Wards with {boss}. Long dinner. Good wine. {boss} paid.
+
+  {capo} says it was a christening. There was no christening.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, ambitious], [self.loyalty, "<", 60]]
+  rival:
+    rival: true
+  boss:
+    boss_of: rival
+weight: 2
+cooldown: 24
+intel:
+  - about: capo
+    claim: "{capo} is talking terms with {rival}."
+    denial: "{capo} is only listening, the way any ambitious man listens."
+    truth: [[capo.loyalty, "<", 45]]
+    sources: [street, family, police]
+options:
+  - id: confront
+    label: Ask {capo} about the christening
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[capo.loyalty, "<", 45]]
+            mult: 0.3
+        tone: good
+        text: "{capo} is embarrassed, then grateful he was asked rather than told. There are no more christenings."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 5}
+      - weight: 1
+        tone: bad
+        text: "{capo} swears it was nothing, and swears it too well."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -6}
+          - followup: {event: ambition_offer, after: [2, 4]}
+  - id: elevate
+    label: Give him more, before {boss} does
+    don: {base: 0, cautious: 0.5, vain: -0.5}
+    outcomes:
+      - tone: good
+        text: "{capo} is given a seat closer to the Don and a share of the family's construction work. He stops going to dinner across the river."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 12}
+          - stat: {who: capo, stat: respect, delta: 5}
+          - stat: {who: crew, stat: loyalty, delta: -2}
+  - id: watch
+    label: Say nothing, and have him watched
+    don: {base: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Two men are put on {capo}. They report that he goes to Mass, visits his mother, and eats a great deal. Then they report something else.
+        effects:
+          - followup: {event: ambition_offer, after: [2, 4], when: [[capo.loyalty, "<", 55]]}

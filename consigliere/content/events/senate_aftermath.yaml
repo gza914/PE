@@ -1,0 +1,11 @@
+id: senate_aftermath
+kind: news
+followup_only: true
+title: The committee goes home
+headline: "Senate Probe Ends With Calls for New Laws"
+text: |-
+  The committee packed its cameras and went back to Washington, promising new laws. The new laws will take years.
+
+  The city goes back to what it was doing. So does the family, a little more carefully.
+effects:
+  - heat: {who: family, delta: -10}

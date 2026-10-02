@@ -1,0 +1,28 @@
+id: son_made
+title: A capo named Ferrante
+text: |-
+  The Don would like to make Vincent a capo. He has not asked anyone. He is asking you.
+
+  Some of the capos have twenty years in. Vincent has two.
+followup_only: true
+carries: [son, capo]
+options:
+  - id: make_him
+    label: Make him a capo
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - tone: neutral
+        text: Vincent is made a capo at a dinner nobody will forget. Several men who expected the chair smile until their faces hurt.
+        effects:
+          - promote: {who: son, role: capo}
+          - stat: {who: crew, stat: loyalty, delta: -2}
+          - stat: {who: son, stat: respect, delta: 15}
+  - id: not_yet
+    label: Tell the Don he should wait a year
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The Don waits. The capos notice that he waited, and they think a little better of him for it.
+        effects:
+          - cohesion: 3
+          - memory: {who: son, about: you, weight: -5}

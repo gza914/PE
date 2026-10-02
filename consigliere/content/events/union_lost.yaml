@@ -1,0 +1,13 @@
+id: union_lost
+kind: news
+followup_only: true
+title: Dunn takes Local 312
+headline: "Reformer Dunn Wins Local 312"
+text: |-
+  Frank Dunn is the new president of Local 312. His first act was to fire Kerrigan's accountant. His second was to read the books.
+
+  {racket} is going to have a hard year.
+carries: [racket]
+effects:
+  - racket_income: {racket: racket, pct: -15}
+  - followup: {event: union_strike, after: [3, 5]}
