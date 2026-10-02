@@ -112,7 +112,7 @@ Content lives in data files, not code, so it can grow without touching the engin
 
 ### Events
 
-An event is a YAML file with: trigger conditions (state predicates), weight, cooldown, the text shown to the player, 2 to 4 options, and per-option effects and follow-up events. Effects can be probabilistic and delayed ("in 2 to 4 months, if X still holds, fire Y").
+An event is a YAML file with: trigger conditions (state predicates), weight, cooldown, the text shown to the player, 2 to 4 options, and per-option effects and follow-up events. Effects can be probabilistic and delayed ("in 2 to 4 months, if X still holds, fire Y"). The exact schema is documented at the top of `engine/eventdefs.py`: a cast of characters and rackets picked at random from those that fit, conditions as `[left, op, right]`, options with the Don's own leanings by trait, and weighted outcomes each with a tone (good, bad, neutral) and effects. A `news` event has no options; it is a consequence that simply happens, usually as a follow-up.
 
 Target counts:
 
@@ -147,7 +147,7 @@ Negotiations between families or within the family. Version 1 is scripted: each 
 
 ## Interface and presentation
 
-A terminal app built with Textual: keyboard-driven, mouse-optional, readable in an 80x24 window and better in a larger one.
+A single web page, designed for a desktop browser first: mouse or keyboard, readable in a laptop window and better on a large screen. It also works in a narrow window. (Changed from the original plan of a Textual terminal app; the plain-text loop remains for quick headless play.)
 
 Screens:
 
@@ -166,7 +166,7 @@ Presentation touches: a typewriter effect for key scenes (skippable), muted colo
 
 ## Technical architecture
 
-Python 3.12, Textual for the UI, Pydantic for the data model, YAML for content, pytest for tests. The rule that matters most: **the simulation never imports the UI.** The engine runs headless so it can be tested and balanced by script.
+Python 3.11 for the engine, Pydantic for the data model, YAML for content, pytest for tests. The UI is one self-contained web page (`web/`), built by `tools/build_web.py`. The page runs `web/engine.js`, a JavaScript mirror of the monthly tick that reproduces Python's random generator and float math exactly; a parity test plays the same seeded games in both and requires identical results. The rule that matters most: **the simulation never imports the UI.** The engine runs headless so it can be tested and balanced by script.
 
 ### Module layout
 
@@ -177,10 +177,10 @@ Python 3.12, Textual for the UI, Pydantic for the data model, YAML for content, 
 | `engine/turn.py` | Monthly tick: runs each system in a fixed order |
 | `engine/systems/` | One file per system: economy, heat, law, conflict, relationships, aging, information |
 | `engine/ai.py` | NPC decision-making: utility scores weighted by traits and memory |
-| `engine/events.py` | Loads YAML, evaluates triggers, applies effects, schedules follow-ups |
+| `engine/eventdefs.py`, `engine/matters.py` | Event schema; matters arising, triggers, effects, the Don's decisions, follow-ups |
 | `engine/rng.py` | One seeded random generator passed everywhere |
 | `content/` | Events, arcs, name lists, rackets, starting scenarios (YAML) |
-| `ui/` | Textual screens; reads state and sends player commands only |
+| `web/` | The web UI (`index.html`, `app.js`) and the JS engine mirror (`engine.js`); reads state and sends player commands only |
 | `llm/` (optional) | Sit-down and dialogue calls; strict JSON output, validated, with a scripted fallback |
 | `tools/simulate.py` | Runs thousands of headless games with bot players |
 | `tests/` | Unit tests per system, golden-seed regression tests |
@@ -204,7 +204,7 @@ Each milestone ends with something playable. Do not start the next until the cur
 2. **Economy and characters.** One family, the Don, 4 capos, 6 rackets, skimming, loyalty drift. Plain text reports each month.
 3. **The advisory loop.** Matters, recommendations, Don's Trust, and the Don's decision logic. 15 events. First playable: is advising interesting?
 4. **Information.** Reports, sources, confidence, verification, one informant. The rat arc. Vertical slice: one family, 24 months, 30 events, one arc.
-5. **Textual UI.** Office, Matter, Dossiers, Family, Ledger screens.
+5. **Web UI.** Office (desk and last month), Matter, Dossiers, Family, Ledger views. Started early; grows with each milestone.
 6. **The world.** Two rival families, territory, heat, investigations, the conflict ladder, scripted sit-downs.
 7. **Simulation harness.** Bot strategies, balance reports; tune until no strategy dominates.
 8. **Time and succession.** Aging, death, the Don's decline, succession crisis, endings and memoir.
