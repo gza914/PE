@@ -17,7 +17,7 @@
   - Retirement is offered from 9 years (Don's Trust 70). It is a request the Don can grant, put off ("one more year", likelier the more he relies on you) or resent (Don's Trust -25, likelier with Exposure 30+ or a new Don).
   - "Intact" needs $100,000 in the treasury (was $25,000).
   - Event incomes trimmed; new monthly obligations make a careful family pay for its caution.
-- **Latest result** (`docs/BALANCE.md`): RESULTS
+- **Latest result** (`docs/BALANCE.md`, 1,000 runs each): cautious wins 55%, paper 46%, silent 10%, ignore_law 5%, aggressive 0%, random 0%. No balance bugs; only the tutorial-only `first_morning` never fires in bot play.
 
 ## Milestone 11: polish
 - **Difficulty** (`content/difficulty.yaml`): Easy, Normal, Hard. They adjust the starting treasury, Don's Trust and Influence, how readily the Don follows advice, and how fast investigations move. Chosen at New game; saved in `WorldState.difficulty`.
