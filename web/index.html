@@ -1,0 +1,188 @@
+<title>Consigliere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Antonio:wght@500;700&family=Courier+Prime:wght@400;700&family=Libre+Franklin:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one narrow column, like a ledger page. Sticky masthead with the month and your standing,
+   a typed monthly report as the main surface, one fixed action at the thumb: end the month. */
+:root {
+  --paper: #e9eee2;      /* columnar ledger paper */
+  --sheet: #f5f7f0;      /* the typed report */
+  --ink: #1d2721;
+  --muted: #5b6a5f;
+  --rule: #c5d1bb;       /* ledger rules */
+  --brass: #7d5f16;      /* accent: brass fittings, the Don's office */
+  --brass-soft: #e6dcc0;
+  --danger: #9a2a2a;     /* red is reserved for danger */
+  --on-brass: #fbf8ef;
+  --display: "Antonio", "Arial Narrow", "Helvetica Neue Condensed", Impact, sans-serif;
+  --body: "Libre Franklin", "Franklin Gothic", "Helvetica Neue", Arial, sans-serif;
+  --typed: "Courier Prime", "Courier New", Courier, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111712; --sheet: #182019; --ink: #e2e8da; --muted: #93a295; --rule: #2c3a2f;
+    --brass: #cfa94c; --brass-soft: #3a3320; --danger: #e2766a; --on-brass: #17140a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111712; --sheet: #182019; --ink: #e2e8da; --muted: #93a295; --rule: #2c3a2f;
+  --brass: #cfa94c; --brass-soft: #3a3320; --danger: #e2766a; --on-brass: #17140a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 16px/1.5 var(--body);
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 40rem; margin: 0 auto; padding-inline: 16px; }
+
+/* Masthead */
+.mast {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--paper); border-bottom: 2px solid var(--ink);
+  padding-block: 12px 10px;
+}
+.mast-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { font: 700 0.8rem/1 var(--display); letter-spacing: 0.32em; text-transform: uppercase; color: var(--muted); }
+.month { font: 700 clamp(1.9rem, 8vw, 2.6rem)/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; margin: 6px 0 0; text-wrap: balance; }
+.treasury { text-align: right; }
+.treasury .label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: block; }
+.treasury .amt { font: 700 1.25rem/1.1 var(--typed); font-variant-numeric: tabular-nums; }
+
+.meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.meter { min-width: 0; }
+.meter-top { display: flex; justify-content: space-between; gap: 4px; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.meter-top b { font: 700 0.85rem var(--typed); color: var(--ink); letter-spacing: 0; }
+.bar { height: 6px; background: var(--rule); margin-top: 4px; }
+.bar i { display: block; height: 100%; background: var(--ink); }
+.meter.warn .bar i { background: var(--danger); }
+.meter.warn .meter-top b { color: var(--danger); }
+
+.tabs { display: flex; gap: 0; margin-top: 12px; border: 1.5px solid var(--ink); }
+.tabs button {
+  flex: 1; min-width: 0; padding: 8px 4px; border: 0; background: transparent; color: var(--ink);
+  font: 500 0.95rem/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+}
+.tabs button + button { border-left: 1.5px solid var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+button:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+
+main { padding-block: 18px 120px; display: grid; gap: 22px; }
+main > * { min-width: 0; }
+
+/* Typed report */
+.sheet {
+  background: var(--sheet); border: 1px solid var(--rule);
+  padding: 18px 16px 20px;
+  border-left: 4px double var(--rule);
+  min-width: 0;
+}
+.sheet h2 { font: 700 1.35rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; }
+.sheet .stamp { font: 0.78rem var(--typed); color: var(--muted); margin: 0 0 14px; }
+.section-head { font: 700 0.78rem/1 var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); margin: 18px 0 6px; }
+.rows { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding-block: 4px; font-family: var(--typed); font-size: 0.95rem; }
+.row .who { min-width: 0; }
+.row .who small { display: block; font-size: 0.78rem; color: var(--muted); }
+.row .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row.total { border-top: 1.5px solid var(--ink); margin-top: 4px; font-weight: 700; }
+.row.unpaid .num { color: var(--danger); font-weight: 700; }
+.net { font: 700 1rem var(--typed); margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; }
+.net .delta.down { color: var(--danger); }
+
+.notes { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.note { font-family: var(--body); font-style: italic; line-height: 1.55; }
+.note .meta { display: block; font: normal 0.75rem var(--typed); color: var(--muted); margin-top: 2px; }
+.quiet { color: var(--muted); font-size: 0.92rem; }
+
+.memo p { margin: 0 0 12px; max-width: 62ch; }
+.memo p:last-child { margin-bottom: 0; }
+
+/* Family */
+.people { display: grid; gap: 0; }
+.person { padding-block: 14px; border-bottom: 1px solid var(--rule); display: grid; gap: 6px; }
+.person:first-child { padding-top: 0; }
+.person-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.person h3 { font: 700 1.2rem/1.15 var(--display); letter-spacing: 0.03em; text-transform: uppercase; margin: 0; }
+.role { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.reading { display: inline-flex; align-items: center; gap: 8px; font: 0.85rem var(--typed); }
+.pips { display: inline-flex; gap: 3px; }
+.pips i { width: 8px; height: 8px; border: 1.5px solid var(--ink); display: block; }
+.pips i.on { background: var(--ink); }
+.reading.low .pips i { border-color: var(--danger); }
+.reading.low .pips i.on { background: var(--danger); }
+.reading.low span { color: var(--danger); }
+.rackets { margin: 0; padding: 0; list-style: none; font: 0.9rem var(--typed); color: var(--muted); }
+.lastnote { font-style: italic; font-size: 0.92rem; color: var(--muted); }
+
+/* Books */
+.chart { width: 100%; height: auto; display: block; }
+.chart .line { fill: none; stroke: var(--ink); stroke-width: 2; }
+.chart .area { fill: var(--brass-soft); }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart text { fill: var(--muted); font: 11px var(--typed); }
+.chart .end { fill: var(--brass); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font: 0.9rem var(--typed); font-variant-numeric: tabular-nums; }
+th { text-align: right; font: 700 0.72rem var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 6px 0 6px 10px; border-bottom: 1.5px solid var(--ink); }
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+td { text-align: right; padding: 6px 0 6px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td.flag { color: var(--danger); font-weight: 700; }
+
+.game-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font: 0.82rem var(--typed); color: var(--muted); }
+.btn-quiet { background: transparent; border: 1.5px solid var(--ink); color: var(--ink); padding: 8px 14px; font: 600 0.85rem var(--body); cursor: pointer; }
+.btn-danger { background: var(--danger); border: 1.5px solid var(--danger); color: var(--sheet); padding: 8px 14px; font: 600 0.85rem var(--body); cursor: pointer; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* The one action */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: linear-gradient(to bottom, transparent, var(--paper) 30%);
+  padding: 22px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.end-month {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: var(--brass); color: var(--on-brass); border: 0; padding: 15px 18px; cursor: pointer;
+  font: 700 1.05rem/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase;
+  box-shadow: 0 2px 0 var(--ink);
+}
+.end-month:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--ink); }
+.end-month span:last-child { font: 0.85rem var(--typed); letter-spacing: 0; text-transform: none; opacity: 0.85; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .fresh { animation: settle 280ms ease-out; }
+  @keyframes settle { from { opacity: 0.4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<div class="mast">
+  <div class="wrap">
+    <div class="mast-row">
+      <div>
+        <div class="brand">Consigliere</div>
+        <h1 class="month" id="month">January 1958</h1>
+      </div>
+      <div class="treasury"><span class="label">Treasury</span><span class="amt" id="treasury">$40,000</span></div>
+    </div>
+    <div class="meters" id="meters"></div>
+    <div class="tabs" role="tablist">
+      <button id="tab-office" role="tab" aria-selected="true" data-tab="office">Office</button>
+      <button id="tab-family" role="tab" aria-selected="false" data-tab="family">Family</button>
+      <button id="tab-books" role="tab" aria-selected="false" data-tab="books">Books</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="view" aria-live="polite"></main>
+
+<div class="dock">
+  <div class="wrap">
+    <button class="end-month" id="end-month"><span>End the month</span><span id="end-month-sub"></span></button>
+  </div>
+</div>
+
+<script>window.CONSIGLIERE_CONTENT = /*__CONTENT__*/;</script>
+<script>/*__ENGINE__*/</script>
+<script>/*__APP__*/</script>

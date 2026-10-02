@@ -23,10 +23,20 @@
 - Tessaro skims about 20% of what he owes (about $270k over 10 years); Sabella about $100k; Marchetti a little; Amaro nothing.
 - The treasury nets about +$3k a month and never runs short, so the missed-stipend path never fires in normal play. Nothing to spend on yet; Milestone 3 decisions should create that pressure.
 
+## Web version (added after Milestone 2)
+- One mobile-first page, `web/dist/consigliere.html`, built by `tools/build_web.py` from three pieces:
+  - `web/index.html`: layout and styles.
+  - `web/app.js`: the UI. It has Office (the month's books and notes), Family (your read on each man, plus his rackets) and Books (treasury chart, monthly table, everything you noticed).
+  - `web/engine.js`: a JavaScript copy of the monthly tick.
+- The Python engine stays the source of truth. The build script dumps the balance, the observation text and the validated starting WorldState as JSON, so the web page never re-reads the YAML. `engine.js` reproduces Python's Mersenne Twister and the exact float math, and `tests/test_web_parity.py` checks with node that 120-month games are identical, including the missed-stipend path.
+- Saves go to the browser's localStorage. A New game button asks for confirmation on the page itself.
+- Pyodide (Python in the browser) was ruled out: the hosting page blocks the CDN fetches it needs, and it would be a 13MB download on phones.
+
 ## Known issues
 - No decisions yet: you watch. Racket `heat` is defined but not accumulated (Milestone 6).
 - The CLI reads names, roles and racket assignments from `WorldState` (treated as public knowledge); stats come only via `PlayerKnowledge`.
 - The golden test in `tests/test_golden.py` must be updated whenever balance or content changes on purpose.
+- Every engine change now has to be made twice (Python and `web/engine.js`); the parity test catches any drift.
 - pytest is not installed in a fresh container: `pip install -e .[dev]`.
 
 ## Next step
