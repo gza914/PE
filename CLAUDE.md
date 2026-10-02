@@ -14,5 +14,5 @@ Text strategy game. Full design: docs/DESIGN.md. Current milestone: see docs/PRO
 ## Commands
 - Run (text): python -m consigliere
 - Test: pytest -q
-- Balance: python tools/simulate.py --runs 1000
+- Balance: python tools/simulate.py --runs 1000 --strict  (about 4 minutes; report in docs/BALANCE.md)
 - Web build: python tools/build_web.py  (writes web/dist/consigliere.html, one self-contained page)

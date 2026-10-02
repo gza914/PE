@@ -74,6 +74,8 @@ class AdviceBalance(Model):
     follow_max: Unit
     don_noise: float  # randomness in the Don's own preference
     trust: TrustDeltas
+    silence_penalty: int
+    silence_floor: int
 
 
 class MoodBalance(Model):
@@ -140,6 +142,7 @@ class SitDownBalance(Model):
     opening_margin_max: int
     patience: int
     good_deal_margin: int
+    tribute_months: int
 
 
 class LifeBalance(Model):
@@ -171,6 +174,7 @@ class EndingsBalance(Model):
     ruin_treasury: int
     exile_exposure: int
     intact_strength: int
+    intact_treasury: int
 
 
 class EndingSpec(Model):

@@ -42,8 +42,16 @@ for (let i = 0; i < input.months; i++) {
       if ((state.month + i + j) % 2 === 0 && E.canVerify(state, m, i, input.content)) E.verify(state, rng, m.id, i, input.content);
     });
     const choices = m.options.map((o) => o.id).concat(m.can_wait ? ["wait"] : [], [null]);
+    const def = input.content.events.find((e) => e.id === m.event_id);
     if (input.style === "cycle") E.recommend(state, m.id, choices[(state.month * 7 + j * 3) % choices.length]);
-    else if (input.content.events.find((e) => e.id === m.event_id).you_decide) E.recommend(state, m.id, m.options[0].id);
+    else if (def.you_decide) E.recommend(state, m.id, m.options[0].id);
+    else if (input.style === "faithful") {
+      const don = state.characters[E.playerFamily(state).don_id];
+      const appeal = (o) => (o.don.base ?? 0) + don.traits.reduce((t, tr) => t + (o.don[tr] ?? 0), 0);
+      let best = def.options[0];
+      for (const o of def.options) if (appeal(o) > appeal(best)) best = o;
+      E.recommend(state, m.id, best.id);
+    }
   });
   E.tick(state, rng, input.content);
 }
@@ -68,7 +76,8 @@ def run_js(state: dict | None, seed: int, months: int, content: dict, style: str
 
 
 def run_py(state: dict | None, seed: int, months: int, style: str = "cycle") -> dict:
-    """style "cycle" gives every kind of advice in turn; "silent" never advises, so the game runs long."""
+    """style "cycle" gives every kind of advice in turn; "silent" never advises; "faithful" advises what
+    the Don already leans toward, so the game runs long."""
     if state is None:
         world, rng = new_game(seed)
     else:
@@ -100,6 +109,16 @@ def run_py(state: dict | None, seed: int, months: int, style: str = "cycle") -> 
                 apply(world, rng, Recommend(matter_id=matter.id, choice=bot_choice(world, matter, j)))
             elif events()[matter.event_id].you_decide:
                 apply(world, rng, Recommend(matter_id=matter.id, choice=matter.options[0].id))
+            elif style == "faithful":
+                don = world.characters[world.player_family.don_id]
+                def appeal(o):
+                    return o.don.get("base", 0) + sum(o.don.get(t.value, 0) for t in don.traits)
+                options = events()[matter.event_id].options
+                best = options[0]
+                for o in options:
+                    if appeal(o) > appeal(best):
+                        best = o
+                apply(world, rng, Recommend(matter_id=matter.id, choice=best.id))
         tick(world, rng)
     return {"state": world.model_dump(mode="json"), "probe": rng.random()}
 
@@ -120,9 +139,9 @@ def test_same_seed_same_game_with_an_active_advisor(seed, content):
     assert js == py
 
 
-@pytest.mark.parametrize("seed", [3, 1234, 77, 2024, 31337])
-def test_same_seed_same_fifteen_years_with_a_quiet_advisor(seed, content):
-    js, py = run_js(None, seed, 180, content, "silent"), run_py(None, seed, 180, "silent")
+@pytest.mark.parametrize("seed", [3, 1234, 77, 2024, 31337, 9])
+def test_same_seed_same_fifteen_years_with_a_faithful_advisor(seed, content):
+    js, py = run_js(None, seed, 180, content, "faithful"), run_py(None, seed, 180, "faithful")
     assert py["state"]["ending"] is not None, "fifteen years always end somehow"
     assert js == py
 
@@ -130,7 +149,7 @@ def test_same_seed_same_fifteen_years_with_a_quiet_advisor(seed, content):
 def test_a_trusted_advisor_retires(content):
     state = starting_state(5)
     state["standing"]["dons_trust"] = 95
-    js, py = run_js(state, 5, 180, content, "silent"), run_py(state, 5, 180, "silent")
+    js, py = run_js(state, 5, 180, content, "faithful"), run_py(state, 5, 180, "faithful")
     assert py["state"]["ending"]["id"].startswith("retired")
     assert js == py
 
@@ -157,11 +176,16 @@ def test_every_event_and_effect_kind_is_exercised_somewhere(content):
     trusted["standing"]["dons_trust"] = 95
     for seed in range(40):
         if seed % 4 == 0:
-            state = run_py(trusted, seed, 180, "silent")["state"]
+            state = run_py(trusted, seed, 180, "faithful")["state"]
         else:
-            state = run_py(None, seed, 60 if seed % 2 else 180, "cycle" if seed % 2 else "silent")["state"]
+            state = run_py(None, seed, 60 if seed % 2 else 180, "cycle" if seed % 2 else "faithful")["state"]
         seen.update(d["matter_id"].rsplit("-", 1)[0] for d in state["knowledge"]["decisions"])
         seen.update(state["event_log"])
     rare = {"succession_pair"}  # only when the Don dies with exactly two men left; unit-tested on its own
     matters = {e["id"] for e in content["events"] if e["kind"] == "matter" and not e.get("followup_only")}
     assert matters - rare <= seen
+
+
+def test_a_silent_advisor_matches_too(content):
+    js, py = run_js(None, 11, 180, content, "silent"), run_py(None, 11, 180, "silent")
+    assert js == py

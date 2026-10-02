@@ -1,7 +1,43 @@
 # Progress
 
 ## Current milestone
-6 (The world) and 8 (Time and succession): **done**. Left: 5 (deeper web screens), 7 (simulation harness), 9 (content pass), 10 (optional live sit-downs), 11 (polish).
+5 (web screens) and 7 (simulation harness): **done**. Left: 9 (content pass to 150+ events), 10 (optional live sit-downs), 11 (polish).
+
+## Milestone 7: simulation harness
+- `python tools/simulate.py --runs 1000` plays full games with six bot strategies (`tools/bots.py`) on four cores. 1,000 runs per strategy take about 4 minutes. Flags: `--strategies`, `--months`, `--seed`, `--jobs`, `--json`, `--report`, and `--strict`, which exits 1 on a balance bug.
+- **Strategies.** Bots see only what a player sees, plus the published options; their own coin flips come from a separately seeded GameRNG.
+
+  | Strategy | How it plays |
+  |---|---|
+  | cautious | least risk; verifies intel; keeps the books; makes peace at the table |
+  | aggressive | escalates; threatens at the table, then walks |
+  | random | random advice and random moves at the table |
+  | ignore_law | follows the money and ignores heat, Exposure and the courts |
+  | silent | never advises |
+  | paper | best looking on paper; verifies; keeps the books |
+
+  The attentive bots (cautious, paper, ignore_law) flag light envelopes, move rackets away from capos who stay short, and staff unattended rackets.
+- **Report:** win rate (retired or reached 1972 with the family intact), average ending rank and length, endings by strategy, average treasury at each year end, war rate and months at war, how often the rat was found, final Don's Trust, events that never fired, and balance bugs. A strategy over 70% wins or an event that never fires is a bug. Events marked `rare` (deliberate fallbacks) are listed but not counted.
+- **Tuning the harness drove:**
+  - Tribute agreed at a sit-down now lasts 24 months (expenses can have an end month).
+  - Stipend raises are +$500, at most every two years.
+  - Payoffs drop from $6,000 to $5,000.
+  - A month in which you advise on none of the Don's matters costs 1 Don's Trust, down to a floor of 25. Silence on a single matter is still free, but a silent consigliere is sidelined.
+  - Retirement is offered at 8 years with Don's Trust 70.
+  - "Intact" needs strength 45 and $25k in the treasury.
+- **Latest result** (`docs/BALANCE.md`, 1,000 runs each): cautious 54% wins, paper 44%, silent 30%, ignore_law 7%, aggressive 3%, random 0%. No balance bugs; only the rare `succession_pair` fallback never fired.
+
+## Milestone 5: web screens
+- **Dossiers tab:** everyone you know, pinned first. For each man:
+  - his reputation (traits)
+  - what you believe about his loyalty, with when you last noticed and how sure you are
+  - his envelopes against what they should be
+  - the law
+  - everything you've noticed about him, and the news that names him
+  - your own notes, saved in the game (`Note`, `Pin` commands)
+- **Envelopes against expectations** (Books): each capo's rackets' expected envelope against his last six. "Show the Don" puts a flagged_books matter on the desk, with intel on whether he's keeping back money; once per capo per six months.
+- **Who runs what** (Family): propose moving any racket to another capo. It becomes a reassignment or assignment matter with your advice on record, and the Don decides. Each man's card shows his envelopes.
+- **Engine:** envelopes record their racket; matter ids stay unique; schema version 7. Everything is mirrored in JS, and the parity bot flags and proposes too.
 
 ## Milestone 8: time and succession
 - **Aging** (`engine/lifecycle.py`): past 50, health slips with a monthly chance of 1.5% per year over. Dons and rival bosses run ×1.5, and drink adds 5%. A man below 35 health can have a spell. At 0 he dies off the page and a funeral is narrated. The Don usually dies in the mid to late 1960s.
@@ -172,7 +208,6 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 ## Known issues (Milestones 6 and 8)
 - The Don decides matters for the month in which he dies, before the succession sits.
 - Bots back succession candidates blindly, which is why "pushed out" is common in the table above. A player reading "who has the votes" should do much better.
-- `tools/simulate.py` is still the scratch scripts described here; Milestone 7 makes it a real tool.
 
 ## Known issues (Milestone 4)
 - Exposure rises (subpoenas, bribes) but has no consequence until heat and the law arrive in Milestone 6.
@@ -193,4 +228,4 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 
 ## Next step
 - Play a full run in the web version, to an ending.
-- Milestone 7: turn the balance scripts into `tools/simulate.py` with bot strategies and reports, then tune.
+- Milestone 9: grow the content toward 150+ events and 8+ arcs, rerunning `python tools/simulate.py --runs 1000 --strict` after each batch.

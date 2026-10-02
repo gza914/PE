@@ -326,6 +326,7 @@ class EventDef(Model):
     lists: dict[str, list[str]] = Field(default_factory=dict)
     carries: list[str] = Field(default_factory=list)  # binding names a follow-up inherits from earlier events
     even_if_gone: bool = False  # news that still runs when the people it names are out of play
+    rare: bool = False  # a fallback that may legitimately never fire in a balance run
     you_decide: bool = False  # no Don to ask: your choice is the decision
     default_option: str | None = None  # what happens if you say nothing, when you decide
 

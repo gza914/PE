@@ -279,12 +279,24 @@ def test_bad_call_followed_costs_most(fresh):
     assert settle(state, rng, ALWAYS_FOLLOWS, e).trust_delta == -8
 
 
-def test_silence_is_safe(fresh):
+def test_silence_on_a_matter_is_safe_but_a_silent_month_is_not(fresh):
     state, rng = fresh
     e = event(options=[option("yes", outcome("bad")), option("no", outcome("bad"))])
     desk(state, e, None)
     d = settle(state, rng, ALWAYS_FOLLOWS, e)
     assert d.followed is None and d.recommended is None and d.trust_delta == 0
+    assert state.standing.dons_trust == 50 - ALWAYS_FOLLOWS.advice.silence_penalty
+
+
+def test_advising_on_one_matter_is_enough(fresh):
+    state, rng = fresh
+    quiet = event("quiet", options=[option("yes", outcome("neutral")), option("no", outcome("neutral"))])
+    spoken = event("spoken", options=[option("yes", outcome("neutral")), option("no", outcome("neutral"))])
+    a = matters.make_matter(quiet, {"capo": "capo_amaro"}, state, GameRNG(0))
+    b = matters.make_matter(spoken, {"capo": "capo_amaro"}, state, GameRNG(0))
+    b.recommendation = "yes"
+    state.matters = [a, b]
+    matters.run(state, rng, ALWAYS_FOLLOWS, evs(quiet, spoken))
     assert state.standing.dons_trust == 50
 
 

@@ -274,7 +274,8 @@ def end_sitdown(state: WorldState, deal: bool, line: str, bal: Balance) -> None:
         expense_id = f"tribute_{them.id}"
         family.expenses = [e for e in family.expenses if e.id != expense_id]
         if sd.offer > 0:
-            family.expenses.append(Expense(id=expense_id, label=f"Tribute to {them.name}", amount=sd.offer))
+            family.expenses.append(Expense(id=expense_id, label=f"Tribute to {them.name}", amount=sd.offer,
+                                           until=state.month + bal.sitdown.tribute_months))
         rivalry.stage = 0
         rivalry.tension = int(clamp(rivalry.tension - 40))
         if sd.offer - sd.red_line <= bal.sitdown.good_deal_margin:

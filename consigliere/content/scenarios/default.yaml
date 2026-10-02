@@ -13,7 +13,7 @@ families:
     heat: 15
     expenses:
       - {id: lawyers, label: Lawyers on retainer, amount: 3000}
-      - {id: payoffs, label: "Envelopes at the precinct and City Hall", amount: 6000}
+      - {id: payoffs, label: "Envelopes at the precinct and City Hall", amount: 5000}
       - {id: house, label: The Don's household, amount: 3500}
       - {id: stipends, label: Stipends for the crews, amount: 3500, stipend: true}
 

@@ -8,16 +8,16 @@ cast:
   capo:
     role: [capo]
 trigger: [[month, ">=", 4]]
-cooldown: 12
+cooldown: 24
 options:
   - id: raise
     label: Raise the stipends for good
     don: {base: 0, sentimental: 0.5}
     outcomes:
       - tone: good
-        text: The stipends go up a thousand a month. The men stop grumbling, and start telling each other that the old man takes care of his own.
+        text: The stipends go up five hundred a month. The men stop grumbling, and start telling each other that the old man takes care of his own.
         effects:
-          - change_expense: {id: stipends, delta: 1000}
+          - change_expense: {id: stipends, delta: 500}
           - stat: {who: crew, stat: loyalty, delta: 3}
           - memory: {who: crew, about: family, weight: 6, decay: 0.02}
   - id: bonus

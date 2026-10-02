@@ -12,6 +12,7 @@ cast:
 lists: {candidates: [a, b]}
 trigger: [[flag.don_gone, "==", 1], [crew_size, "==", 2]]
 weight: 100
+rare: true
 cooldown: 0
 you_decide: true
 default_option: stay_out

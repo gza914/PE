@@ -48,7 +48,7 @@ World ticks ──▶ Reports arrive ──────▶ Matters arise ──�
 
 The Don follows your advice with a probability set by Don's Trust, his traits, and his mood. A good call he ignores still costs you when things go wrong; a bad call he follows costs more.
 
-For each matter you can recommend one of its 2 to 4 options, recommend waiting, or stay silent (no risk, no gain). With enough Influence you can also act behind the scenes: arrange a meeting, move money, plant a rumor, or warn someone. Each matter shows what you believe, how sure you are, and what it would cost to learn more.
+For each matter you can recommend one of its 2 to 4 options, recommend waiting, or stay silent (no risk, no gain). A month in which you say nothing on any of the Don's matters costs a little of his trust, down to a floor: a consigliere who never speaks is sidelined, though silence alone never gets him killed. With enough Influence you can also act behind the scenes: arrange a meeting, move money, plant a rumor, or warn someone. Each matter shows what you believe, how sure you are, and what it would cost to learn more.
 
 There is no win screen. Runs end in one of several endings, ranked in the end-of-run memoir; the best is retiring alive with the family intact.
 

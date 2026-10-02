@@ -155,7 +155,7 @@ def which_ending(state: WorldState, bal: Balance) -> str | None:
     eb = bal.endings
     family = state.player_family
     you = state.player
-    intact = family.strength >= eb.intact_strength and family.treasury >= 0
+    intact = family.strength >= eb.intact_strength and family.treasury >= eb.intact_treasury
     if "you_jailed" in state.flags:
         return "prison"
     if not you.alive:

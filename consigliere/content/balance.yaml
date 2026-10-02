@@ -61,6 +61,8 @@ advice:
     ignored_good: -2          # he went his own way and it worked: you were wrong
     ignored_bad: -2           # a good call he ignores still costs you when it goes wrong
     ignored_neutral: 0
+  silence_penalty: 1          # a month in which you advised on none of the Don's matters costs this much trust...
+  silence_floor: 25           # ...but silence alone only sidelines you; it never takes trust below this
 
 mood:                         # the Don's mood after a matter turns out...
   good: 3
@@ -121,6 +123,7 @@ sitdown:
   opening_margin_max: 1400
   patience: 3
   good_deal_margin: 400       # a deal within this of their red line pleases the Don
+  tribute_months: 24          # how long an agreed tribute is owed
 
 life:
   age_threshold: 50           # past this age, health starts to slip...
@@ -148,4 +151,5 @@ endings:
   ruin_strength: 5
   ruin_treasury: -25000
   exile_exposure: 100
-  intact_strength: 40         # "the family intact": at least this strong, and solvent
+  intact_strength: 45         # "the family intact": at least this strong...
+  intact_treasury: 25000      # ...with this much put away

@@ -126,6 +126,7 @@ class Expense(Model):
     label: str
     amount: int = Field(ge=0)
     stipend: bool = False  # missing a stipend payment costs loyalty
+    until: int | None = None  # last month it is owed; None for as long as it lasts
 
 
 class Family(Model):

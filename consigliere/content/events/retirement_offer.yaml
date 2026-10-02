@@ -4,7 +4,7 @@ text: |-
   You have been at the Don's right hand a long time. Your wife has started leaving brochures for a place by the sea, face up, where you will see them.
 
   The family is in a good state. It might not always be. A man could leave now, on his own feet.
-trigger: [[month, ">=", 72], [dons_trust, ">=", 60], [flag.don_gone, "==", 0]]
+trigger: [[month, ">=", 96], [dons_trust, ">=", 70], [flag.don_gone, "==", 0]]
 weight: 1
 cooldown: 12
 you_decide: true

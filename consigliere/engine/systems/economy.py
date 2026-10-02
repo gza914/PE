@@ -65,6 +65,7 @@ def run_family(state: WorldState, family: Family, rng: GameRNG, bal: Balance) ->
             entry.kickups.append(LedgerLine(label=racket.name, amount=kickup, note="unattended", racket_id=racket.id))
         family.treasury += kickup
 
+    family.expenses = [e for e in family.expenses if e.until is None or e.until >= state.month]
     for expense in family.expenses:
         if family.treasury >= expense.amount:
             family.treasury -= expense.amount

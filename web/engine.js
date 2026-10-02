@@ -198,6 +198,7 @@
       }
       family.treasury += kickup;
     }
+    family.expenses = family.expenses.filter((e) => e.until === null || e.until === undefined || e.until >= state.month);
     for (const expense of family.expenses) {
       if (family.treasury >= expense.amount) {
         family.treasury -= expense.amount;
@@ -483,7 +484,7 @@
       }
       case "add_expense":
         if (family.expenses.every((e) => e.id !== v.id)) {
-          family.expenses.push({ id: v.id, label: v.label, amount: v.amount, stipend: Boolean(v.stipend) });
+          family.expenses.push({ id: v.id, label: v.label, amount: v.amount, stipend: Boolean(v.stipend), until: null });
         }
         break;
       case "change_expense":
@@ -807,7 +808,10 @@
   function decide(state, rng, content) {
     const bal = content.balance;
     const evs = indexEvents(content);
+    const his = state.matters.filter((m) => !evs.byId[m.event_id].you_decide);
+    const silent = his.length > 0 && his.every((m) => m.recommendation === null);
     state.matters = state.matters.slice().filter((m) => resolveMatter(state, m, rng, bal, evs));
+    if (silent && state.standing.dons_trust > bal.advice.silence_floor) state.standing.dons_trust = Math.trunc(clamp(state.standing.dons_trust - bal.advice.silence_penalty));
     const shift = (50 - state.don_mood) * bal.mood.drift_rate;
     state.don_mood = Math.trunc(clamp(state.don_mood + rng.roundStochastic(shift)));
     state.standing.influence = Math.trunc(clamp(state.standing.influence + bal.information.monthly_influence));
@@ -880,7 +884,7 @@
     if (man.family_id === family.id && man.id !== state.player_id) {
       const expenseId = `family_of_${man.id}`;
       if (family.expenses.every((e) => e.id !== expenseId)) {
-        family.expenses.push({ id: expenseId, label: `The family of ${man.name}`, amount: bal.law.family_support, stipend: true });
+        family.expenses.push({ id: expenseId, label: `The family of ${man.name}`, amount: bal.law.family_support, stipend: true, until: null });
       }
     }
     if (man.id === state.player_id) state.flags.you_jailed = state.month;
@@ -1053,7 +1057,10 @@
     if (deal) {
       const expenseId = `tribute_${them.id}`;
       family.expenses = family.expenses.filter((e) => e.id !== expenseId);
-      if (sd.offer > 0) family.expenses.push({ id: expenseId, label: `Tribute to ${them.name}`, amount: sd.offer, stipend: false });
+      if (sd.offer > 0) {
+        family.expenses.push({ id: expenseId, label: `Tribute to ${them.name}`, amount: sd.offer, stipend: false,
+          until: state.month + content.balance.sitdown.tribute_months });
+      }
       rivalry.stage = 0;
       rivalry.tension = Math.trunc(clamp(rivalry.tension - 40));
       if (sd.offer - sd.red_line <= content.balance.sitdown.good_deal_margin) trust = 3;
@@ -1287,7 +1294,7 @@
     const eb = bal.endings;
     const family = playerFamily(state);
     const you = player(state);
-    const intact = family.strength >= eb.intact_strength && family.treasury >= 0;
+    const intact = family.strength >= eb.intact_strength && family.treasury >= eb.intact_treasury;
     if ("you_jailed" in state.flags) return "prison";
     if (!you.alive) return you.fate === "died" ? "died" : "killed";
     if ("pushed_out" in state.flags) return "pushed_out";

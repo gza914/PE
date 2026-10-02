@@ -634,7 +634,11 @@ def run(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs: dict[s
     """Monthly system: the Don settles every matter on the desk, then his mood settles too."""
     bal = bal or balance()
     evs = evs if evs is not None else events()
+    his = [m for m in state.matters if not evs[m.event_id].you_decide]
+    silent = bool(his) and all(m.recommendation is None for m in his)
     state.matters = [m for m in list(state.matters) if resolve(state, m, rng, bal, evs)]
+    if silent and state.standing.dons_trust > bal.advice.silence_floor:
+        state.standing.dons_trust = int(clamp(state.standing.dons_trust - bal.advice.silence_penalty))
     shift = (50 - state.don_mood) * bal.mood.drift_rate
     state.don_mood = int(clamp(state.don_mood + rng.round_stochastic(shift)))
     state.standing.influence = int(clamp(state.standing.influence + bal.information.monthly_influence))

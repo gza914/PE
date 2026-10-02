@@ -10,7 +10,7 @@ def test_seed_1234_first_year_with_a_silent_consigliere():
     for _ in range(12):
         tick(state, rng)
     family = state.player_family
-    assert (family.treasury, family.cohesion, family.heat) == (24579, 59, 18)
+    assert (family.treasury, family.cohesion, family.heat) == (36579, 59, 18)
     assert {c.id: c.stats.loyalty for c in state.members(family.id)} == {
         "don_ferrante": 100,
         "underboss_lauro": 68,
@@ -23,5 +23,5 @@ def test_seed_1234_first_year_with_a_silent_consigliere():
     assert len(state.knowledge.ledger) == 12
     assert len(state.knowledge.reports) == 3
     assert len(state.knowledge.decisions) == 26
-    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (46, 53, 3)
+    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (34, 53, 3)
     assert {k: (v.stage, v.tension) for k, v in state.rivalries.items()} == {"brancato": (0, 33), "orsini": (0, 1)}
