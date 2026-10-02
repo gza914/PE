@@ -62,6 +62,17 @@ def fx(state, rng, bindings, **effect):
     matters.apply_effect(state, Effect.model_validate(effect), bindings, rng, events()["light_envelope"], "Test")
 
 
+def test_the_herald_does_not_repeat_itself_within_a_year(game):
+    state, rng = game
+    state.knowledge.papers = []
+    for month in range(world.FILLER_MEMORY):
+        state.month = month
+        world.print_filler(state, rng)
+    texts = [h.text for h in state.knowledge.papers]
+    assert len(set(texts)) == len(texts) == world.FILLER_MEMORY
+    assert not any(h.family for h in state.knowledge.papers)
+
+
 def test_racket_and_promotion_effects(game):
     state, rng = game
     b = {"district": "fulton", "capo": "capo_amaro"}

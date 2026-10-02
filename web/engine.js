@@ -1163,7 +1163,15 @@
     runHeat(state, rng, bal);
     runLaw(state, rng, bal);
     runRivals(state, rng, bal);
-    state.knowledge.papers.push({ month: state.month, text: rng.choice(content.papers), family: false });
+    printFiller(state, rng, content);
+  }
+
+  const FILLER_MEMORY = 12;
+
+  function printFiller(state, rng, content) {
+    const recent = new Set(state.knowledge.papers.slice(-FILLER_MEMORY).map((h) => h.text));
+    const fresh = content.papers.filter((t) => !recent.has(t));
+    state.knowledge.papers.push({ month: state.month, text: rng.choice(fresh.length ? fresh : content.papers), family: false });
   }
 
   // ---- matters you put on the desk yourself (engine/matters.py) ----

@@ -1,0 +1,32 @@
+id: numbers_big_hit
+title: The man who hit the number
+text: |-
+  A longshoreman named Walsh hit the number on Tuesday for a dime a day he has played for nineteen years. The family owes him six thousand dollars.
+
+  {capo} says the bank can stiff him. Nobody will believe a longshoreman over the family.
+cast:
+  racket:
+    racket: true
+    where: [[self.kind, "==", numbers]]
+  capo:
+    role: [capo, underboss]
+    runs: racket
+cooldown: 18
+options:
+  - id: pay
+    label: Pay him, and make sure the whole street knows
+    don: {base: 0.5, sentimental: 1, pious: 0.5}
+    outcomes:
+      - tone: good
+        text: Walsh is paid in full, in public, at the bar where he plays. Every dime player on the Eastside doubles his bet the next week.
+        effects:
+          - treasury: -6000
+          - racket_income: {racket: racket, pct: 12}
+  - id: stiff
+    label: Let {capo} stiff him
+    don: {base: 0, greedy: 1}
+    outcomes:
+      - tone: bad
+        text: Walsh is not paid. He tells everyone on the docks. The dime players move their bets to {racket}'s competitors across the river.
+        effects:
+          - racket_income: {racket: racket, pct: -15}

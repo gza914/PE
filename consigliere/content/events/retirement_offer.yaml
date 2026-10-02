@@ -4,7 +4,7 @@ text: |-
   You have been at the Don's right hand a long time. Your wife has started leaving brochures for a place by the sea, face up, where you will see them.
 
   The family is in a good state. It might not always be. A man could leave now, on his own feet.
-trigger: [[month, ">=", 96], [dons_trust, ">=", 70], [flag.don_gone, "==", 0]]
+trigger: [[month, ">=", 108], [dons_trust, ">=", 70], [flag.don_gone, "==", 0]]
 weight: 1
 cooldown: 12
 you_decide: true
@@ -14,10 +14,33 @@ options:
   - id: retire
     label: Tell the Don you would like to retire
     outcomes:
-      - tone: neutral
+      - tone: good
+        weight_if:
+          - when: [[cohesion, "<", 50]]
+            mult: 0.5
+          - when: [[don_mood, ">=", 65]]
+            mult: 1.5
         text: The Don is quiet for a long time. Then he pours two glasses of something old and tells you it was an honor.
         effects:
           - flag: retire
+      - tone: neutral
+        weight: 1.2
+        weight_if:
+          - when: [[dons_trust, ">=", 90]]
+            mult: 2
+        text: The Don puts a hand on your shoulder and says one more year. He needs you. It is not really a question.
+        effects:
+          - don_mood: -5
+      - tone: bad
+        weight: 0.8
+        weight_if:
+          - when: [[exposure, ">=", 30]]
+            mult: 2
+          - when: [[flag.new_don, "==", 1]]
+            mult: 2
+        text: The Don hears a man who wants out, and a man who wants out is a man who might talk. He smiles and says of course. After that, you are not asked to as many meetings.
+        effects:
+          - standing: {dons_trust: -25}
   - id: not_yet
     label: Not yet
     outcomes:

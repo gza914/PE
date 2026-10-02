@@ -17,7 +17,7 @@ options:
       - tone: good
         text: The Don lets the debt go. The senator's brother hears about it, and pays half of his own accord.
         effects:
-          - treasury: 4000
+          - treasury: 2000
           - stat: {who: capo, stat: loyalty, delta: 4}
   - id: someone_else
     label: Give the job to someone less careful
@@ -27,12 +27,12 @@ options:
         tone: good
         text: The debt is collected, all of it, and the senator says nothing, because what could he say?
         effects:
-          - treasury: 8000
+          - treasury: 2000
           - stat: {who: capo, stat: respect, delta: -5}
       - weight: 1
         tone: bad
         text: The debt is collected. The senator makes a speech about organized crime in the construction industry the following week.
         headline: "State Senator Decries Mob Grip on Construction"
         effects:
-          - treasury: 8000
+          - treasury: 2000
           - heat: {who: family, delta: 8}

@@ -1,0 +1,45 @@
+id: bookmaker_welsh
+title: The bookmaker cannot pay
+text: |-
+  Morty Kessel, an independent bookmaker who lays off his big bets with {capo}, took too much action on a long shot at Belmont. The long shot won. Morty owes {capo}'s book fourteen thousand dollars and has about four of it.
+
+  Morty has been a good customer for twelve years.
+cast:
+  capo:
+    role: [capo, underboss]
+cooldown: 30
+options:
+  - id: carry_him
+    label: Carry Morty on the books and let him pay it off
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Morty pays a thousand a month for ten months and sends the Don a case of wine at Christmas. He lays off more bets with {capo} than ever.
+        effects:
+          - treasury: 2000
+      - weight: 1
+        tone: bad
+        text: Morty pays two months and then closes his shop and moves to his daughter's in Ohio. The rest of the debt goes with him.
+        effects:
+          - treasury: -10000
+  - id: take_shop
+    label: Take his book in place of the money
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - tone: good
+        text: Morty's book becomes {capo}'s book. Morty becomes a clerk in it, and seems almost relieved.
+        effects:
+          - treasury: -4000
+          - stat: {who: capo, stat: greed, delta: 3}
+  - id: example
+    label: Make an example of him
+    don: {base: 0, hothead: 1, paranoid: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - tone: bad
+        text: Morty is found on the floor of his shop with both arms broken. He pays four thousand dollars. Every other independent bookmaker in the city starts laying off with someone else.
+        effects:
+          - treasury: -10000
+          - heat: {who: family, delta: 4}
+          - stat: {who: crew, stat: fear, delta: 4}

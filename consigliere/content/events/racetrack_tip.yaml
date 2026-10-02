@@ -1,0 +1,46 @@
+id: racetrack_tip
+title: A horse named Little Sister
+text: |-
+  A trainer at the racetrack owes {capo} a favor. He says a horse named Little Sister will win the fourth race on Saturday at twelve to one, because the other horses will be running with a little something in their oats.
+
+  The racing commission has new veterinarians this year.
+cast:
+  capo:
+    role: [capo]
+cooldown: 12
+options:
+  - id: bet
+    label: Bet heavily on Little Sister
+    don: {base: 0, greedy: 1}
+    advised_exposure: 2
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Little Sister wins by four lengths. The family's money comes back twelve times over, spread across bookmakers in three states.
+        effects:
+          - treasury: 7000
+      - weight: 1
+        tone: bad
+        text: The new veterinarians test the oats. The race is voided, the trainer arrested, and the bookmakers remember who placed the large bets.
+        headline: "Racing Commission Voids Fourth Race, Doping Suspected"
+        effects:
+          - heat: {who: family, delta: 6}
+          - standing: {exposure: 3}
+  - id: modest
+    label: A modest bet, through other men
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Little Sister wins. The family's modest bet comes back less modest.
+        effects:
+          - treasury: 2000
+      - weight: 1
+        tone: neutral
+        text: The race is voided. The modest bet is refunded, and nobody's name comes up.
+  - id: pass
+    label: Leave the horses alone
+    don: {base: 0, pious: 1}
+    outcomes:
+      - tone: neutral
+        text: Little Sister finishes fourth. Nobody ever finds out why.

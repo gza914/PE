@@ -1,0 +1,33 @@
+id: car_thieves
+title: Boys stealing cars
+text: |-
+  A gang of teenagers has been stealing cars in {district} and selling them for parts. Two of the cars belonged to friends of the family. One belonged to a monsignor.
+
+  The police are getting nowhere, which is unusual in {district}, where the family usually knows everything.
+cast:
+  district:
+    district_of: family
+cooldown: 18
+options:
+  - id: stop
+    label: Find them and put a stop to it
+    don: {base: 0.5, paranoid: 0.5, pious: 0.5}
+    outcomes:
+      - tone: good
+        text: The boys are found and spoken to. The monsignor's car is returned, washed, with a full tank.
+        effects:
+          - standing: {influence: 2}
+  - id: recruit
+    label: Find them and put them to work
+    don: {base: 0, greedy: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The boys turn out to be talented. They steal cars to order now, for the family, and never in {district}.
+        effects:
+          - treasury: 3000
+      - weight: 1
+        tone: bad
+        text: One of the boys is arrested in a stolen car with a family phone number on a matchbook.
+        effects:
+          - heat: {who: family, delta: 5}

@@ -1,0 +1,44 @@
+id: brother_in_law
+title: Your wife's brother
+text: |-
+  Your wife's brother Leonard has lost his job at the shipyard again and has opened a restaurant, which has also failed. He owes eleven thousand dollars to a loan shark in {capo}'s territory, who does not yet know who Leonard's sister is married to.
+
+  Your wife has asked you, very calmly, to do something.
+cast:
+  capo:
+    role: [capo]
+trigger: [[month, ">=", 8]]
+cooldown: 48
+you_decide: true
+default_option: pay_it
+patience: 0
+options:
+  - id: pay_it
+    label: Pay Leonard's debt yourself, quietly
+    outcomes:
+      - tone: neutral
+        text: You pay the eleven thousand dollars from the family's money and make a note to pay it back. Leonard sends a fruit basket. He does not mention it again.
+        effects:
+          - treasury: -11000
+  - id: ask_capo
+    label: Ask {capo} to have the debt forgiven
+    outcomes:
+      - weight: 2
+        tone: good
+        text: "{capo} has a word with the loan shark. The debt is forgiven. {capo} reminds you of this, warmly, at every Sunday dinner for a year."
+        effects:
+          - stat: {who: capo, stat: respect, delta: 3}
+      - weight: 1
+        tone: bad
+        text: "{capo} forgives the debt and tells the story at the social club. The other capos learn that the consigliere's family has debts."
+        effects:
+          - cohesion: -3
+          - standing: {influence: -2}
+  - id: let_him_learn
+    label: Let Leonard work it out himself
+    outcomes:
+      - tone: bad
+        text: Leonard works it out by borrowing from a second loan shark. Your wife does not speak to you for three weeks, and neither does the Don's wife, who heard about it.
+        effects:
+          - don_mood: -6
+          - treasury: -4000

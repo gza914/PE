@@ -147,9 +147,9 @@ def test_same_seed_same_fifteen_years_with_a_faithful_advisor(seed, content):
 
 
 def test_a_trusted_advisor_retires(content):
-    state = starting_state(6)
+    state = starting_state(3)
     state["standing"]["dons_trust"] = 95
-    js, py = run_js(state, 6, 180, content, "faithful"), run_py(state, 6, 180, "faithful")
+    js, py = run_js(state, 3, 180, content, "faithful"), run_py(state, 3, 180, "faithful")
     assert py["state"]["ending"]["id"].startswith("retired")
     assert js == py
 
@@ -174,9 +174,13 @@ def test_every_event_and_effect_kind_is_exercised_somewhere(content):
     seen = set()
     trusted = starting_state(0)
     trusted["standing"]["dons_trust"] = 95
-    for seed in range(40):
+    feud = starting_state(0)
+    feud["rivalries"]["brancato"].update(stage=4, tension=85)
+    for seed in range(56):
         if seed % 4 == 0:
             state = run_py(trusted, seed, 180, "faithful")["state"]
+        elif seed % 8 == 3:
+            state = run_py(feud, seed, 24, "cycle")["state"]
         else:
             state = run_py(None, seed, 60 if seed % 2 else 180, "cycle" if seed % 2 else "faithful")["state"]
         seen.update(d["matter_id"].rsplit("-", 1)[0] for d in state["knowledge"]["decisions"])

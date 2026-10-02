@@ -1,0 +1,57 @@
+id: capo_feud
+title: Bad blood between {a} and {b}
+text: |-
+  {a} and {b} have stopped speaking. It began over a parking space outside the social club and has become something larger, involving a sister, a christening and a comment about a suit.
+
+  Their men have started eating at different restaurants.
+cast:
+  a:
+    role: [capo]
+  b:
+    role: [capo, underboss]
+trigger: [[crew_size, ">=", 3]]
+weight: 2
+cooldown: 30
+options:
+  - id: sit_them_down
+    label: Have the Don sit them down together
+    don: {base: 1, sentimental: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The Don sits them down over veal and wine. By the end of the night they are arguing about baseball instead. Peace has been restored.
+        effects:
+          - cohesion: 4
+          - don_mood: 3
+      - weight: 1
+        tone: bad
+        text: The Don sits them down. {a} says something about {b}'s mother. The veal is not finished.
+        effects:
+          - cohesion: -6
+          - memory: {who: a, about: b, weight: -0.3}
+  - id: side_with_a
+    label: Back {a}; he is right about the parking space
+    don: {base: 0, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don rules for {a}. {b} accepts the ruling and does not accept it at all.
+        effects:
+          - stat: {who: a, stat: loyalty, delta: 5}
+          - stat: {who: b, stat: loyalty, delta: -8}
+  - id: let_them
+    label: Let them settle it between themselves
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: They settle it themselves. Nobody will say how, and both of them are wearing new suits.
+      - weight: 0.3
+        weight_if:
+          - when: [[cohesion, "<", 60]]
+            mult: 4
+        tone: bad
+        text: They settle it with a fight in the street outside the social club, in front of a patrol car. Both of them spend the night in jail.
+        headline: "Brawl Outside Garrick Street Club"
+        effects:
+          - cohesion: -8
+          - heat: {who: family, delta: 4}

@@ -1,0 +1,55 @@
+id: waterfront_commission
+title: The Waterfront Commission
+text: |-
+  The state has created a Waterfront Commission with the power to license every longshoreman and hiring boss on the docks. Anybody with a criminal record will lose his license. Several of {capo}'s hiring bosses have criminal records. Some of them have several.
+
+  The Commission's hearings begin next month.
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 16]]
+cooldown: 72
+options:
+  - id: clean_men
+    label: Replace the hiring bosses with men who have clean records
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Clean men are found, at a price. They are less frightening than the old hiring bosses, and the docks are less profitable for it.
+        effects:
+          - treasury: -8000
+          - add_expense: {id: dock_clean_men, label: Hiring bosses with clean records, amount: 400}
+  - id: fight_hearings
+    label: Fight the Commission at its hearings, with lawyers
+    don: {base: 0.5, vain: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The lawyers find a hundred procedural objections. The hearings go on for two years and decide nothing.
+        effects:
+          - treasury: -10000
+      - weight: 1
+        tone: bad
+        text: The lawyers object at length and the hearings are televised. {capo}'s hiring bosses look exactly like what they are.
+        headline: "Dock Bosses Squirm at Waterfront Hearings"
+        effects:
+          - treasury: -10000
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 3}
+  - id: commissioner
+    label: Find a friend on the Commission
+    don: {base: 0, greedy: 0.5, ambitious: 0.5}
+    advised_exposure: 3
+    outcomes:
+      - weight: 1
+        tone: good
+        text: One of the commissioners has a son-in-law in the concrete business. The licenses are approved in batches, without much reading.
+        effects:
+          - add_expense: {id: dock_commissioner, label: A friend on the Waterfront Commission, amount: 500}
+      - weight: 1
+        tone: bad
+        text: The commissioner is approached and turns out to be wearing a wire for the state police.
+        headline: "Waterfront Commissioner Reports Bribe Attempt"
+        effects:
+          - heat: {who: family, delta: 10}
+          - standing: {exposure: 4}

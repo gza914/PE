@@ -1,0 +1,32 @@
+id: christmas_turkeys
+title: Turkeys for Christmas
+text: |-
+  It is a tradition, or used to be: a turkey for every family in {district} at Christmas, delivered by the family's men, with the Don's compliments.
+
+  It has lapsed in recent years. {capo} thinks it's time it came back.
+cast:
+  district:
+    district_of: family
+  capo:
+    role: [capo]
+trigger: [[month, ">=", 10]]
+cooldown: 12
+options:
+  - id: turkeys
+    label: Turkeys for everyone
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - tone: good
+        text: Two thousand turkeys go out on Christmas Eve. In {district}, nobody talks to the police for a year.
+        headline: "Mystery Benefactor Gives 2,000 Turkeys in {district}"
+        effects:
+          - treasury: -4000
+          - standing: {influence: 4}
+          - heat: {who: family, delta: -4}
+          - cohesion: 2
+  - id: skip
+    label: Not this year
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: No turkeys. The people of {district} buy their own, and notice.

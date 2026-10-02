@@ -1,0 +1,35 @@
+id: newspaper_strike
+title: The newspapers go on strike
+text: |-
+  Every newspaper in the city is on strike. For as long as it lasts, nothing the family does will be in print.
+
+  {capo} sees an opportunity. There is a warehouse on the waterfront that has been in the way for years.
+cast:
+  capo:
+    role: [capo]
+cooldown: 48
+options:
+  - id: use_it
+    label: Settle some old business while nobody's writing it down
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Several old problems are settled during the strike. When the papers come back, they have other things to write about.
+        effects:
+          - heat: {who: family, delta: -6}
+          - treasury: 4000
+      - weight: 1
+        tone: bad
+        text: The strike ends sooner than expected. The first edition back has a long piece about the warehouse.
+        headline: "Waterfront Warehouse Mystery: What Happened During the Strike?"
+        effects:
+          - heat: {who: family, delta: 6}
+  - id: quiet
+    label: Use the quiet to lie low
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The family has a quiet month. The heat that had been building cools a little, with nobody stoking it.
+        effects:
+          - heat: {who: family, delta: -8}

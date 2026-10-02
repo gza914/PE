@@ -1,0 +1,58 @@
+id: grocery_war
+title: Trouble at the produce market
+text: |-
+  The {rival} family has started leaning on the wholesale produce market on Water Street, which has paid {capo} for twenty years. Two trucks were turned over on Monday. The fruit sellers want to know who they are supposed to pay now.
+
+  They would prefer, on the whole, to pay only one family.
+cast:
+  rival:
+    rival: true
+  capo:
+    role: [capo, underboss]
+cooldown: 36
+options:
+  - id: push_back
+    label: Have {capo}'s men turn over two of theirs
+    don: {base: 0.5, hothead: 1, paranoid: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Two {rival} trucks are found upside down on Water Street on Thursday. The fruit sellers know who to pay.
+        effects:
+          - rivalry: {who: rival, tension: 15}
+          - standing: {influence: 2}
+      - weight: 1
+        tone: bad
+        text: Two {rival} trucks are turned over, and one of the drivers is badly hurt. The {rival} family now has a reason, and uses it.
+        effects:
+          - rivalry: {who: rival, stage: 1}
+          - heat: {who: family, delta: 4}
+  - id: complain
+    label: Complain to the {rival} family, politely
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: The {rival} family apologizes for the misunderstanding and stops turning over trucks. They keep collecting from three of the stalls.
+        effects:
+          - treasury: -4000
+      - weight: 0.3
+        weight_if:
+          - when: [[influence, "<", 40]]
+            mult: 5
+        tone: bad
+        text: The {rival} family hears a polite complaint as a family that will not fight. By the end of the month, half the market pays them.
+        effects:
+          - treasury: -10000
+          - standing: {influence: -4}
+          - rivalry: {who: rival, tension: 5}
+  - id: share
+    label: Offer to split the market with them
+    don: {base: 0, greedy: -0.5, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The market is split down the middle of Water Street. {capo} is furious, and the fruit sellers now pay two families instead of one.
+        effects:
+          - treasury: -6000
+          - stat: {who: capo, stat: loyalty, delta: -5}
+          - rivalry: {who: rival, tension: -8}

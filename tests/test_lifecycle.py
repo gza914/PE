@@ -144,6 +144,7 @@ def test_saying_nothing_on_your_own_decision_takes_the_default(fresh):
 ])
 def test_endings(fresh, setup, ending):
     state, _ = fresh
+    state.player_family.treasury = 500_000
     setup(state)
     assert lifecycle.which_ending(state, tuned()) == ending
 
@@ -169,6 +170,7 @@ def test_the_story_ends_with_a_memoir_and_stops(game):
     for _ in range(3):
         apply(state, rng, EndMonth())
     state.flags["retire"] = state.month
+    state.player_family.treasury = 500_000
     month = state.month
     tick(state, rng)
     ending = state.ending

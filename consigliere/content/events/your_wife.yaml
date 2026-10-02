@@ -1,0 +1,35 @@
+id: your_wife
+title: Your wife has questions
+text: |-
+  Your wife has found a second bank book in your desk drawer, in a name that is not yours. She would like to know what it is for. She would also like to know why the men who visit the house never use the front door.
+
+  She has asked you to choose between telling her everything and telling her nothing.
+trigger: [[month, ">=", 30]]
+cooldown: 60
+you_decide: true
+default_option: nothing
+patience: 0
+options:
+  - id: nothing
+    label: Tell her nothing
+    outcomes:
+      - tone: neutral
+        text: You tell her nothing. She puts the bank book back where she found it and never mentions it again, which is somehow worse.
+  - id: some
+    label: Tell her enough
+    outcomes:
+      - weight: 2
+        tone: good
+        text: You tell her enough. She is quiet for a day and then says she always knew. She asks only that you are home for dinner on Sundays.
+      - weight: 1
+        tone: bad
+        text: You tell her enough. She tells her sister, in strict confidence, and her sister has a husband who drinks with policemen.
+        effects:
+          - standing: {exposure: 5}
+  - id: house
+    label: Buy her the house by the sea she keeps talking about
+    outcomes:
+      - tone: good
+        text: You buy a small white house by the sea, in her name. She stops asking about the bank book. The Don jokes that you are planning your escape.
+        effects:
+          - treasury: -18000

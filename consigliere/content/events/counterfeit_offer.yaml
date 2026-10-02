@@ -1,0 +1,37 @@
+id: counterfeit_offer
+title: Very good twenties
+text: |-
+  A printer from Montreal has brought {capo} a suitcase of twenty-dollar bills. They are very good twenties. He will sell a hundred thousand dollars of them for twenty thousand real ones, and as many more as the family wants.
+
+  Counterfeiting is a federal crime. So is nearly everything else, but this one is the Secret Service's.
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 10]]
+cooldown: 48
+options:
+  - id: buy
+    label: Buy the suitcase and pass the money through the rackets
+    don: {base: 0, greedy: 1.5}
+    advised_exposure: 4
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The twenties go out through the numbers banks and the bars, a few at a time. The family turns twenty thousand into sixty thousand.
+        effects:
+          - treasury: 40000
+          - heat: {who: family, delta: 4}
+      - weight: 2
+        tone: bad
+        text: A bank teller in Hartford notices that three twenties have the same serial number. The Secret Service follows them home.
+        headline: "Counterfeit Ring Traced to City Bars"
+        effects:
+          - treasury: -20000
+          - heat: {who: family, delta: 12}
+          - standing: {exposure: 5}
+  - id: refuse
+    label: Send the printer back to Montreal
+    don: {base: 1, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The printer goes back to Montreal with his suitcase. Six months later he is arrested in Buffalo, where somebody did buy.

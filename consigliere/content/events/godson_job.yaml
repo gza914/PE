@@ -18,7 +18,7 @@ options:
         tone: good
         text: The boy is good with numbers and better with silence. Within a year he has found three places where money was leaking.
         effects:
-          - treasury: 4000
+          - treasury: 2000
           - stat: {who: capo, stat: loyalty, delta: 5}
       - weight: 1
         tone: bad

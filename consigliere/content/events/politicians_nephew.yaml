@@ -1,0 +1,43 @@
+id: politicians_nephew
+title: The Councilman's nephew
+text: |-
+  Councilman Harold Prentiss, who has voted the right way on every zoning question for six years, has a nephew who wants a job. The nephew has no skills. He would like to be paid as if he did.
+
+  The Councilman has mentioned this twice, which is once more than he usually mentions anything.
+trigger: [[month, ">=", 4]]
+cooldown: 30
+options:
+  - id: hire
+    label: Put the nephew on a payroll somewhere
+    don: {base: 1, cautious: 0.5}
+    outcomes:
+      - tone: good
+        text: The nephew becomes an assistant manager at a laundry. He comes in on Fridays to collect his envelope. The Councilman keeps voting the right way.
+        effects:
+          - add_expense: {id: prentiss_nephew, label: The Councilman's nephew, amount: 400}
+          - standing: {influence: 2}
+  - id: one_time
+    label: Give the Councilman a gift instead
+    don: {base: 0.5, greedy: 0.5}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: The Councilman accepts five thousand dollars and says nothing more about his nephew. He says nothing more about zoning, either.
+        effects:
+          - treasury: -5000
+      - weight: 1
+        tone: bad
+        text: The Councilman accepts the money and is insulted by it. At the next hearing he asks pointed questions about a parking garage.
+        effects:
+          - treasury: -5000
+          - heat: {who: family, delta: 4}
+  - id: refuse
+    label: Tell him the family is not an employment agency
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: bad
+        text: The Councilman discovers a sudden interest in organized crime. He gives a speech about it on the steps of City Hall.
+        headline: "Councilman Prentiss Vows Crackdown on Rackets"
+        effects:
+          - heat: {who: family, delta: 6}
+          - standing: {influence: -3}

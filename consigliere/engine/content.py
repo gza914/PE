@@ -236,11 +236,13 @@ def check_event_references(events: dict[str, EventDef]) -> None:
     """Catch broken references between events, casts and effects at load time."""
     for event in events.values():
         names = set(event.cast) | set(event.carries)
+        earlier = set(event.carries)
         for name, slot in event.cast.items():
             for ref in (slot.racket_of, slot.racket_not_of, slot.runs, slot.boss_of, slot.racket_in,
                         None if slot.district_of == "family" else slot.district_of):
-                if ref is not None and ref not in names:
-                    raise ContentError(f"{event.id}: cast slot {name} refers to unknown slot {ref}")
+                if ref is not None and ref not in earlier:
+                    raise ContentError(f"{event.id}: cast slot {name} refers to {ref}, which must come before it")
+            earlier.add(name)
         names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
         all_effects = [e for o in event.options for out in o.outcomes for e in out.effects]
         if any(e.kind == "succession" for e in all_effects):

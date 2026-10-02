@@ -1,0 +1,50 @@
+id: fixed_fight
+title: The fight at the Armory
+text: |-
+  A middleweight named Tommy Rourke fights at the Armory on Saturday. His manager owes the family money, and has offered to pay it back another way: Rourke goes down in the sixth.
+
+  The odds on the other man are four to one.
+secrets: {rourke_honest: 0.25}
+cooldown: 12
+intel:
+  - claim: Rourke has agreed to go down.
+    denial: Rourke knows nothing about it, and won't go down for anybody.
+    truth: [[secret.rourke_honest, "==", 0]]
+    sources: [street, press]
+    reveal: 1.0
+options:
+  - id: bet
+    label: Put the family's money on the sixth round
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.rourke_honest, "==", 1]]
+            mult: 0
+        text: Rourke goes down in the sixth, convincingly. The family's money comes back fourfold through a dozen bookmakers.
+        effects:
+          - treasury: 6000
+      - tone: bad
+        weight_if:
+          - when: [[secret.rourke_honest, "==", 0]]
+            mult: 0
+        text: Nobody told Rourke. He knocks the other man out in the third, and the family's money stays with the bookmakers.
+        headline: "Rourke Stuns Armory Crowd With Third-Round Knockout"
+        effects:
+          - treasury: -4000
+  - id: small
+    label: Bet small, and take the manager's money too
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The family bets a little and collects the manager's debt in full, whatever happens in the sixth.
+        effects:
+          - treasury: 3000
+  - id: stay_out
+    label: Collect the debt the ordinary way
+    don: {base: 0, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The manager pays, eventually, in installments, with apologies.
+        effects:
+          - treasury: 1500

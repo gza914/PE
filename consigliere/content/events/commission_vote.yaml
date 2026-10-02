@@ -1,0 +1,54 @@
+id: commission_vote
+title: A vote at the Commission
+text: |-
+  The heads of the families will meet at a farmhouse upstate to vote on whether the {rival} family may open a casino in the Eastside. The Don has one vote. He has asked how you think he should use it.
+
+  Votes at the Commission are remembered for a very long time.
+cast:
+  rival:
+    rival: true
+trigger: [[month, ">=", 6]]
+cooldown: 36
+options:
+  - id: vote_for
+    label: Vote with the {rival} family, and ask for something in return
+    don: {base: 0.5, greedy: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The casino is approved. A month later an envelope from the {rival} family arrives with a note of thanks and eight thousand dollars in it.
+        effects:
+          - treasury: 8000
+          - rivalry: {who: rival, tension: -10}
+      - weight: 1
+        tone: neutral
+        text: The casino is approved, and the {rival} family forgets to say thank you. The Don does not forget that they forgot.
+        effects:
+          - don_mood: -4
+  - id: vote_against
+    label: Vote against them
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: The casino is voted down. The {rival} boss shakes the Don's hand on the way out, a little too firmly.
+        effects:
+          - rivalry: {who: rival, tension: 12}
+          - standing: {influence: 2}
+  - id: abstain
+    label: Abstain, and offend nobody
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 2
+        tone: neutral
+        text: The Don abstains. The casino is approved by one vote. Nobody thanks him and nobody blames him, which at the Commission is a kind of invisibility.
+        effects:
+          - standing: {influence: -2}
+      - weight: 0.2
+        weight_if:
+          - when: [[influence, "<", 40]]
+            mult: 8
+        tone: bad
+        text: The Don abstains, and the other bosses notice that the Ferrante family no longer has opinions. The next time the Eastside is discussed, nobody asks the Don.
+        effects:
+          - standing: {influence: -6}
+          - treasury: -6000

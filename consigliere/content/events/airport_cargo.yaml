@@ -1,0 +1,35 @@
+id: airport_cargo
+title: Cargo at the new airport
+text: |-
+  The new airport has a cargo terminal where furs, watches and pharmaceuticals come in from Europe every night. The loading crews are union, and the union is friendly.
+
+  {capo} thinks the family should have a piece of what falls off the planes.
+cast:
+  capo:
+    role: [capo]
+  district:
+    district_of: family
+trigger: [[month, ">=", 30]]
+once: true
+options:
+  - id: piece
+    label: Take a piece of the cargo terminal
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: A few crates a week go missing at the cargo terminal, and the family is very good at finding them buyers.
+        effects:
+          - add_racket: {id: airport_cargo, name: Airport cargo, kind: docks, district: district, capo: capo, income: 3500, heat_per_month: 4, bind: cargo}
+      - weight: 1
+        tone: bad
+        text: The airlines hire Pinkertons. The first crate the family touches belongs to a congressman.
+        headline: "Pinkertons Probe Thefts at Airport Cargo Terminal"
+        effects:
+          - heat: {who: family, delta: 6}
+  - id: pass
+    label: Leave the airport to someone else
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Someone else takes the airport. Within a year, it is the most profitable thing anyone in the city owns.

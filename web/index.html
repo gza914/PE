@@ -292,6 +292,54 @@ td.flag { color: var(--danger); font-weight: 700; }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 kbd { font: 0.75rem var(--typed); border: 1px solid var(--rule); padding: 0 4px; }
 
+
+/* Papers: the Evening Herald, month by month */
+.papers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem); gap: 32px; align-items: start; }
+@media (max-width: 900px) { .papers { grid-template-columns: minmax(0, 1fr); } }
+.herald { background: var(--sheet); border: 1px solid var(--rule); padding: 20px 24px 24px; }
+.herald-flag { text-align: center; border-bottom: 3px double var(--ink); padding-bottom: 8px; margin-bottom: 14px; }
+.herald-flag b { display: block; font: 700 clamp(1.8rem, 4vw, 2.8rem)/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
+.herald-flag small { font: 0.78rem var(--typed); color: var(--muted); }
+.edition { display: grid; gap: 8px; padding-block: 12px; border-bottom: 1px solid var(--rule); }
+.edition:last-child { border-bottom: 0; }
+.edition-date { font: 700 0.72rem var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.headline { font: 700 1.15rem/1.2 var(--display); letter-spacing: 0.02em; text-transform: uppercase; margin: 0; }
+.headline.ours { color: var(--danger); }
+.headline.city { font-size: 0.98rem; color: var(--muted); }
+.headline .tag { font: 700 0.62rem var(--body); letter-spacing: 0.12em; vertical-align: middle; margin-left: 8px; border: 1px solid currentColor; padding: 1px 5px; }
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-row button[aria-pressed="true"] { background: var(--brass-soft); }
+
+/* Settings and new game */
+.tabs .tab-end { margin-left: auto; }
+.settings { display: grid; gap: 22px; max-width: 46rem; }
+.setting { display: grid; gap: 8px; }
+.setting h3 { font: 700 1.1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.03em; margin: 0; }
+.setting p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); width: fit-content; }
+.seg button { background: transparent; border: 0; border-right: 1.5px solid var(--ink); padding: 7px 14px; font: 600 0.85rem var(--body); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px; }
+.level { text-align: left; background: var(--sheet); border: 1.5px solid var(--rule); padding: 14px 16px; cursor: pointer; display: grid; gap: 4px; }
+.level b { font: 700 1.1rem/1.1 var(--display); text-transform: uppercase; letter-spacing: 0.04em; }
+.level span { font-size: 0.88rem; color: var(--muted); }
+.level[aria-pressed="true"] { border-color: var(--brass); box-shadow: inset 0 0 0 1.5px var(--brass); }
+.check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--brass); }
+.btn-go { background: var(--brass); color: var(--on-brass); border: 0; padding: 11px 20px; font: 700 1rem/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+
+/* Tutorial tips */
+#tip-slot:empty { display: none; }
+.tip { margin-top: 16px; background: var(--brass-soft); border: 1.5px solid var(--brass); padding: 12px 16px; display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.tip p { margin: 0; max-width: 72ch; }
+.tip .kicker { font: 700 0.7rem var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); display: block; margin-bottom: 2px; }
+.tip-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Typewriter: the unrevealed part keeps its space so nothing jumps */
+.tw-rest { color: transparent; }
+.skip-hint { font: 0.75rem var(--typed); color: var(--muted); }
+
 @media (prefers-reduced-motion: no-preference) {
   .fresh { animation: settle 240ms ease-out both; }
   @keyframes settle { from { transform: translateY(4px); } to { transform: none; } }
@@ -314,11 +362,14 @@ kbd { font: 0.75rem var(--typed); border: 1px solid var(--rule); padding: 0 4px;
       <button id="tab-dossiers" role="tab" aria-selected="false" data-tab="dossiers">Dossiers</button>
       <button id="tab-city" role="tab" aria-selected="false" data-tab="city">City</button>
       <button id="tab-sources" role="tab" aria-selected="false" data-tab="sources">Sources</button>
+      <button id="tab-papers" role="tab" aria-selected="false" data-tab="papers">Papers</button>
       <button id="tab-books" role="tab" aria-selected="false" data-tab="books">Books</button>
+      <button id="tab-settings" role="tab" aria-selected="false" data-tab="settings" class="tab-end">Settings</button>
     </nav>
   </div>
 </header>
 
+<div class="wrap" id="tip-slot"></div>
 <main class="wrap" id="view" aria-live="polite"></main>
 
 <script>window.CONSIGLIERE_CONTENT = /*__CONTENT__*/;</script>

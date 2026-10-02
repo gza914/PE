@@ -1,0 +1,42 @@
+id: vending_contract
+title: Candy machines in the schools
+text: |-
+  The Board of Education is giving out a contract for candy and soda machines in every public school in the city. The man who decides is a deputy commissioner with a boat he cannot afford.
+
+  It is clean money, or close to it.
+trigger: [[treasury, ">", 10000]]
+cooldown: 36
+options:
+  - id: boat
+    label: Help the deputy commissioner with his boat
+    don: {base: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The contract goes to a company with no visible connection to anyone. Children all over the city buy its candy.
+        effects:
+          - treasury: -5000
+          - add_racket: {id: school_vending, name: School vending machines, kind: protection, district: home, income: 2000, heat_per_month: 1, bind: machines}
+      - weight: 1
+        tone: bad
+        text: The deputy commissioner is already under investigation for the boat. The family's payment becomes Exhibit Four.
+        headline: "Schools Official Charged in Vending Bribe"
+        effects:
+          - treasury: -5000
+          - standing: {exposure: 5}
+  - id: bid
+    label: Bid honestly, through a front company
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The honest bid wins, to everyone's surprise, including the deputy commissioner's.
+        effects:
+          - add_racket: {id: school_vending, name: School vending machines, kind: protection, district: home, income: 1500, heat_per_month: 1, bind: machines}
+      - weight: 2
+        tone: neutral
+        text: The contract goes to a company owned by the deputy commissioner's brother-in-law.
+cast:
+  home:
+    district_of: family

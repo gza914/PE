@@ -31,7 +31,7 @@ options:
       - tone: neutral
         text: The family takes a cut and asks no questions. The money is good. The kind of attention it brings is not.
         effects:
-          - add_racket: {id: side_heroin, name: "{capo}'s side business", kind: narcotics, district: district, capo: capo, income: 7000, heat_per_month: 8, bind: dope}
+          - add_racket: {id: side_heroin, name: "{capo}'s side business", kind: narcotics, district: district, capo: capo, income: 4000, heat_per_month: 8, bind: dope}
           - heat: {who: family, delta: 6}
   - id: ignore
     label: Say nothing, and let it be his problem

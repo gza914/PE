@@ -1,0 +1,35 @@
+id: cigarette_trucks
+title: Cigarettes from the South
+text: |-
+  Cigarettes cost thirty cents a pack less in the Carolinas, because of the tax. A man with trucks and a warehouse has offered {capo} as many as he can sell, without tax stamps.
+
+  It is the kind of crime the state cares about a great deal more than anyone else does.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, greedy]]
+cooldown: 24
+options:
+  - id: buy
+    label: Buy the trucks' worth and sell them through the stores
+    don: {base: 0.5}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The cigarettes sell faster than they can be unloaded. Every corner store in three districts carries them.
+        effects:
+          - treasury: 4000
+          - heat: {who: family, delta: 3}
+      - weight: 1
+        tone: bad
+        text: State tax agents stop the second truck at the bridge. The driver has {capo}'s phone number in his wallet.
+        headline: "State Seizes Truckload of Untaxed Cigarettes"
+        effects:
+          - heat: {who: family, delta: 6}
+          - standing: {exposure: 2}
+  - id: pass
+    label: Not worth the trouble
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The man with the trucks finds another buyer. He always does.

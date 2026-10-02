@@ -140,7 +140,7 @@ class Bot:
         return votes_leader(state, matter) or event.default_option
 
     def retires(self, state: WorldState) -> bool:
-        return state.month >= 96
+        return state.month >= 108
 
     def sit(self, state: WorldState) -> str:
         sd = state.sitdown

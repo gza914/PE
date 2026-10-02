@@ -43,7 +43,7 @@ options:
       - tone: good
         text: The family goes into the business. The first month's money comes in a suitcase, and two of the old capos stop coming to Sunday dinner.
         effects:
-          - add_racket: {id: heroin, name: "Heroin in {district}", kind: narcotics, district: district, capo: capo, income: 16000, heat_per_month: 9, bind: dope}
+          - add_racket: {id: heroin, name: "Heroin in {district}", kind: narcotics, district: district, capo: capo, income: 9000, heat_per_month: 9, bind: dope}
           - flag: narcotics_open
           - cohesion: -5
           - followup: {event: narcotics_heat, after: [4, 8]}

@@ -342,6 +342,9 @@ def sitdown_act(state: WorldState, action: str, bal: Balance | None = None) -> N
 
 # ---- the monthly system ----
 
+FILLER_MEMORY = 12
+
+
 def run(state: WorldState, rng: GameRNG, bal: Balance | None = None) -> None:
     """A sit-down left unfinished breaks up; then heat, the law and the rivals move."""
     bal = bal or balance()
@@ -350,4 +353,11 @@ def run(state: WorldState, rng: GameRNG, bal: Balance | None = None) -> None:
     run_heat(state, rng, bal)
     run_law(state, rng, bal)
     run_rivals(state, rng, bal)
-    state.knowledge.papers.append(Headline(month=state.month, text=rng.choice(papers())))
+    print_filler(state, rng)
+
+
+def print_filler(state: WorldState, rng: GameRNG) -> None:
+    """The rest of the Herald: a city story, never one it ran in the last year."""
+    recent = {h.text for h in state.knowledge.papers[-FILLER_MEMORY:]}
+    fresh = [t for t in papers() if t not in recent] or papers()
+    state.knowledge.papers.append(Headline(month=state.month, text=rng.choice(fresh)))

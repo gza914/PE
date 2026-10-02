@@ -1,0 +1,47 @@
+id: missing_collector
+title: A collector has not come back
+text: |-
+  Sal Pugliese, who collects for {capo}'s {racket}, went out on Thursday with his route book and has not been seen since. The route that week was worth about nine thousand dollars.
+
+  His wife says he has never missed a dinner. His girlfriend says the same.
+cast:
+  racket:
+    racket: true
+  capo:
+    role: [capo, underboss]
+    runs: racket
+secrets:
+  ran: 0.5
+cooldown: 36
+options:
+  - id: search
+    label: Have {capo}'s men look for him
+    don: {base: 0.5, paranoid: 0.5}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[secret.ran, "==", 1]]
+            mult: 0
+        tone: neutral
+        text: Sal is found in a hospital in Jersey with a broken leg and a story about a truck. The money is in his car. It is all there, nearly.
+        effects:
+          - treasury: -1000
+      - weight: 1
+        weight_if:
+          - when: [[secret.ran, "==", 0]]
+            mult: 0
+        tone: bad
+        text: Sal is found in Miami, with the money spent and a new name. {capo}'s men bring him back. He will not be collecting again.
+        effects:
+          - treasury: -9000
+          - stat: {who: crew, stat: fear, delta: 3}
+          - heat: {who: family, delta: 3}
+  - id: write_off
+    label: Write off the money and replace him
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The nine thousand dollars is written off and a new collector learns Sal's route. Every collector in the city hears that the Ferrante family can be robbed.
+        effects:
+          - treasury: -9000
+          - racket_income: {racket: racket, pct: -5}

@@ -1,0 +1,50 @@
+id: irs_audit
+title: The olive oil company
+text: |-
+  The Internal Revenue Service is auditing the olive oil import company the Don uses to explain where his money comes from. The auditor is young and thorough and has asked for ten years of records.
+
+  Some of those years' records do not exist, and some should not.
+trigger: [[month, ">=", 12]]
+cooldown: 36
+options:
+  - id: accountants
+    label: Hire the best accountants in the city to rebuild the books
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: Ten years of records are produced, every one of them immaculate. The auditor finds a small error in 1951 and goes away happy.
+        effects:
+          - treasury: -8000
+      - weight: 1
+        tone: bad
+        text: The rebuilt books are immaculate, which is itself suspicious. The audit becomes an investigation.
+        effects:
+          - treasury: -8000
+          - heat: {who: family, delta: 6}
+          - standing: {exposure: 3}
+  - id: settle
+    label: Settle, and pay a penalty
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The company pays a penalty of twelve thousand dollars and promises to keep better records. The auditor gets a promotion.
+        effects:
+          - treasury: -12000
+  - id: fight
+    label: Fight it in tax court
+    don: {base: 0, vain: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The tax court finds for the company on a technicality. The Don frames the decision.
+        effects:
+          - treasury: -3000
+          - don_mood: 5
+      - weight: 1
+        tone: bad
+        text: The tax court finds against the company, and the newspapers read the decision with great interest.
+        headline: "Tax Court Rules Against Ferrante Import Firm"
+        effects:
+          - treasury: -15000
+          - heat: {who: family, delta: 5}

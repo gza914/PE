@@ -1,0 +1,49 @@
+id: police_shakeup
+title: A new captain at the Ninth Precinct
+text: |-
+  The Police Commissioner has moved Captain Doyle out of the Ninth Precinct after twenty years, and the new captain, a former Marine named Russo, has let it be known that he does not drink, does not gamble, and does not accept Christmas presents.
+
+  Captain Doyle's Christmas presents came to eighteen hundred dollars a month.
+trigger: [[month, ">=", 12]]
+cooldown: 60
+options:
+  - id: test_him
+    label: Find out what Captain Russo does accept
+    don: {base: 0.5, greedy: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Captain Russo does not accept money. He does accept a scholarship for his son at a good Catholic school. It costs more than the money would have.
+        effects:
+          - add_expense: {id: russo_school, label: A scholarship at St. Ignatius, amount: 600}
+      - weight: 1
+        tone: bad
+        text: Captain Russo really does not accept anything. He reports the offer to Internal Affairs, and Internal Affairs reports it to the newspapers.
+        headline: "Captain Russo Spurns Bribe, Names No Names"
+        effects:
+          - heat: {who: family, delta: 8}
+  - id: go_quiet
+    label: Move the Ninth Precinct business somewhere quieter
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The card games in the Ninth move across the river. They make less money there, and the players complain about the drive.
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: -2}
+  - id: wait_out
+    label: Wait; captains come and go
+    don: {base: 0, vain: 0.5}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: Captain Russo raids two card games in his first month and none in his second. He has other things to do.
+        effects:
+          - heat: {who: family, delta: 3}
+      - weight: 1
+        tone: bad
+        text: Captain Russo raids a card game every week, and puts the photographs on the bulletin board.
+        effects:
+          - heat: {who: family, delta: 7}
+          - treasury: -5000

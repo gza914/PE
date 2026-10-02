@@ -1,0 +1,56 @@
+id: loan_shark_suicide
+title: A man on a bridge
+text: |-
+  A grocer named Abe Lindner, who owed {capo}'s shylocks six thousand dollars at four points a week, walked off the Hollis Street bridge on Sunday. He left a note. The note names names.
+
+  The police have the note. So, it seems, does the Herald.
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 12]]
+cooldown: 48
+options:
+  - id: widow
+    label: Forgive the debt and send the widow money
+    don: {base: 0.5, pious: 1, sentimental: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The widow receives an envelope with five thousand dollars and no name. At the inquest she says her husband had been unwell. The note is lost.
+        effects:
+          - treasury: -5000
+      - weight: 1
+        tone: bad
+        text: The widow takes the money and gives the note to the Herald anyway. Grief does not always do what it is paid to.
+        headline: "Grocer's Suicide Note Accuses Loan Sharks"
+        effects:
+          - treasury: -5000
+          - heat: {who: family, delta: 6}
+  - id: get_note
+    label: Get the note back from the police
+    don: {base: 0.5, cautious: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 1
+        tone: good
+        text: A desk sergeant is paid two thousand dollars and the note is misfiled, permanently.
+        effects:
+          - treasury: -2000
+      - weight: 1
+        tone: bad
+        text: The desk sergeant takes the money and makes a copy first. The District Attorney is delighted with it.
+        headline: "DA Probes Loan Ring After Bridge Death"
+        effects:
+          - treasury: -2000
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 3}
+  - id: nothing
+    label: Do nothing; the man owed money
+    don: {base: 0, greedy: 0.5, hothead: 0.5}
+    outcomes:
+      - tone: bad
+        text: The Herald prints the note in full. Three city councilmen demand hearings into the loan-sharking racket, and {capo}'s collectors stay home for a month.
+        headline: "Loan Sharks Drove Grocer to His Death, Note Says"
+        effects:
+          - heat: {who: family, delta: 10}
+          - treasury: -6000

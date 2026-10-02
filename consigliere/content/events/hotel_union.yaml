@@ -1,0 +1,55 @@
+id: hotel_union
+title: The hotel workers
+text: |-
+  The hotel workers' local wants a new contract from the Grand Palatine and the four other big hotels downtown. The hotel owners would pay well for the contract to be reasonable. So would the workers, for it to be generous.
+
+  {capo} has friends on both sides of the table.
+cast:
+  capo:
+    role: [capo, underboss]
+trigger: [[month, ">=", 14]]
+cooldown: 48
+options:
+  - id: owners
+    label: Take the owners' money and deliver a quiet contract
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The contract is signed in an afternoon. The owners pay twenty thousand dollars for the afternoon.
+        effects:
+          - treasury: 20000
+          - add_expense: {id: hotel_local, label: Officers of the hotel workers' local, amount: 500}
+      - weight: 1
+        tone: bad
+        text: The contract is signed, and the workers walk out anyway. The strike makes the evening news and the union's books make the morning paper.
+        headline: "Wildcat Strike Hits Downtown Hotels"
+        effects:
+          - treasury: 6000
+          - heat: {who: family, delta: 6}
+  - id: workers
+    label: Back the workers, and own the local
+    don: {base: 0.5, sentimental: 0.5, ambitious: 0.5}
+    outcomes:
+      - tone: good
+        text: The workers get a raise and a pension fund. The pension fund gets a trustee chosen by {capo}.
+        effects:
+          - standing: {influence: 3}
+          - add_expense: {id: hotel_local, label: Officers of the hotel workers' local, amount: 500}
+          - treasury: 4000
+  - id: stay_out
+    label: Stay out of it
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        weight: 1
+        text: The hotels and the union settle without the family. Nobody needed you, and everybody noticed.
+      - weight: 0.2
+        weight_if:
+          - when: [[influence, "<", 40]]
+            mult: 6
+        tone: bad
+        text: Other people step into the negotiation the family stepped out of. The hotels downtown are theirs now.
+        effects:
+          - standing: {influence: -4}
+          - treasury: -5000

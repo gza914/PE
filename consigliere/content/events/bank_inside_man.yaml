@@ -1,0 +1,47 @@
+id: bank_inside_man
+title: A teller with a plan
+text: |-
+  A teller at the Merchants' Savings Bank on Fulton Avenue has come to {capo} with a plan: an armored car, a Friday payroll, a door he will leave unlocked. He wants a third.
+
+  Banks are federal. The FBI does not forget a bank.
+cast:
+  capo:
+    role: [capo]
+secrets: {teller_wired: 0.3}
+cooldown: 36
+intel:
+  - claim: The teller is working for the FBI.
+    denial: The teller is exactly what he seems, a greedy man with a key.
+    truth: [[secret.teller_wired, "==", 1]]
+    sources: [police, street]
+options:
+  - id: do_it
+    label: Let {capo} do it
+    don: {base: -0.5, greedy: 1}
+    advised_exposure: 4
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.teller_wired, "==", 1]]
+            mult: 0
+        text: The armored car is lighter by sixty thousand dollars. The FBI questions every teller at the bank and finds nothing, because the teller has already gone to Canada.
+        headline: "Bandits Take $60,000 Payroll on Fulton Avenue"
+        effects:
+          - treasury: 10000
+          - heat: {who: family, delta: 10}
+      - tone: bad
+        weight_if:
+          - when: [[secret.teller_wired, "==", 0]]
+            mult: 0
+        text: The door is unlocked, and behind it are eleven FBI agents. Three of {capo}'s men are arrested on the spot.
+        headline: "FBI Foils Bank Robbery, Three Held"
+        effects:
+          - heat: {who: family, delta: 12}
+          - standing: {exposure: 6}
+          - strength: {who: family, delta: -4}
+  - id: refuse
+    label: The family does not rob banks
+    don: {base: 0.5, cautious: 1.5}
+    outcomes:
+      - tone: neutral
+        text: The teller is sent away. He tries another crew, and is arrested a month later, by eleven FBI agents.

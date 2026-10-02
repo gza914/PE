@@ -1,0 +1,46 @@
+id: dentist_default
+title: The dentist who can't pay
+text: |-
+  Dr. Lowenstein, a dentist with an office on Garrick Street, borrowed fifteen thousand dollars from {capo} to cover a gambling debt and cannot pay it back. He is a respected man, with patients on the City Council.
+
+  {capo} wants to make an example of him.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.rackets, ">=", 1]]
+cooldown: 24
+options:
+  - id: example
+    label: Let {capo} make an example
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Dr. Lowenstein finds the money within a week, by mortgaging his house. Every borrower in the city hears how it was found.
+        effects:
+          - treasury: 6000
+          - stat: {who: capo, stat: fear, delta: 5}
+      - weight: 1
+        tone: bad
+        text: Dr. Lowenstein goes to his patient on the City Council, who goes to the newspapers.
+        headline: "Dentist Says Loan Sharks Threatened His Family"
+        effects:
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 2}
+  - id: take_practice
+    label: Take a piece of his practice instead
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The family owns a third of a dental practice on Garrick Street. It is the most respectable thing the family owns.
+        effects:
+          - treasury: 3000
+          - standing: {influence: 2}
+  - id: forgive
+    label: Forgive part of it, and keep a friend on the Council
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: neutral
+        text: Dr. Lowenstein pays what he can and is grateful for the rest. So, it turns out, is the councilman.
+        effects:
+          - standing: {influence: 4}

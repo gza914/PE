@@ -1,0 +1,49 @@
+id: reporter_photo
+title: A photograph of you
+text: |-
+  A photographer from the Herald has a picture of you leaving the Don's house at two in the morning. It is not a good picture, but it is a clear one. The editor has not decided whether to print it.
+
+  Your neighbors think you sell insurance.
+trigger: [[month, ">=", 10], [exposure, ">=", 10]]
+cooldown: 36
+options:
+  - id: buy_it
+    label: Buy the negative
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The photographer sells the negative for three thousand dollars and buys a better camera with it.
+        effects:
+          - treasury: -3000
+      - weight: 1
+        tone: bad
+        text: The photographer sells you the negative. He has kept a print.
+        headline: "Mystery Visitor at Ferrante Home Identified"
+        effects:
+          - treasury: -3000
+          - standing: {exposure: 6}
+  - id: lean_on_editor
+    label: Remind the editor who advertises in his paper
+    don: {base: 0.5, paranoid: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: Three restaurants and a car dealership mention to the editor that they are reconsidering their advertising. The picture is not printed.
+        effects:
+          - standing: {influence: -1}
+      - weight: 1
+        tone: bad
+        text: The editor is a stubborn man. He prints the picture on page one, and a column about freedom of the press beside it.
+        headline: "Herald Will Not Be Intimidated"
+        effects:
+          - standing: {exposure: 8}
+          - heat: {who: family, delta: 3}
+  - id: let_it_run
+    label: Let them print it
+    don: {base: 0, vain: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The picture runs on page nine, beneath a story about a dog show. Your neighbors stop asking about insurance.
+        effects:
+          - standing: {exposure: 4}

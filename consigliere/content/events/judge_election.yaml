@@ -1,0 +1,39 @@
+id: judge_election
+title: Judge Albert Haskell's campaign
+text: |-
+  Judge Albert Haskell of the county court, who has been reasonable in three of the family's cases, is running for re-election against a young prosecutor named Gail Mercer. Mercer has promised to clean up the courts. She is ahead.
+
+  Judge Haskell's campaign is short of money.
+trigger: [[month, ">=", 20]]
+cooldown: 48
+options:
+  - id: fund
+    label: Fund the judge's campaign, through friends
+    don: {base: 0.5, cautious: 0.5, paranoid: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Judge Haskell wins by four thousand votes, most of them in the Eastside. He sends the Don a Christmas card with no return address.
+        effects:
+          - treasury: -12000
+          - heat: {who: family, delta: -5}
+      - weight: 1
+        tone: bad
+        text: The family's money is not enough. Gail Mercer wins, and the first thing she does is ask where Judge Haskell's money came from.
+        headline: "Mercer Upsets Haskell; Vows Probe of Campaign Gifts"
+        effects:
+          - treasury: -12000
+          - heat: {who: family, delta: 6}
+  - id: stay_out
+    label: Stay out of the election
+    don: {base: 0.5}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: Judge Haskell wins anyway, narrowly, and owes the family nothing.
+      - weight: 1
+        tone: bad
+        text: Gail Mercer wins. The county court becomes a much less reasonable place.
+        headline: "Reformer Mercer Takes County Bench"
+        effects:
+          - heat: {who: family, delta: 5}

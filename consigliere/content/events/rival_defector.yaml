@@ -1,0 +1,46 @@
+id: rival_defector
+title: A man from the {rival} family
+text: |-
+  A soldier from the {rival} family named Carmine Abruzzi has asked, through a cousin, whether the Ferrante family would take him. He says his boss {boss} has cheated him on a share. He says he knows things about the {rival} family's books.
+
+  Men who change families once can change families twice.
+cast:
+  rival:
+    rival: true
+  boss:
+    boss_of: rival
+trigger: [[month, ">=", 12]]
+cooldown: 48
+options:
+  - id: take_him
+    label: Take him in, and listen to what he knows
+    don: {base: 0.5, ambitious: 1, greedy: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Carmine comes over with a notebook. The notebook is worth a great deal. {boss} learns where Carmine went and says nothing, which is worse than saying something.
+        effects:
+          - treasury: 6000
+          - strength: {who: family, delta: 2}
+          - rivalry: {who: rival, tension: 20}
+      - weight: 1
+        tone: bad
+        text: Carmine comes over with a notebook. Everything in it is false, and every word you say in front of him goes straight back to {boss}.
+        effects:
+          - rivalry: {who: rival, tension: 15}
+          - cohesion: -4
+          - treasury: -5000
+  - id: send_back
+    label: Send him back to {boss}, and let {boss} know
+    don: {base: 0.5, cautious: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        text: "{boss} thanks the Don for his courtesy. Carmine Abruzzi is not seen again. The {rival} family owes the Ferrantes a favor, and both families know it."
+        effects:
+          - rivalry: {who: rival, tension: -12}
+  - id: turn_away
+    label: Turn him away and say nothing
+    don: {base: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Carmine Abruzzi goes somewhere else instead, perhaps somewhere far away. Nobody asks.

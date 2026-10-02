@@ -1,0 +1,27 @@
+id: parking_lots
+title: Parking lots downtown
+text: |-
+  A broker has offered the family four parking lots downtown, near the new office buildings. The price is high, the income is steady, and the whole thing is entirely legal.
+
+  The Don has always said that one day the family should own things it doesn't have to explain.
+trigger: [[treasury, ">", 40000]]
+once: true
+cast:
+  district:
+    district_of: family
+options:
+  - id: buy
+    label: Buy the parking lots
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The family owns four parking lots downtown. They are boring and profitable, and nobody from the government has ever asked about one.
+        effects:
+          - treasury: -30000
+          - add_racket: {id: parking_lots, name: Downtown parking lots, kind: construction, district: district, income: 2500, heat_per_month: 0, bind: lots}
+  - id: pass
+    label: Keep the money where it is
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The lots go to an insurance company. In ten years they are worth four times as much.

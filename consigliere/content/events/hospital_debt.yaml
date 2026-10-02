@@ -1,0 +1,48 @@
+id: hospital_debt
+title: The new wing at St. Agnes
+text: |-
+  St. Agnes Hospital, where half the family was born and the other half expects to die, is raising money for a new children's wing. Monsignor Keane has suggested that the Don's name would look very well on a plaque.
+
+  The plaque costs twenty-five thousand dollars.
+trigger: [[month, ">=", 18], [treasury, ">=", 60000]]
+cooldown: 72
+options:
+  - id: plaque
+    label: Give the money, and take the plaque
+    don: {base: 0.5, vain: 1, pious: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The Ferrante Children's Wing opens in the spring. The Mayor cuts the ribbon. The Don stands beside him in the photograph and looks like a man who builds hospitals.
+        headline: "St. Agnes Opens New Children's Wing"
+        effects:
+          - treasury: -25000
+          - don_mood: 8
+          - standing: {influence: 3}
+          - heat: {who: family, delta: -3}
+      - weight: 1
+        tone: bad
+        text: The wing opens, and a columnist asks where the Ferrante money came from. The answer does not appear in his column, but the question does.
+        headline: "Whose Money Built the Ferrante Wing?"
+        effects:
+          - treasury: -25000
+          - don_mood: 3
+          - heat: {who: family, delta: 3}
+  - id: anonymous
+    label: Give the money anonymously
+    don: {base: 0.5, pious: 1, cautious: 0.5}
+    outcomes:
+      - tone: good
+        text: An anonymous gift of twenty thousand dollars arrives at St. Agnes. Monsignor Keane knows exactly who sent it and says a Mass for the Don's health.
+        effects:
+          - treasury: -20000
+          - don_mood: 4
+  - id: small_gift
+    label: Send a smaller gift, with regrets
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - tone: neutral
+        text: The hospital receives three thousand dollars and a letter of regret. The plaque goes to a department store family. The Don reads about it in the paper.
+        effects:
+          - treasury: -3000
+          - don_mood: -4

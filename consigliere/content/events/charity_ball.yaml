@@ -1,0 +1,37 @@
+id: charity_ball
+title: The Policemen's Benevolent Ball
+text: |-
+  The Policemen's Benevolent Association is holding its annual ball at the Grand Palatine. Tables are sold to friends of the police. The family has always bought one, through a trucking company, and sat at it without making a fuss.
+
+  This year the tickets are three times the price, and there is a new commissioner.
+trigger: [[month, ">=", 9]]
+cooldown: 24
+options:
+  - id: buy_table
+    label: Buy a table, as always
+    don: {base: 1, cautious: 0.5}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The trucking company buys a table. Four captains and an inspector stop by it during the evening to say hello to nobody in particular.
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: -3}
+      - weight: 1
+        tone: bad
+        text: The new commissioner has a list of who bought tables, and why. The trucking company is on it.
+        effects:
+          - treasury: -6000
+          - heat: {who: family, delta: 3}
+  - id: skip
+    label: Skip it this year
+    don: {base: 0.5, greedy: 1}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: The trucking company does not buy a table. Nobody seems to notice.
+      - weight: 1
+        tone: bad
+        text: The trucking company does not buy a table, and several captains notice that it did not.
+        effects:
+          - heat: {who: family, delta: 4}

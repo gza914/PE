@@ -1,0 +1,35 @@
+id: teen_gang
+title: The Fulton Avenue Kings
+text: |-
+  A gang of teenagers calling themselves the Fulton Avenue Kings has been fighting in the streets, painting the walls, and robbing old women of their purses. They have also started collecting their own protection money from two shops.
+
+  They are sixteen years old and they are not afraid of anyone, which is new.
+cast:
+  capo:
+    role: [capo]
+cooldown: 24
+options:
+  - id: crush
+    label: Remind them who collects on Fulton Avenue
+    don: {base: 0.5, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        text: The Kings are reminded, one at a time, by men three times their size. The purse-snatching stops. So does the painting, mostly.
+        effects:
+          - stat: {who: capo, stat: fear, delta: 4}
+          - standing: {influence: 2}
+  - id: recruit
+    label: Put the toughest ones to work for {capo}
+    don: {base: 0, greedy: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The three toughest Kings become {capo}'s runners. They are fast, fearless, and paid.
+        effects:
+          - strength: {who: family, delta: 3}
+      - weight: 1
+        tone: bad
+        text: One of the new runners stabs a boy from a rival gang. The police find {capo}'s money in his pocket.
+        headline: "Teen Stabbed in Fulton Avenue Gang Fight"
+        effects:
+          - heat: {who: family, delta: 6}

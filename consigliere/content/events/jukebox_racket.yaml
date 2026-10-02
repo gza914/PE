@@ -22,7 +22,7 @@ options:
         text: Within six months every bar in {district} has a family jukebox. Some of them even like the music.
         effects:
           - treasury: -10000
-          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 4500, heat_per_month: 2, bind: machines}
+          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 2000, heat_per_month: 2, bind: machines}
           - stat: {who: capo, stat: loyalty, delta: 6}
       - weight: 1
         tone: bad
@@ -30,7 +30,7 @@ options:
         headline: "Bar Owners Say They Were Forced to Take Jukeboxes"
         effects:
           - treasury: -10000
-          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 3000, heat_per_month: 4, bind: machines}
+          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 1500, heat_per_month: 4, bind: machines}
           - heat: {who: family, delta: 5}
   - id: decline_it
     label: Tell him the family has enough to run

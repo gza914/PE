@@ -4,14 +4,21 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 6;
+  const SAVE_VERSION = 7;
+  const SETTINGS_KEY = "consigliere.settings";
+  const DEFAULT_SETTINGS = { typewriter: true, theme: "system", tips: true, dismissed: [] };
+  const CHARS_PER_FRAME = 3;
   const BAND_RANK = { estranged: 1, restless: 2, cooling: 3, steady: 4, devoted: 5 };
   const TONE_LABEL = { good: "Went well", bad: "Went badly", neutral: "No harm done", waiting: "Put off" };
 
   let game = null; // { state, rng }
   let tab = "office";
-  let confirmingNewGame = false;
+  let setup = null; // { difficulty, tutorial } while a new game is being chosen
   let dossier = null; // the character whose dossier is open
+  let paperFilter = "all";
+  let animate = false; // the next render types in fresh news, a sit-down reply or the ending
+  let typing = null; // { finish } while the typewriter is running
+  let settings = loadSettings();
 
   // ---- persistence (per-browser convenience; the game still runs without it) ----
   function save() {
@@ -30,13 +37,37 @@
     } catch (e) { return null; }
   }
 
+  function loadSettings() {
+    const fresh = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+    try { return Object.assign(fresh, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}")); }
+    catch (e) { return fresh; }
+  }
+
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* settings last this visit only */ }
+    applyTheme();
+  }
+
+  function applyTheme() {
+    if (settings.theme === "light" || settings.theme === "dark") document.documentElement.dataset.theme = settings.theme;
+    else delete document.documentElement.dataset.theme;
+  }
+
   function freshSeed() {
     try { return crypto.getRandomValues(new Uint32Array(1))[0]; }
     catch (e) { return Math.floor(Date.now() % 4294967296); }
   }
 
-  function startNewGame() {
-    game = E.newGame(CONTENT, freshSeed());
+  function startNewGame(options) {
+    game = E.newGame(CONTENT, freshSeed(), "default", options);
+    tab = "office";
+    setup = null;
+    animate = true;
+    if (options.tutorial) { settings.dismissed = []; saveSettings(); }
+  }
+
+  function openSetup() {
+    setup = { difficulty: (game && game.state.difficulty) || "normal", tutorial: !game };
     tab = "office";
   }
 
@@ -91,7 +122,7 @@
     byId("end-month-sub").textContent = st.ending ? "the story is over"
       : pending ? `${pending} matter${pending === 1 ? "" : "s"} · ${advised} advised`
       : `close ${E.monthLabel(st.month).split(" ")[0]}`;
-    byId("end-month").disabled = Boolean(st.ending);
+    byId("end-month").disabled = Boolean(st.ending || setup);
     for (const btn of document.querySelectorAll(".tabs button")) {
       btn.setAttribute("aria-selected", String(btn.dataset.tab === tab));
       if (btn.dataset.tab === "office") btn.innerHTML = `Office${pending ? `<span class="count">${pending}</span>` : ""}`;
@@ -176,7 +207,7 @@
   }
 
   function newsCard(n) {
-    return `<article class="news fresh"><div class="kicker">Word came this month</div><h3>${esc(n.title)}</h3>${paras(n.text)}</article>`;
+    return `<article class="news fresh"><div class="kicker">Word came this month</div><h3>${esc(n.title)}</h3><div class="typewrite">${paras(n.text)}</div></article>`;
   }
 
   function patienceWord(p) {
@@ -196,7 +227,7 @@
           <div><span class="label">You offer</span><b>${money(sd.offer)}</b><small>a month</small></div>
           <div><span class="label">Their patience</span><b class="${sd.patience <= 1 ? "warn" : ""}">${patienceWord(sd.patience)}</b></div>
         </div>
-        <ol class="table-log">${sd.log.map((l) => `<li>${esc(l)}</li>`).join("")}</ol>
+        <ol class="table-log">${sd.log.map((l, i) => `<li${i === sd.log.length - 1 ? ' class="typewrite"' : ""}>${esc(l)}</li>`).join("")}</ol>
         <div class="table-moves">
           <button class="move" data-move="concede">Offer ${money(cost)} more</button>
           <button class="move" data-move="hold">Hold firm</button>
@@ -578,10 +609,8 @@
     const ledger = st.knowledge.ledger;
     const meta = `
       <div class="game-meta">
-        <span>Game seed ${st.seed}</span>
-        ${confirmingNewGame
-          ? `<span class="confirm"><span>Burn these books and start over?</span><button class="btn-danger" id="confirm-new">Start over</button><button class="btn-quiet" id="cancel-new">Keep playing</button></span>`
-          : `<button class="btn-quiet" id="new-game">New game</button>`}
+        <span>Game seed ${st.seed} · ${esc(levelLabel(st))}</span>
+        <button class="btn-quiet" id="new-game">New game</button>
       </div>`;
     if (!ledger.length) {
       return `<article class="sheet fresh"><h2>The books</h2><p class="quiet">Nothing written yet. End a month and the first page fills in.</p></article>${meta}`;
@@ -628,6 +657,168 @@
       </div>`;
   }
 
+  // ---- papers: the Evening Herald ----
+  function renderPapers() {
+    const st = game.state;
+    const papers = st.knowledge.papers || [];
+    const byMonth = new Map();
+    for (const h of papers) {
+      if (!byMonth.has(h.month)) byMonth.set(h.month, []);
+      byMonth.get(h.month).push(h);
+    }
+    const shown = (h) => paperFilter === "all" || (paperFilter === "family") === Boolean(h.family);
+    const editions = [...byMonth.keys()].sort((a, b) => b - a).map((month) => {
+      const lines = byMonth.get(month).filter(shown).sort((a, b) => Number(b.family) - Number(a.family));
+      if (!lines.length) return "";
+      return `<section class="edition"><div class="edition-date">${esc(E.monthLabel(month))}</div>
+        ${lines.map((h) => `<h3 class="headline ${h.family ? "ours" : "city"}">${esc(h.text)}${h.family ? `<span class="tag">The family</span>` : ""}</h3>`).join("")}
+      </section>`;
+    }).join("");
+    const ours = papers.filter((h) => h.family);
+    const filter = (id, label) => `<button class="btn-quiet" data-paper-filter="${id}" aria-pressed="${paperFilter === id}">${label}</button>`;
+    return `
+      <div class="papers">
+        <article class="herald fresh">
+          <div class="herald-flag"><b>The Evening Herald</b><small>Every edition since January 1958</small></div>
+          <div class="filter-row" role="group" aria-label="Which stories">${filter("all", "Everything")}${filter("family", "The family")}${filter("city", "The city")}</div>
+          ${editions || `<p class="quiet">${papers.length ? "Nothing like that in the papers yet." : "The first edition comes out when you end the month."}</p>`}
+        </article>
+        <section class="col">
+          <article class="sheet fresh">
+            <h2>Clippings</h2>
+            <p class="stamp">${ours.length} stor${ours.length === 1 ? "y" : "ies"} about the family</p>
+            <p class="quiet">The Don reads the Herald every morning. So do the District Attorney, the rival families and the men at the Bureau. A family that stays out of the paper is a family that is hard to build a case against.</p>
+            ${ours.length ? `<div class="section-head">Most recent</div><ul class="notes">${ours.slice(-5).reverse().map((h) => `<li class="note">${esc(h.text)}<span class="meta">${esc(shortMonth(h.month))}</span></li>`).join("")}</ul>` : ""}
+          </article>
+        </section>
+      </div>`;
+  }
+
+  // ---- settings and a new game ----
+  const levelLabel = (st) => (CONTENT.difficulty[st.difficulty || "normal"] || {}).label || "Normal";
+
+  function seg(key, options) {
+    return `<div class="seg" role="group" aria-label="${esc(key)}">${options.map(([value, label]) =>
+      `<button data-setting="${key}" data-value="${value}" aria-pressed="${String(settings[key]) === value}">${label}</button>`).join("")}</div>`;
+  }
+
+  function renderSettings() {
+    const st = game.state;
+    return `
+      <div class="settings">
+        <article class="sheet fresh">
+          <h2>Settings</h2>
+          <p class="stamp">Kept in this browser</p>
+          <div class="setting"><h3>Theme</h3>${seg("theme", [["system", "Match system"], ["light", "Light"], ["dark", "Dark"]])}</div>
+          <div class="setting"><h3>Typewriter</h3><p>The month's news, replies at the sit-down table and the ending type themselves out. Click or press any key to skip ahead.</p>${seg("typewriter", [["true", "On"], ["false", "Off"]])}</div>
+          <div class="setting"><h3>Tutorial tips</h3><p>Notes from an old hand in the first months of a tutorial game.</p>${seg("tips", [["true", "On"], ["false", "Off"]])}</div>
+        </article>
+        <article class="sheet fresh">
+          <h2>This game</h2>
+          <p class="stamp">Seed ${st.seed} · ${esc(levelLabel(st))}${"tutorial" in st.flags ? " · with the tutorial" : ""}</p>
+          <button class="btn-quiet" id="new-game">New game</button>
+        </article>
+      </div>`;
+  }
+
+  function renderSetup() {
+    const levels = Object.entries(CONTENT.difficulty).map(([id, d]) => `
+      <button class="level" data-level="${esc(id)}" aria-pressed="${setup.difficulty === id}"><b>${esc(d.label)}</b><span>${esc(d.blurb)}</span></button>`).join("");
+    const losing = game && !game.state.ending;
+    return `
+      <article class="sheet memo settings fresh">
+        <h2>A new consigliere</h2>
+        <p class="stamp">January 1958</p>
+        <div class="setting"><h3>How hard a city</h3><div class="levels" role="group" aria-label="Difficulty">${levels}</div></div>
+        <label class="check"><input type="checkbox" id="setup-tutorial" ${setup.tutorial ? "checked" : ""}>
+          <span><b>Begin with a tutorial month.</b> A small first matter, and a few notes from an old hand on how the desk works.</span></label>
+        <div class="game-meta">
+          <span>${losing ? "The game you are playing now will be lost." : ""}</span>
+          <span class="confirm">${game ? `<button class="btn-quiet" id="cancel-setup">Back</button>` : ""}<button class="btn-go" id="start-game">Begin</button></span>
+        </div>
+      </article>`;
+  }
+
+  // ---- tutorial tips ----
+  const TIPS = [
+    { id: "advise", when: (st) => st.month === 0 && st.matters.length > 0,
+      text: "Each card on your desk is a matter for the Don. Pick the advice you would give him, tell him to wait, or say nothing. Nothing happens until you end the month." },
+    { id: "verify", when: (st) => st.month === 0 && st.matters.some((m) => m.intel.length),
+      text: "What you have heard comes from sources, and sources can be wrong. Asking a second one costs Influence. When two disagree, trust the one with the better record." },
+    { id: "end", when: (st) => st.month === 0,
+      text: "When you are ready, press End the month, or N. The Don decides, the envelopes come in, and you read what happened." },
+    { id: "report", when: (st) => st.month === 1,
+      text: "Last month's report is on the right: the Don's decisions, the envelopes and what you noticed about the men. A light envelope is worth remembering." },
+    { id: "family", when: (st) => st.month >= 2 && st.month <= 5,
+      text: "The Family tab shows how each capo reads to you. The Books tab keeps every envelope, and a capo who skims shows up there first." },
+    { id: "papers", when: (st) => st.month >= 3 && st.month <= 8,
+      text: "The Papers tab keeps the Herald's headlines. When the family is in the paper, the law is reading it too." },
+  ];
+
+  function renderTip() {
+    const st = game && game.state;
+    const tip = st && !setup && !st.ending && settings.tips && "tutorial" in st.flags
+      ? TIPS.find((t) => !settings.dismissed.includes(t.id) && t.when(st)) : null;
+    byId("tip-slot").innerHTML = tip ? `
+      <aside class="tip fresh" aria-label="Tip">
+        <p><span class="kicker">A word from an old hand</span>${esc(tip.text)}</p>
+        <div class="tip-actions"><button class="btn-quiet" data-tip="${tip.id}">Got it</button><button class="btn-quiet" data-tips-off>No more tips</button></div>
+      </aside>` : "";
+  }
+
+  // ---- typewriter ----
+  function typewrite() {
+    if (!animate) return;
+    animate = false;
+    if (!settings.typewriter || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const parts = [];
+    for (const el of document.querySelectorAll("#view .typewrite")) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        if (!node.nodeValue.trim()) continue;
+        const shown = document.createElement("span");
+        const rest = document.createElement("span");
+        rest.className = "tw-rest";
+        rest.textContent = node.nodeValue;
+        parts.push({ shown, rest, full: node.nodeValue });
+        node.replaceWith(shown, rest);
+      }
+    }
+    if (!parts.length) return;
+    let i = 0, pos = 0, frame = 0;
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", finish, true);
+      document.removeEventListener("keydown", onKey, true);
+      typing = null;
+    };
+    function finish() {
+      for (const p of parts) { p.shown.textContent = p.full; p.rest.textContent = ""; }
+      stop();
+    }
+    function onKey(e) { e.stopPropagation(); e.preventDefault(); finish(); }
+    const step = () => {
+      let budget = CHARS_PER_FRAME;
+      while (budget > 0 && i < parts.length) {
+        const p = parts[i];
+        const take = Math.min(budget, p.full.length - pos);
+        pos += take;
+        budget -= take;
+        p.shown.textContent = p.full.slice(0, pos);
+        p.rest.textContent = p.full.slice(pos);
+        if (pos >= p.full.length) { i += 1; pos = 0; }
+      }
+      if (i < parts.length) frame = requestAnimationFrame(step);
+      else stop();
+    };
+    document.addEventListener("pointerdown", finish, true);
+    document.addEventListener("keydown", onKey, true);
+    typing = { finish };
+    frame = requestAnimationFrame(step);
+  }
+
   // ---- wiring ----
   function renderEnding() {
     const e = game.state.ending;
@@ -640,7 +831,7 @@
         <div class="kicker">${esc(E.monthLabel(e.month))} · the end</div>
         <h2>${esc(e.title)}</h2>
         <div class="rank">Ending ${e.rank} of ${Object.keys(CONTENT.endings).length}, best first</div>
-        <div class="memoir-text">${paras(e.text)}</div>
+        <div class="memoir-text typewrite">${paras(e.text)}</div>
         <div class="memoir-grid">
           <div>
             <div class="section-head">The record</div>
@@ -666,38 +857,70 @@
             ${m.lost.length ? `<ul class="notes">${m.lost.map((l) => `<li class="note">${esc(l)}</li>`).join("")}</ul>` : `<p class="quiet">Nobody. That almost never happens.</p>`}
           </div>
         </div>
-        <div class="game-meta"><span>Game seed ${game.state.seed}</span><button class="btn-quiet" id="confirm-new">Begin again, January 1958</button></div>
+        <div class="game-meta"><span>Game seed ${game.state.seed}</span><button class="btn-quiet" id="new-game">Begin again, January 1958</button></div>
       </article>`;
   }
 
   function render() {
-    renderMast();
+    if (typing) typing.finish();
     const view = byId("view");
-    if (game.state.ending && tab === "office") {
-      view.innerHTML = renderEnding();
-      byId("confirm-new").addEventListener("click", () => { startNewGame(); save(); render(); });
+    if (game) renderMast();
+    else byId("end-month").disabled = true;
+    renderTip();
+    if (setup) {
+      view.innerHTML = renderSetup();
       return;
     }
-    view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
-      : tab === "sources" ? renderSources() : tab === "city" ? renderCity()
-      : tab === "dossiers" ? renderDossiers() : renderOffice();
-    const on = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
-    on("new-game", () => { confirmingNewGame = true; render(); });
-    on("cancel-new", () => { confirmingNewGame = false; render(); });
-    on("confirm-new", () => { confirmingNewGame = false; startNewGame(); save(); render(); });
+    if (game.state.ending && tab === "office") {
+      view.innerHTML = renderEnding();
+    } else {
+      view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
+        : tab === "sources" ? renderSources() : tab === "city" ? renderCity()
+        : tab === "dossiers" ? renderDossiers() : tab === "papers" ? renderPapers()
+        : tab === "settings" ? renderSettings() : renderOffice();
+    }
+    typewrite();
   }
 
   function endMonth() {
-    if (game.state.ending) return;
+    if (!game || setup || game.state.ending) return;
     E.tick(game.state, game.rng, CONTENT);
     tab = "office";
-    confirmingNewGame = false;
+    animate = true;
     save();
     render();
     window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }
 
+  function onSetupClick(event) {
+    const level = event.target.closest(".level");
+    if (level) {
+      setup.difficulty = level.dataset.level;
+    } else if (event.target.closest("#start-game")) {
+      startNewGame({ difficulty: setup.difficulty, tutorial: setup.tutorial });
+      save();
+    } else if (event.target.closest("#cancel-setup")) {
+      setup = null;
+    } else {
+      return;
+    }
+    render();
+  }
+
   function onViewClick(event) {
+    if (setup) return onSetupClick(event);
+    if (event.target.closest("#new-game")) { openSetup(); render(); window.scrollTo(0, 0); return; }
+    const setting = event.target.closest("[data-setting]");
+    if (setting) {
+      const key = setting.dataset.setting, value = setting.dataset.value;
+      settings[key] = key === "theme" ? value : value === "true";
+      if (key === "tips" && settings.tips) settings.dismissed = [];
+      saveSettings();
+      render();
+      return;
+    }
+    const filterBtn = event.target.closest("[data-paper-filter]");
+    if (filterBtn) { paperFilter = filterBtn.dataset.paperFilter; render(); return; }
     const check = event.target.closest(".verify");
     const btn = event.target.closest(".choice");
     const move = event.target.closest(".move");
@@ -716,6 +939,7 @@
       E.pin(game.state, pinBtn.dataset.id, pinBtn.getAttribute("aria-pressed") !== "true");
     } else if (move) {
       E.sitdownAct(game.state, move.dataset.move, CONTENT);
+      animate = true;
     } else if (check && !check.disabled) {
       E.verify(game.state, game.rng, check.dataset.matter, Number(check.dataset.intel), CONTENT);
     } else if (btn) {
@@ -731,27 +955,44 @@
   }
 
   function start(hotData) {
+    applyTheme();
     const saved = (hotData && hotData.state ? hotData : null) || load();
     if (saved) {
       game = { state: saved.state, rng: E.GameRNG.fromState(saved.rng) };
       tab = saved.tab || "office";
       dossier = saved.dossier || null;
     } else {
-      startNewGame();
+      openSetup();
     }
     for (const btn of document.querySelectorAll(".tabs button")) {
-      btn.addEventListener("click", () => { tab = btn.dataset.tab; confirmingNewGame = false; save(); render(); });
+      btn.addEventListener("click", () => {
+        if (!game) return;
+        tab = btn.dataset.tab;
+        setup = null;
+        save();
+        render();
+      });
     }
     byId("end-month").addEventListener("click", endMonth);
     byId("view").addEventListener("click", onViewClick);
     byId("view").addEventListener("change", (event) => {
       const area = event.target.closest(".note-text");
       if (area) { E.note(game.state, area.dataset.id, area.value); save(); }
+      if (event.target.id === "setup-tutorial" && setup) setup.tutorial = event.target.checked;
+    });
+    byId("tip-slot").addEventListener("click", (event) => {
+      const got = event.target.closest("[data-tip]");
+      if (got) settings.dismissed.push(got.dataset.tip);
+      else if (event.target.closest("[data-tips-off]")) settings.tips = false;
+      else return;
+      saveSettings();
+      renderTip();
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key.toLowerCase() === "n" && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target instanceof HTMLInputElement)) endMonth();
+      const typingInField = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement;
+      if (e.key.toLowerCase() === "n" && !e.metaKey && !e.ctrlKey && !e.altKey && !typingInField) endMonth();
     });
-    window.claude?.hot?.snapshot?.(() => ({ state: game.state, rng: game.rng.getState(), tab }));
+    window.claude?.hot?.snapshot?.(() => (game ? { state: game.state, rng: game.rng.getState(), tab } : {}));
     render();
   }
 

@@ -1,0 +1,45 @@
+id: garbage_contract
+title: The garbage contract
+text: |-
+  The city is letting a new contract for private garbage hauling in {district}. Garbage is a wonderful business: every building needs it, nobody wants to think about it, and nobody ever changes haulers.
+
+  Two other companies have bid. Their owners could be persuaded to withdraw.
+cast:
+  district:
+    district_of: family
+  capo:
+    role: [capo]
+cooldown: 36
+options:
+  - id: persuade
+    label: Persuade the other bidders to withdraw
+    don: {base: 0, paranoid: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 3
+        tone: good
+        text: Both other bidders discover pressing business elsewhere. The family's company hauls {district}'s garbage, and will for twenty years.
+        effects:
+          - add_racket: {id: garbage, name: "Garbage hauling in {district}", kind: protection, district: district, capo: capo, income: 2500, heat_per_month: 2, bind: hauling}
+          - heat: {who: family, delta: 3}
+      - weight: 1
+        tone: bad
+        text: One bidder does not withdraw. He goes to the Herald with a story about two men and a baseball bat.
+        headline: "Garbage Bidder Says He Was Threatened"
+        effects:
+          - heat: {who: family, delta: 8}
+  - id: buy
+    label: Buy one of the other companies instead
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The family buys a hauling company with fourteen trucks and a contract already in hand. It is slower, and entirely legal.
+        effects:
+          - treasury: -12000
+          - add_racket: {id: garbage, name: "Garbage hauling in {district}", kind: protection, district: district, capo: capo, income: 2000, heat_per_month: 1, bind: hauling}
+  - id: pass
+    label: Let the city pick
+    don: {base: 0}
+    outcomes:
+      - tone: neutral
+        text: The city picks the lowest bidder. Rumor says the lowest bidder belongs to {district}'s neighbors.

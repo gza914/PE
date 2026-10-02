@@ -1,0 +1,36 @@
+id: fbi_approach_you
+title: A man in a gray hat
+text: |-
+  A man in a gray hat sits down beside you at the barber's and introduces himself as Special Agent Wallace Teague. He says he is not there to arrest anybody. He says he only wants to talk, any time you like.
+
+  He leaves a card on the chair. The barber has seen it.
+trigger: [[month, ">=", 18], [exposure, ">=", 20]]
+cooldown: 48
+you_decide: true
+default_option: tell_don
+patience: 0
+options:
+  - id: tell_don
+    label: Tell the Don about it the same day
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The Don listens, nods, and thanks you for telling him. He says a man who tells him these things is a man he can trust.
+        effects:
+          - standing: {dons_trust: 4}
+      - weight: 1
+        tone: neutral
+        text: The Don thanks you for telling him. For a month afterward he watches you a little more carefully than before.
+        effects:
+          - don_mood: -3
+  - id: say_nothing
+    label: Throw the card away and say nothing
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: You throw the card away. Agent Teague does not come back. You think about him more than you would like.
+      - weight: 1
+        tone: bad
+        text: The barber tells his brother-in-law, who tells a capo, who tells the Don. The Don asks why he had to hear it from a barber.
+        effects:
+          - standing: {dons_trust: -15}

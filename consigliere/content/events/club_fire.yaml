@@ -1,0 +1,38 @@
+id: club_fire
+title: A fire at the Monaco Club
+text: |-
+  The Monaco Club, a nightclub the family has a quiet interest in, is losing money. Its owner has suggested that a fire might solve the problem. The insurance is very good.
+
+  Insurance companies employ investigators.
+cast:
+  capo:
+    role: [capo]
+cooldown: 36
+options:
+  - id: fire
+    label: Let the Monaco Club burn
+    don: {base: 0, greedy: 1}
+    advised_exposure: 3
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The Monaco Club burns on a Tuesday night when nobody is inside. The insurance pays forty thousand dollars, after a long and suspicious delay.
+        headline: "Monaco Club Gutted by Overnight Fire"
+        effects:
+          - treasury: 7000
+          - heat: {who: family, delta: 4}
+      - weight: 1
+        tone: bad
+        text: The insurance investigator finds a gasoline can and a matchbook from {capo}'s bar.
+        headline: "Arson Suspected in Monaco Club Blaze"
+        effects:
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 4}
+  - id: sell
+    label: Sell the club, at a loss
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The Monaco Club is sold to a man from out of town who believes in nightclubs. The family takes its loss.
+        effects:
+          - treasury: -2000

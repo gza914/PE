@@ -101,6 +101,7 @@ def test_intel_and_verify(game):
 def test_ending_is_shown_instead_of_another_month(game):
     state, rng = game
     state.flags["retire"] = 0
+    state.player_family.treasury = 500_000
     out = []
     run(state, rng, scripted(["n", "n", "q"]), out.append)
     text = "\n".join(out)

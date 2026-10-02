@@ -1,0 +1,37 @@
+id: point_shaving
+title: The college boys
+text: |-
+  Two players on the State College basketball team owe money to {capo}'s bookmakers. {capo} has suggested that, instead of paying, they might lose a few games by slightly more than they should.
+
+  The college game is very popular this year. So is the Herald's sports page.
+cast:
+  capo:
+    role: [capo, underboss]
+cooldown: 48
+options:
+  - id: shave
+    label: Let {capo} arrange it
+    don: {base: 0.5, greedy: 1}
+    advised_exposure: 3
+    outcomes:
+      - weight: 2
+        tone: good
+        text: State College loses three games by more than the spread. The family wins forty thousand dollars. The coach blames the defense.
+        effects:
+          - treasury: 25000
+      - weight: 1
+        tone: bad
+        text: One of the boys tells his coach, and the coach tells the District Attorney. The college game has a scandal and {capo}'s bookmakers have a grand jury.
+        headline: "State Cagers Admit Point Shaving; Gamblers Sought"
+        effects:
+          - heat: {who: family, delta: 12}
+          - standing: {exposure: 4}
+          - treasury: -6000
+  - id: forgive
+    label: Forgive the debt and leave college sports alone
+    don: {base: 0.5, cautious: 1, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The boys' debts are forgiven. They never find out why, and they play the rest of the season with suspicious enthusiasm.
+        effects:
+          - treasury: -3000

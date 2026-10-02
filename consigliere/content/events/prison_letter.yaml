@@ -1,0 +1,37 @@
+id: prison_letter
+title: A letter from upstate
+text: |-
+  A letter has come from Dominic Russo, who has done six years upstate without saying a word about anybody. His wife has cancer. His boy has been arrested for stealing a car.
+
+  He asks for nothing. He just thought the family should know.
+trigger: [[month, ">=", 6]]
+cooldown: 36
+options:
+  - id: everything
+    label: Take care of all of it
+    don: {base: 0.5, sentimental: 2}
+    outcomes:
+      - tone: good
+        text: The wife sees the best doctors in the city. The boy's case is dismissed. Russo writes again, a single line of thanks, and every man in the family hears about it.
+        effects:
+          - treasury: -5000
+          - stat: {who: crew, stat: loyalty, delta: 3}
+          - cohesion: 3
+  - id: some
+    label: Help the wife, and let the boy learn
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The wife is looked after. The boy does three months, and comes out angry.
+        effects:
+          - treasury: -2500
+          - stat: {who: crew, stat: loyalty, delta: 1}
+  - id: nothing
+    label: Russo knew what he signed up for
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: bad
+        text: Nothing goes to the Russos. The men in the family who have been inside talk about it among themselves, quietly, for a long time.
+        effects:
+          - stat: {who: crew, stat: loyalty, delta: -4}
+          - memory: {who: crew, about: family, weight: -5, decay: 0.02}

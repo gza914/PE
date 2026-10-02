@@ -1,0 +1,41 @@
+id: evicted_widow
+title: Mrs. Esposito's apartment
+text: |-
+  Mrs. Esposito, a widow of seventy, is being evicted from the apartment where she raised six children. The new landlord wants to raise the rent and has gone to court to get her out.
+
+  She came to the Don's house and waited three hours to ask for his help. She has nothing to give him but her gratitude.
+trigger: [[month, ">=", 3]]
+cooldown: 36
+options:
+  - id: help
+    label: Have someone speak to the landlord
+    don: {base: 0.5, sentimental: 2, pious: 0.5}
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The landlord is spoken to. He discovers he does not want to raise Mrs. Esposito's rent after all. Her sons, one of whom is a police lieutenant, remember.
+        effects:
+          - standing: {influence: 4}
+          - don_mood: 5
+      - weight: 1
+        tone: bad
+        text: The landlord is spoken to, and calls his own lawyer, who calls the district attorney.
+        effects:
+          - heat: {who: family, delta: 4}
+  - id: pay
+    label: Pay her rent for a year
+    don: {base: 0.5, cautious: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: Mrs. Esposito's rent is paid, by someone she never sees. She lights a candle for the Don every Sunday.
+        effects:
+          - treasury: -2400
+          - don_mood: 3
+  - id: refuse
+    label: The family cannot solve everyone's problems
+    don: {base: 0}
+    outcomes:
+      - tone: neutral
+        text: Mrs. Esposito goes to live with her daughter in Linden Park. She tells everyone at church that the Don would not see her.
+        effects:
+          - standing: {influence: -2}

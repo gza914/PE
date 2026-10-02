@@ -152,4 +152,4 @@ endings:
   ruin_treasury: -25000
   exile_exposure: 100
   intact_strength: 45         # "the family intact": at least this strong...
-  intact_treasury: 25000      # ...with this much put away
+  intact_treasury: 100000     # ...with this much put away

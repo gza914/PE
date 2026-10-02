@@ -1,0 +1,36 @@
+id: singer_contract
+title: The singer's contract
+text: |-
+  Rosemary Vance sings at the Copa Room and is about to record her first album. She owes {capo} eight thousand dollars from before she was anybody.
+
+  {capo} proposes that instead of the money, the family take her contract.
+cast:
+  capo:
+    role: [capo]
+cooldown: 36
+options:
+  - id: contract
+    label: Take her contract
+    don: {base: 0.5, vain: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Rosemary Vance's album is a hit. The family owns half of everything she sings, and she sings beautifully.
+        effects:
+          - treasury: 5000
+          - standing: {influence: 2}
+      - weight: 1
+        tone: bad
+        text: Rosemary's album does well, and then Rosemary tells a magazine who owns her contract.
+        headline: "Singer Vance Says Mobsters Own Her Career"
+        effects:
+          - treasury: 2000
+          - heat: {who: family, delta: 5}
+  - id: money
+    label: Just take the money
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: Rosemary pays the eight thousand from her advance. She sends {capo} a signed photograph.
+        effects:
+          - treasury: 4000

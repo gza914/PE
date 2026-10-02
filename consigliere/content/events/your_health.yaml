@@ -1,0 +1,39 @@
+id: your_health
+title: A pain in your chest
+text: |-
+  You have had a pain in your chest for a month. It comes on the stairs and at the Sunday dinners, and lately at night. Your doctor wants you to go into the hospital for tests.
+
+  A consigliere in the hospital is a consigliere people can visit.
+trigger: [[month, ">=", 48]]
+cooldown: 48
+you_decide: true
+default_option: hospital
+patience: 0
+options:
+  - id: hospital
+    label: Go into the hospital for a week
+    outcomes:
+      - weight: 3
+        tone: good
+        text: The tests find an ulcer, which the doctor says is common in your profession, whatever he thinks that is. You come home with a diet and a bill.
+        effects:
+          - treasury: -3000
+          - health: {who: you, delta: 6}
+      - weight: 1
+        tone: neutral
+        text: The tests find nothing. While you are gone, the Don makes two decisions without you, and they are not the ones you would have made.
+        effects:
+          - standing: {dons_trust: -4}
+          - health: {who: you, delta: 3}
+  - id: ignore
+    label: Work through it
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: The pain goes away by itself. You decide you were right all along.
+      - weight: 1
+        tone: bad
+        text: The pain does not go away. One night on the stairs it is very much worse, and you spend three weeks in the hospital anyway.
+        effects:
+          - health: {who: you, delta: -15}
+          - treasury: -5000

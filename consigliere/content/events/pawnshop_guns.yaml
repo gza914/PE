@@ -1,0 +1,33 @@
+id: pawnshop_guns
+title: The pawnshop on Garrick Street
+text: |-
+  A pawnshop on Garrick Street, which pays {capo} every month, has been selling guns out of the back room. One of those guns was used in a holdup last week, and the police traced it.
+
+  The pawnbroker has asked {capo} for help.
+cast:
+  capo:
+    role: [capo]
+cooldown: 24
+options:
+  - id: cut_loose
+    label: Cut the pawnbroker loose
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The pawnbroker is on his own. He says nothing to the police about the family, because he wants to live in this city when he gets out.
+        effects:
+          - stat: {who: capo, stat: respect, delta: -3}
+  - id: help
+    label: Help him, quietly
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The police lose interest in the gun's history. The pawnbroker pays {capo} double for a year.
+        effects:
+          - treasury: 3000
+      - weight: 1
+        tone: bad
+        text: The police do not lose interest. They find the family's help instead, and write it down.
+        effects:
+          - heat: {who: family, delta: 6}

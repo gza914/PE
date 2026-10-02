@@ -1,0 +1,61 @@
+id: blackmail_letter
+title: A letter about {capo}
+text: |-
+  A letter has come to the Don's house, typed and unsigned. It says that the writer knows what {capo} did in the spring of 1956, and that the writer would be content with ten thousand dollars and the matter would end there.
+
+  {capo} says he has no idea what the letter means. He says it twice.
+cast:
+  capo:
+    role: [capo, underboss]
+secrets:
+  real: 0.5
+cooldown: 48
+options:
+  - id: pay
+    label: Pay, and see what happens
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[secret.real, "==", 1]]
+            mult: 0.3
+        tone: neutral
+        text: The money is left in a locker at the bus station. Nothing more is heard. You never learn what happened in the spring of 1956.
+        effects:
+          - treasury: -10000
+      - weight: 1
+        weight_if:
+          - when: [[secret.real, "==", 0]]
+            mult: 0.2
+        tone: bad
+        text: The money is left at the bus station. A second letter arrives two months later, asking for twenty.
+        effects:
+          - treasury: -10000
+          - add_expense: {id: blackmailer, label: A man with a typewriter, amount: 400}
+  - id: find_writer
+    label: Find out who owns the typewriter
+    don: {base: 0.5, paranoid: 1, hothead: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The typewriter belongs to a bookkeeper {capo} fired two years ago. He is visited. There are no further letters.
+        effects:
+          - stat: {who: crew, stat: fear, delta: 2}
+      - weight: 1
+        weight_if:
+          - when: [[secret.real, "==", 1]]
+            mult: 3
+        tone: bad
+        text: The writer is found, and before he is visited he mails what he knows about {capo} to the District Attorney.
+        headline: "Anonymous Tip Reopens 1956 Case"
+        effects:
+          - heat: {who: family, delta: 8}
+          - investigation: {who: capo, progress: 15}
+  - id: ask_capo
+    label: Ask {capo} what happened in 1956
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} tells the Don a story about 1956. It may even be true. He does not forgive you for making him tell it."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -6}

@@ -1,0 +1,37 @@
+id: nightclub_purchase
+title: The Starlight Room is for sale
+text: |-
+  The Starlight Room, the best nightclub in the city, is for sale. Its owner is retiring to Arizona for his lungs. He wants ninety thousand dollars and no questions about who is buying.
+
+  A nightclub is a fine place to wash money and a terrible place to make it.
+trigger: [[month, ">=", 24], [treasury, ">=", 120000]]
+cooldown: 72
+options:
+  - id: buy
+    label: Buy the Starlight Room through a friend's name
+    don: {base: 0.5, vain: 1.5, ambitious: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The Starlight Room changes hands. The Don has a table by the stage, and every singer in the city wants to play there. It loses money every month, beautifully.
+        effects:
+          - treasury: -90000
+          - don_mood: 8
+          - standing: {influence: 4}
+          - add_expense: {id: starlight_room, label: The Starlight Room, amount: 800}
+      - weight: 1
+        tone: bad
+        text: The Starlight Room changes hands, and the Herald finds out whose hands. The liquor board takes a close interest in the license.
+        headline: "Starlight Room Sold; Buyer's Ties Questioned"
+        effects:
+          - treasury: -90000
+          - heat: {who: family, delta: 6}
+          - add_expense: {id: starlight_room, label: The Starlight Room, amount: 800}
+  - id: pass
+    label: Let somebody else buy it
+    don: {base: 1, cautious: 1, greedy: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Starlight Room is sold to a hotel chain. The Don goes once, says the band is too loud, and does not go again.
+        effects:
+          - don_mood: -3
