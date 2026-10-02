@@ -36,7 +36,7 @@ from .models import (
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -101,8 +101,19 @@ def _v5_to_v6(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v6_to_v7(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 5: notes, pins and flagged books in your knowledge."""
+    knowledge = data.setdefault("knowledge", {})
+    knowledge.setdefault("notes", {})
+    knowledge.setdefault("pinned", [])
+    knowledge.setdefault("flagged", {})
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6}
+MIGRATIONS: dict[int, Migration] = {
+    1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6, 6: _v6_to_v7,
+}
 
 
 class PlayerKnowledge(Model):
@@ -118,6 +129,9 @@ class PlayerKnowledge(Model):
     investigations: dict[str, KnownInvestigation] = Field(default_factory=dict)  # by target id
     sitdown: SitDownView | None = None
     dons: list[str] = Field(default_factory=list)  # every Don you have served, in order
+    notes: dict[str, str] = Field(default_factory=dict)  # your own notes, by character id
+    pinned: list[str] = Field(default_factory=list)  # dossiers you keep on top
+    flagged: dict[str, int] = Field(default_factory=dict)  # capo id -> month you last flagged his books
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]

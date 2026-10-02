@@ -1,0 +1,23 @@
+id: assignment
+title: "{racket} for {to}"
+text: |-
+  {racket} has nobody running it, and you have put {to}'s name forward.
+followup_only: true
+carries: [racket, to]
+patience: 1
+options:
+  - id: move
+    label: Give {racket} to {to}
+    don: {base: 0.5}
+    outcomes:
+      - tone: good
+        text: "{to} takes {racket} and thanks the Don, and then, more quietly, thanks you."
+        effects:
+          - assign_racket: {racket: racket, to: to}
+          - stat: {who: to, stat: loyalty, delta: 3}
+  - id: keep
+    label: Leave it unattended for now
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{racket} goes on running itself, which is to say not very well."

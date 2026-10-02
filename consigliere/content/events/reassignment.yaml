@@ -1,0 +1,39 @@
+id: reassignment
+title: "{racket}: from {from} to {to}"
+text: |-
+  You have put it to the Don that {racket} would do better under {to} than under {from}.
+
+  {from} will not see it that way.
+followup_only: true
+carries: [racket, from, to]
+patience: 1
+options:
+  - id: move
+    label: Move {racket} to {to}
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[to.competence, "<", from.competence]]
+            mult: 0.3
+        text: "{to} takes {racket}, and by spring the envelopes are heavier. {from} smiles at Sunday dinner and talks to nobody."
+        effects:
+          - assign_racket: {racket: racket, to: to}
+          - stat: {who: to, stat: loyalty, delta: 4}
+          - stat: {who: from, stat: loyalty, delta: -8}
+          - memory: {who: from, about: don, weight: -8, decay: 0.02}
+      - tone: bad
+        weight_if:
+          - when: [[to.competence, ">=", from.competence]]
+            mult: 0.3
+        text: "{to} takes {racket} and does no better with it. {from} tells everyone who will listen that he said so."
+        effects:
+          - assign_racket: {racket: racket, to: to}
+          - stat: {who: from, stat: loyalty, delta: -8}
+          - memory: {who: from, about: don, weight: -8, decay: 0.02}
+  - id: keep
+    label: Leave it with {from}
+    don: {base: 0.5, sentimental: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{from} keeps {racket}, and never learns how close it came. Or he does."

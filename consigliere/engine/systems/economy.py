@@ -60,9 +60,9 @@ def run_family(state: WorldState, family: Family, rng: GameRNG, bal: Balance) ->
         kickup, skim = collect(racket, capo, bal.economy, rng, rival_run=family.id != state.player.family_id)
         if capo is not None and capo.alive:
             capo.hidden.stash += skim
-            entry.kickups.append(LedgerLine(label=f"{racket.name} ({capo.name})", amount=kickup))
+            entry.kickups.append(LedgerLine(label=f"{racket.name} ({capo.name})", amount=kickup, racket_id=racket.id))
         else:
-            entry.kickups.append(LedgerLine(label=racket.name, amount=kickup, note="unattended"))
+            entry.kickups.append(LedgerLine(label=racket.name, amount=kickup, note="unattended", racket_id=racket.id))
         family.treasury += kickup
 
     for expense in family.expenses:

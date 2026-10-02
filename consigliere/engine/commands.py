@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Literal, Union
 
-from .matters import WAIT, can_verify, verify
+from .matters import WAIT, can_flag, can_propose, can_verify, flag_books, propose, verify
 from .world import SITDOWN_ACTIONS, sitdown_act
 from .models import Model
 from .rng import GameRNG
@@ -39,7 +39,38 @@ class SitDownAct(Model):
     action: str
 
 
-Command = Union[EndMonth, Recommend, Verify, SitDownAct]
+class Note(Model):
+    """Your own note on someone. Empty text removes it."""
+
+    kind: Literal["note"] = "note"
+    character_id: str
+    text: str
+
+
+class Pin(Model):
+    kind: Literal["pin"] = "pin"
+    character_id: str
+    pinned: bool
+
+
+class FlagBooks(Model):
+    """Bring the Don the numbers on a capo whose envelopes look light."""
+
+    kind: Literal["flag_books"] = "flag_books"
+    capo_id: str
+
+
+class ProposeReassign(Model):
+    """Put it to the Don that a racket should go to another capo."""
+
+    kind: Literal["propose"] = "propose"
+    racket_id: str
+    capo_id: str
+
+
+NOTE_LIMIT = 500
+
+Command = Union[EndMonth, Recommend, Verify, SitDownAct, Note, Pin, FlagBooks, ProposeReassign]
 
 
 class CommandError(ValueError):
@@ -76,5 +107,26 @@ def apply(state: WorldState, rng: GameRNG, command: Command) -> None:
         if command.action not in SITDOWN_ACTIONS:
             raise CommandError(f"{command.action!r} is not something you can do at the table.")
         sitdown_act(state, command.action)
+    elif isinstance(command, Note):
+        if command.character_id not in state.characters:
+            raise CommandError("Nobody by that name.")
+        text = command.text.strip()[:NOTE_LIMIT]
+        if text:
+            state.knowledge.notes[command.character_id] = text
+        else:
+            state.knowledge.notes.pop(command.character_id, None)
+    elif isinstance(command, Pin):
+        if command.character_id not in state.characters:
+            raise CommandError("Nobody by that name.")
+        pinned = [p for p in state.knowledge.pinned if p != command.character_id]
+        state.knowledge.pinned = pinned + ([command.character_id] if command.pinned else [])
+    elif isinstance(command, FlagBooks):
+        if not can_flag(state, command.capo_id):
+            raise CommandError("You can't bring the Don his numbers right now.")
+        flag_books(state, rng, command.capo_id)
+    elif isinstance(command, ProposeReassign):
+        if not can_propose(state, command.racket_id, command.capo_id):
+            raise CommandError("That move can't be proposed.")
+        propose(state, rng, command.racket_id, command.capo_id)
     else:
         raise CommandError(f"Unknown command: {command!r}")

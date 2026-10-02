@@ -214,6 +214,7 @@ class LedgerLine(Model):
     label: str
     amount: int
     note: str = ""
+    racket_id: str | None = None  # set on envelopes, so the books can be read racket by racket
 
 
 class LedgerEntry(Model):

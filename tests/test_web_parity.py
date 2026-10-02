@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from consigliere.engine.commands import Recommend, SitDownAct, Verify, apply
+from consigliere.engine.commands import FlagBooks, ProposeReassign, Recommend, SitDownAct, Verify, apply
 from consigliere.engine.content import events
-from consigliere.engine.matters import can_verify
+from consigliere.engine.matters import can_flag, can_propose, can_verify
 from consigliere.engine.rng import GameRNG
 from consigliere.engine.scenario import load_scenario, new_game
 from consigliere.engine.state import WorldState
@@ -30,6 +30,12 @@ const PLANS = [["concede"], ["hold", "concede", "threaten", "concede", "concede"
 for (let i = 0; i < input.months; i++) {
   if (state.ending) break;
   const plan = PLANS[state.month % 3];
+  const crew = E.members(state, E.playerFamily(state).id).filter((c) => c.alive && (c.role === "capo" || c.role === "underboss"));
+  if (state.month % 7 === 3) { const c = crew.find((m) => E.canFlag(state, m.id)); if (c) E.flagBooks(state, rng, c.id, input.content); }
+  if (state.month % 11 === 5) {
+    const ours = Object.values(state.rackets).filter((r) => r.family_id === E.playerFamily(state).id);
+    outer: for (const r of ours) for (const c of crew) if (E.canPropose(state, r.id, c.id)) { E.propose(state, rng, r.id, c.id, input.content); break outer; }
+  }
   for (let k = 0; state.sitdown && k < 6; k++) E.sitdownAct(state, plan[k % plan.length], input.content);
   state.matters.forEach((m, j) => {
     m.intel.forEach((_, i) => {
@@ -72,6 +78,16 @@ def run_py(state: dict | None, seed: int, months: int, style: str = "cycle") -> 
         if world.ending is not None:
             break
         plan = plans[world.month % 3]
+        crew = [c for c in world.members(world.player_family.id) if c.alive and c.role.value in ("capo", "underboss")]
+        if world.month % 7 == 3:
+            c = next((m for m in crew if can_flag(world, m.id)), None)
+            if c is not None:
+                apply(world, rng, FlagBooks(capo_id=c.id))
+        if world.month % 11 == 5:
+            ours = [r for r in world.rackets.values() if r.family_id == world.player_family.id]
+            pick = next(((r, c) for r in ours for c in crew if can_propose(world, r.id, c.id)), None)
+            if pick is not None:
+                apply(world, rng, ProposeReassign(racket_id=pick[0].id, capo_id=pick[1].id))
         for k in range(6):
             if world.sitdown is None:
                 break

@@ -1,0 +1,53 @@
+id: flagged_books
+title: The numbers on {capo}
+text: |-
+  You brought the Don a page of figures: what {capo}'s rackets ought to bring in, and what his envelopes have actually held. The difference is not small.
+
+  The Don looked at the page for a long time without saying anything.
+followup_only: true
+carries: [capo]
+patience: 0
+intel:
+  - about: capo
+    claim: "{capo} has been keeping back more than his share."
+    denial: "{capo}'s rackets are just having a hard run."
+    truth: [[capo.stash, ">", 8000]]
+    sources: [street, family]
+options:
+  - id: audit
+    label: Have his books gone over
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[capo.stash, "<=", 8000]]
+            mult: 0
+        text: The books are gone over by a man who does nothing else. {capo} pays back what he can and promises the rest. His envelopes are heavier after that.
+        effects:
+          - treasury: 5000
+          - stat: {who: capo, stat: greed, delta: -12}
+          - stat: {who: capo, stat: fear, delta: 8}
+          - memory: {who: capo, about: family, weight: -4}
+      - tone: bad
+        weight_if:
+          - when: [[capo.stash, ">", 8000]]
+            mult: 0
+        text: "{capo}'s books are clean. He knows who put them on the table, and he will not forget it."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -8}
+          - memory: {who: capo, about: you, weight: -10, decay: 0.02}
+  - id: word
+    label: Have a quiet word with him
+    don: {base: 0.5, cautious: 1, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don has a quiet word with {capo} over coffee. {capo} says he understands, and for a while his envelopes say so too.
+        effects:
+          - stat: {who: capo, stat: greed, delta: -5}
+          - stat: {who: capo, stat: loyalty, delta: -2}
+  - id: drop
+    label: Let it go
+    don: {base: 0}
+    outcomes:
+      - tone: neutral
+        text: The page goes into a drawer. The Don does not mention it again.

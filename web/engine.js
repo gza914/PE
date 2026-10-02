@@ -192,18 +192,18 @@
       const [kickup, skim] = collect(racket, capo, bal.economy, rng, family.id !== player(state).family_id);
       if (capo && capo.alive) {
         capo.hidden.stash += skim;
-        entry.kickups.push({ label: `${racket.name} (${capo.name})`, amount: kickup, note: "" });
+        entry.kickups.push({ label: `${racket.name} (${capo.name})`, amount: kickup, note: "", racket_id: racket.id });
       } else {
-        entry.kickups.push({ label: racket.name, amount: kickup, note: "unattended" });
+        entry.kickups.push({ label: racket.name, amount: kickup, note: "unattended", racket_id: racket.id });
       }
       family.treasury += kickup;
     }
     for (const expense of family.expenses) {
       if (family.treasury >= expense.amount) {
         family.treasury -= expense.amount;
-        entry.expenses.push({ label: expense.label, amount: expense.amount, note: "" });
+        entry.expenses.push({ label: expense.label, amount: expense.amount, note: "", racket_id: null });
       } else {
-        entry.expenses.push({ label: expense.label, amount: expense.amount, note: "unpaid" });
+        entry.expenses.push({ label: expense.label, amount: expense.amount, note: "unpaid", racket_id: null });
         if (expense.stipend) missStipend(state, family, bal);
       }
     }
@@ -645,6 +645,9 @@
 
   function makeMatter(event, bindings, state, rng) {
     state.event_log[event.id] = state.month;
+    let matterId = `${event.id}-${state.month}`;
+    const taken = new Set(state.matters.map((m) => m.id));
+    for (let n = 2; taken.has(matterId); n++) matterId = `${event.id}-${state.month}-${n}`;
     rollSecrets(event, bindings, rng);
     for (const effect of event.arise_effects) {
       applyEffect(state, effect, bindings, rng, event, fill(event.title, state, bindings, event.lists));
@@ -658,7 +661,7 @@
       intel.push(known);
     }
     return {
-      id: `${event.id}-${state.month}`, event_id: event.id, month: state.month,
+      id: matterId, event_id: event.id, month: state.month,
       title: fill(event.title, state, bindings, event.lists), text: fill(event.text, state, bindings, event.lists),
       options: event.options.map((o) => ({ id: o.id, label: fill(o.label, state, bindings, event.lists) })),
       bindings, waited: 0, can_wait: event.patience > 0, recommendation: null, intel,
@@ -839,7 +842,7 @@
     const family = playerFamily(state);
     family.treasury += amount;
     const entry = ledgerFor(state, state.month);
-    const line = { label, amount, note: "" };
+    const line = { label, amount, note: "", racket_id: null };
     if (!entry) state.unbooked.push(line);
     else { entry.other.push(line); entry.treasury_end = family.treasury; }
   }
@@ -1113,6 +1116,59 @@
     runRivals(state, rng, bal);
   }
 
+  // ---- matters you put on the desk yourself (engine/matters.py) ----
+  const FLAG_COOLDOWN = 6;
+
+  function canFlag(state, capoId) {
+    const man = state.characters[capoId];
+    const family = playerFamily(state);
+    if (!man || !man.alive || man.family_id !== family.id || man.id === state.player_id) return false;
+    if (man.id === family.don_id || !Object.values(state.rackets).some((r) => r.capo_id === man.id)) return false;
+    const last = state.knowledge.flagged[capoId];
+    const pending = state.matters.some((m) => m.event_id === "flagged_books" && m.bindings.capo === capoId);
+    return !pending && (last === undefined || state.month - last >= FLAG_COOLDOWN);
+  }
+
+  function flagBooks(state, rng, capoId, content) {
+    CURRENT = content;
+    if (!canFlag(state, capoId)) throw new Error("You can't bring the Don his numbers right now.");
+    state.knowledge.flagged[capoId] = state.month;
+    const matter = makeMatter(indexEvents(content).byId.flagged_books, { capo: capoId }, state, rng);
+    state.matters.push(matter);
+    return matter;
+  }
+
+  function canPropose(state, racketId, capoId) {
+    const racket = state.rackets[racketId], man = state.characters[capoId];
+    const family = playerFamily(state);
+    if (!racket || !man || racket.family_id !== family.id || racket.capo_id === capoId) return false;
+    if (!man.alive || man.family_id !== family.id || !["capo", "underboss"].includes(man.role)) return false;
+    return !state.matters.some((m) => ["reassignment", "assignment"].includes(m.event_id) && m.bindings.racket === racketId);
+  }
+
+  function propose(state, rng, racketId, capoId, content) {
+    CURRENT = content;
+    if (!canPropose(state, racketId, capoId)) throw new Error("That move can't be proposed.");
+    const current = state.rackets[racketId].capo_id;
+    const evs = indexEvents(content).byId;
+    const matter = current === null
+      ? makeMatter(evs.assignment, { racket: racketId, to: capoId }, state, rng)
+      : makeMatter(evs.reassignment, { racket: racketId, from: current, to: capoId }, state, rng);
+    matter.recommendation = "move";
+    state.matters.push(matter);
+    return matter;
+  }
+
+  function note(state, characterId, text) {
+    const t = text.trim().slice(0, 500);
+    if (t) state.knowledge.notes[characterId] = t;
+    else delete state.knowledge.notes[characterId];
+  }
+
+  function pin(state, characterId, pinned) {
+    state.knowledge.pinned = state.knowledge.pinned.filter((p) => p !== characterId).concat(pinned ? [characterId] : []);
+  }
+
   // ---- time (engine/lifecycle.py) ----
   function runAging(state, rng, bal) {
     const lb = bal.life;
@@ -1284,7 +1340,7 @@
   const api = {
     GameRNG, pyRound, monthLabel, player, playerFamily, members, bandFor, tick, newGame, recommend, WAIT,
     canVerify, verify, apparentTrust, sitdownAct, STAGES: ["peace", "insult", "sit-down", "retaliation", "blood", "war"],
-    INV_STAGES, districtHeat,
+    INV_STAGES, districtHeat, canFlag, flagBooks, canPropose, propose, note, pin, pressure,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.ConsigliereEngine = api;

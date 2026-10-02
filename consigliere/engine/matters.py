@@ -14,6 +14,7 @@ from .mathutil import clamp
 from .eventdefs import IntelDef
 from .models import (
     Allegiance,
+    Role,
     Character,
     Decision,
     Expense,
@@ -453,6 +454,12 @@ def roll_secrets(event: EventDef, bindings: dict[str, str], rng: GameRNG) -> Non
 def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rng: GameRNG) -> Matter:
     """Secrets are rolled, arising effects apply, then your sources tell you what they know."""
     state.event_log[event.id] = state.month
+    matter_id = f"{event.id}-{state.month}"
+    taken = {m.id for m in state.matters}
+    n = 2
+    while matter_id in taken:
+        matter_id = f"{event.id}-{state.month}-{n}"
+        n += 1
     roll_secrets(event, bindings, rng)
     for effect in event.arise_effects:
         apply_effect(state, effect, bindings, rng, event, fill(event.title, state, bindings, event.lists))
@@ -466,7 +473,7 @@ def make_matter(event: EventDef, bindings: dict[str, str], state: WorldState, rn
             known.reports.append(report)
         intel.append(known)
     return Matter(
-        id=f"{event.id}-{state.month}",
+        id=matter_id,
         event_id=event.id,
         month=state.month,
         title=fill(event.title, state, bindings, event.lists),
@@ -631,3 +638,51 @@ def run(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs: dict[s
     shift = (50 - state.don_mood) * bal.mood.drift_rate
     state.don_mood = int(clamp(state.don_mood + rng.round_stochastic(shift)))
     state.standing.influence = int(clamp(state.standing.influence + bal.information.monthly_influence))
+
+
+# ---- matters you put on the desk yourself ----
+
+FLAG_COOLDOWN = 6
+
+
+def can_flag(state: WorldState, capo_id: str) -> bool:
+    """You can bring the Don a capo's numbers once every six months."""
+    man = state.characters.get(capo_id)
+    if man is None or not man.alive or man.family_id != state.player_family.id or man.id == state.player_id:
+        return False
+    if man.id == state.player_family.don_id or not any(r.capo_id == man.id for r in state.rackets.values()):
+        return False
+    last = state.knowledge.flagged.get(capo_id)
+    pending = any(m.event_id == "flagged_books" and m.bindings.get("capo") == capo_id for m in state.matters)
+    return not pending and (last is None or state.month - last >= FLAG_COOLDOWN)
+
+
+def flag_books(state: WorldState, rng: GameRNG, capo_id: str) -> Matter:
+    state.knowledge.flagged[capo_id] = state.month
+    matter = make_matter(events()["flagged_books"], {"capo": capo_id}, state, rng)
+    state.matters.append(matter)
+    return matter
+
+
+def can_propose(state: WorldState, racket_id: str, capo_id: str) -> bool:
+    """A racket of ours can be proposed for a living capo of ours who doesn't already run it."""
+    racket, man = state.rackets.get(racket_id), state.characters.get(capo_id)
+    family = state.player_family
+    if racket is None or man is None or racket.family_id != family.id or racket.capo_id == capo_id:
+        return False
+    if not man.alive or man.family_id != family.id or man.role not in (Role.CAPO, Role.UNDERBOSS):
+        return False
+    return not any(m.event_id in ("reassignment", "assignment") and m.bindings.get("racket") == racket_id
+                   for m in state.matters)
+
+
+def propose(state: WorldState, rng: GameRNG, racket_id: str, capo_id: str) -> Matter:
+    """Put a racket's move to the Don. You are on record for it: your advice is to do it."""
+    current = state.rackets[racket_id].capo_id
+    if current is None:
+        matter = make_matter(events()["assignment"], {"racket": racket_id, "to": capo_id}, state, rng)
+    else:
+        matter = make_matter(events()["reassignment"], {"racket": racket_id, "from": current, "to": capo_id}, state, rng)
+    matter.recommendation = "move"
+    state.matters.append(matter)
+    return matter
