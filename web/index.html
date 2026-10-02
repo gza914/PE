@@ -99,9 +99,38 @@ main { padding-block: 26px 64px; }
 .choice[aria-pressed="true"] .box::after { content: ""; width: 8px; height: 8px; background: var(--ink); }
 .choice.aside { color: var(--muted); font-size: 0.92rem; }
 .choice-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.choice-row:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 520px) { .choice-row { grid-template-columns: minmax(0, 1fr); } }
 .advice-status { font: 0.82rem var(--typed); color: var(--muted); }
 .advice-status b { color: var(--ink); }
+
+/* Intel: slips of paper from your sources */
+.intel { display: grid; gap: 10px; border-top: 1px dashed var(--rule); border-bottom: 1px dashed var(--rule); padding-block: 12px; }
+.intel-head { font: 700 0.72rem/1 var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); }
+.intel-item { display: grid; gap: 6px; }
+.slips { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.slip { background: var(--paper); border: 1px solid var(--rule); padding: 8px 12px; display: grid; gap: 3px; }
+.slip-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; font: 0.8rem var(--typed); }
+.src { font-weight: 700; }
+.says { font-style: italic; }
+.trust { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); white-space: nowrap; }
+.trust-bar { display: inline-block; width: 44px; height: 5px; background: var(--rule); }
+.trust-bar i { display: block; height: 100%; background: var(--brass); }
+.intel-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.split { font: 700 0.75rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); }
+.verify { background: transparent; border: 1px solid var(--brass); color: var(--brass); padding: 5px 10px; font: 600 0.8rem var(--body); cursor: pointer; }
+.verify:hover:not(:disabled) { background: var(--brass-soft); }
+.verify:disabled { border-color: var(--rule); color: var(--muted); cursor: not-allowed; }
+.revealed { font: 0.8rem var(--typed); color: var(--ink); border-left: 2px solid var(--brass); padding-left: 8px; margin-top: 4px; }
+
+/* Sources */
+.lede { max-width: 70ch; }
+.source { background: var(--sheet); border: 1px solid var(--rule); padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.source h3 { font: 700 1.2rem/1.15 var(--display); letter-spacing: 0.03em; text-transform: uppercase; margin: 0; }
+.source.gone { opacity: 0.6; }
+.trust-big { display: flex; align-items: center; gap: 8px; font: 0.9rem var(--typed); }
+.trust-big .trust-bar { width: 90px; height: 7px; }
+.record, .first { font: 0.82rem var(--typed); color: var(--muted); }
 
 .news { border-left: 4px solid var(--danger); background: var(--sheet); padding: 14px 18px; }
 .news .kicker { font: 700 0.72rem var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--danger); }
@@ -201,6 +230,7 @@ kbd { font: 0.75rem var(--typed); border: 1px solid var(--rule); padding: 0 4px;
     <nav class="tabs" role="tablist">
       <button id="tab-office" role="tab" aria-selected="true" data-tab="office">Office</button>
       <button id="tab-family" role="tab" aria-selected="false" data-tab="family">Family</button>
+      <button id="tab-sources" role="tab" aria-selected="false" data-tab="sources">Sources</button>
       <button id="tab-books" role="tab" aria-selected="false" data-tab="books">Books</button>
     </nav>
   </div>

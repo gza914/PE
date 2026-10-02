@@ -282,6 +282,10 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
         for racket in state.rackets.values():
             if racket.capo_id == gone.id:
                 racket.capo_id = None
+        for src in state.sources.values():
+            if src.character_id == gone.id:
+                src.active = False
+                state.knowledge.sources[src.id].active = False
     elif kind == "health":
         for c in targets(state, bindings, value.who):
             c.hidden.health = int(clamp(c.hidden.health + value.delta))
@@ -561,3 +565,4 @@ def run(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs: dict[s
     state.matters = [m for m in list(state.matters) if resolve(state, m, rng, bal, evs)]
     shift = (50 - state.don_mood) * bal.mood.drift_rate
     state.don_mood = int(clamp(state.don_mood + rng.round_stochastic(shift)))
+    state.standing.influence = int(clamp(state.standing.influence + bal.information.monthly_influence))

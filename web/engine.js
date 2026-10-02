@@ -494,6 +494,9 @@
         const gone = state.characters[resolveId(state, bindings, v)];
         gone.alive = false;
         for (const r of Object.values(state.rackets)) if (r.capo_id === gone.id) r.capo_id = null;
+        for (const src of Object.values(state.sources)) {
+          if (src.character_id === gone.id) { src.active = false; state.knowledge.sources[src.id].active = false; }
+        }
         break;
       }
       case "health":
@@ -738,6 +741,7 @@
     state.matters = state.matters.slice().filter((m) => resolveMatter(state, m, rng, bal, evs));
     const shift = (50 - state.don_mood) * bal.mood.drift_rate;
     state.don_mood = Math.trunc(clamp(state.don_mood + rng.roundStochastic(shift)));
+    state.standing.influence = Math.trunc(clamp(state.standing.influence + bal.information.monthly_influence));
   }
 
   const eventIndex = new WeakMap();

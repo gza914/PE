@@ -31,7 +31,7 @@ intel:
 options:
   - id: canary
     label: Tell each of them a different story, and see which one reaches the government
-    don: {base: 0.5, cautious: 0.5, paranoid: 1}
+    don: {base: 0, cautious: 0.5}
     outcomes:
       - tone: neutral
         text: Three stories go out. A shipment on Tuesday, a meeting on Thursday, a card game moved to Saturday. Each man hears only one. Now you wait.

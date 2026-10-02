@@ -9,18 +9,18 @@ def test_seed_1234_first_year_with_a_silent_consigliere():
     state, rng = new_game(1234)
     for _ in range(12):
         tick(state, rng)
-    assert state.player_family.treasury == 35903
-    assert state.player_family.cohesion == 65
+    assert state.player_family.treasury == 32707
+    assert state.player_family.cohesion == 66
     assert {c.id: c.stats.loyalty for c in state.characters.values()} == {
         "don_ferrante": 100,
         "underboss_lauro": 68,
         "you": 80,
-        "capo_amaro": 90,
+        "capo_amaro": 87,
         "capo_tessaro": 37,
-        "capo_marchetti": 75,
+        "capo_marchetti": 84,
         "capo_sabella": 67,
     }
     assert len(state.knowledge.ledger) == 12
-    assert len(state.knowledge.reports) == 1
-    assert len(state.knowledge.decisions) == 25
-    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (50, 48, 1)
+    assert len(state.knowledge.reports) == 2
+    assert len(state.knowledge.decisions) == 26
+    assert (state.standing.dons_trust, state.don_mood, len(state.matters)) == (50, 52, 0)

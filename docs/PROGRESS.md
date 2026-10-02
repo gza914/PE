@@ -1,7 +1,52 @@
 # Progress
 
 ## Current milestone
-3. The advisory loop: **done**. Next up: Milestone 4 (Information).
+4. Information (vertical slice): **done**. Next up: Milestone 5 (web UI depth: Matter detail, Dossiers, Ledger) or Milestone 6 (the world: rival families, heat, investigations).
+
+## Milestone 4
+- **Sources** (`state.sources` hold the truth; `knowledge.sources` hold what you believe). The scenario starts with four:
+  - Talk at the social club: overrated (true 50%, you start at 60%).
+  - Nunzio the barber: underrated (true 80%, you start at 45%).
+  - Sal Lauro: 75% true. He is family, so if he is the rat his reports invert.
+  - Mr. Fessler, the lawyer: 85% true.
+
+  Events can add more:
+  - Sgt. Dolan (police). If Dolan's bad outcome fires, he is secretly working for his lieutenant and compromised.
+  - Ellen Hartigan of the Herald (press).
+  - Tommy Vella (street). He is reliable or unreliable on a hidden coin flip, and you can't tell which from the text.
+- **Intel on matters** (`intel:` in event YAML): a claim, its denial, the condition that makes it true, and the kinds of source that would know.
+  - When a matter arises, one source of a fitting kind reports, according to its reliability. A compromised source always reports the opposite.
+  - Nobody reports on himself.
+- **Verification** (`Verify` command, "Ask another source" in the web UI): costs 3 Influence and asks a source who hasn't spoken yet. Influence now accrues by +1 a month.
+- **Learning who to trust:** when a matter is settled, the truth behind each claim comes out with a 60% chance (per-claim override). Each source's record updates, and your trust becomes (right + 4 × first impression) / (right + wrong + 4). The Don's decisions report what came out and who had it right.
+- **Event machinery added:**
+  - `secrets`: coin flips at arising that travel with follow-ups.
+  - `arise_effects`
+  - `{any: [...]}` conditions
+  - `lists`: names sorted so slot order never leaks.
+  - `carries`: bindings inherited by follow-ups.
+  - Effects: `allegiance`, `add_source` / `compromise_source` / `remove_source`, `assign_roles` (a shuffle), `add_vice`, `retire`, `health`.
+- **The Rat arc** (5 events):
+  1. Mr. Fessler's warning names three men. They are secretly shuffled into rat, red herring (who has his own secret) and innocent.
+  2. The street's evidence comes in, with a claim about each man.
+  3. You either feed each man a different story (the canary) or put the question to one of them. Accusing the wrong man costs his loyalty, and the rat keeps talking.
+  4. The reckoning: exile, turn him, or "the old way" (off-page).
+  5. If the rat stays in place, subpoenas arrive and the evidence round comes back.
+- **Content:** 31 events: 16 earlier, 5 in the arc, and 10 new ones built on secrets and intel (a robbed card game, a reporter, a hijacked truck, a runner with big ears, a capo's restaurant, the Don's doctor, a patrolman's shakedown, the Don's nephew, a raid tip, a repaid loan). `light_envelope` now carries intel about the capo's real spending.
+- **Web:** matter cards show "What you've heard" as slips from each source, with a trust bar, "Your sources disagree", and Ask another source. The new Sources tab shows each source's trust, record and first impression. The Don's decisions show what came out.
+- **Saves:** schema version 4, with a migration from version 3.
+- **Tests:** 128. The parity bot now verifies intel. Its 10-year games cover a rat who is also a source, a compromised Dolan, and an unreliable Tommy.
+
+## Balance check (40 seeds × 24 months, Don's Trust at the end, starting at 50)
+| Strategy | Trust | Rat found |
+|---|---|---|
+| Knows every secret (upper bound) | 75 | 40/40 |
+| Best option on paper, ignores intel | 64 | 40/40 |
+| Reads intel, trusts first impressions | 59 | 40/40 |
+| Silent | 47 | 40/40 (slowly, after subpoenas) |
+| Random | 20 | 38/40 |
+
+Knowing the truth is worth about 11 points of trust over ignoring intel. A player who takes first impressions at face value does worse than one who ignores intel, because the best source starts out underrated. Learning who to trust is the skill.
 
 ## Milestone 3
 - **Interface decision:** the web page is the main interface, laid out for desktop first (it still works in a narrow window). It replaces the Textual plan in DESIGN.md. The text CLI stays for quick headless play.
@@ -69,6 +114,11 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 - Saves go to the browser's localStorage. A New game button asks for confirmation on the page itself.
 - Pyodide (Python in the browser) was ruled out: the hosting page blocks the CDN fetches it needs, and it would be a 13MB download on phones.
 
+## Known issues (Milestone 4)
+- Exposure rises (subpoenas, bribes) but has no consequence until heat and the law arrive in Milestone 6.
+- Matters don't show what it would cost to learn more beyond the flat Influence price; sources of different kinds all cost the same.
+- No Dossiers screen yet: what you believe about each man is the Family tab's loyalty reading plus the Sources tab.
+
 ## Known issues (Milestone 3)
 - Content is thin: with 13 random matters the same ones return about once a year. Milestone 4 targets 30 events.
 - Don's Trust at 0 has no consequence yet (endings come in Milestone 8). Influence is gained but can't be spent.
@@ -82,5 +132,5 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 - pytest is not installed in a fresh container: `pip install -e .[dev]`.
 
 ## Next step
-- Play a few in-game years in the web version and note which matters felt like real dilemmas and which were obvious.
-- Milestone 4: reports, sources, confidence, verification, one informant, the Rat arc; reach 30 events.
+- Play the vertical slice (24 months) in the web version: is reading the slips fun, and does the Rat arc land?
+- Milestone 5 (deepen the web UI: Dossiers, Ledger with skim estimates) or Milestone 6 (rival families, heat, investigations, sit-downs).

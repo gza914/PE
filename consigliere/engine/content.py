@@ -87,6 +87,7 @@ class InformationBalance(Model):
     verify_cost: int = Field(ge=0)  # Influence spent to hear from a second source
     prior_weight: float = Field(gt=0)  # how many reports your first impression of a source is worth
     reveal_chance: Unit  # chance the truth behind a claim comes out once a matter is settled
+    monthly_influence: int  # Influence that accrues each month
 
 
 class Balance(Model):

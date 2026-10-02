@@ -90,6 +90,8 @@ Every fact the player sees is a Report with a source, a date, and a confidence. 
 
 The true world state is never shown directly. The UI shows what you believe, and the gap between belief and truth is where the drama comes from.
 
+As built (Milestone 4): each source has a hidden reliability and a first impression (how far you trust him at the start). The two can differ in either direction. A compromised source, including a family member who is secretly an informant, always reports the opposite of the truth. When a matter is settled, the truth behind its claims comes out with some chance, and each source's record of right and wrong calls updates how far you trust him. Verifying costs Influence, which accrues slowly each month and through favors. Planting false reports exists as the canary trap in the Rat arc.
+
 ### Economy
 
 Rackets (numbers, loansharking, unions, docks, construction, gambling, protection, later narcotics as a tempting, high-heat option) each have income, heat per month, and an assigned capo. Capos skim based on Greed and Loyalty. The family treasury pays tribute, bribes, lawyers, and the families of jailed men. Neglecting those families lowers Loyalty across the crew.

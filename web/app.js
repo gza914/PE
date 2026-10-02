@@ -4,7 +4,7 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 2;
+  const SAVE_VERSION = 3;
   const BAND_RANK = { estranged: 1, restless: 2, cooling: 3, steady: 4, devoted: 5 };
   const TONE_LABEL = { good: "Went well", bad: "Went badly", neutral: "No harm done", waiting: "Put off" };
 
@@ -110,6 +110,7 @@
         <h3>${esc(m.title)}</h3>
         ${m.waited ? `<div class="waited">Put off ${m.waited} month${m.waited === 1 ? "" : "s"}. The Don will not wait again.</div>` : ""}
         <div class="body">${paras(m.text)}</div>
+        ${intelHtml(m)}
         <div class="choices" role="group" aria-label="Your advice on ${esc(m.title)}">
           ${m.options.map((o) => choice(o.id, o.label, false)).join("")}
           <div class="choice-row">
@@ -119,6 +120,37 @@
         </div>
         <div class="advice-status"><b>${esc(current)}.</b> The Don decides when you end the month.</div>
       </article>`;
+  }
+
+  const pct = (x) => Math.round(x * 100);
+  const trustOf = (sourceId) => E.apparentTrust(game.state.knowledge.sources[sourceId], CONTENT.balance);
+
+  function trustChip(sourceId) {
+    const t = pct(trustOf(sourceId));
+    return `<span class="trust" title="How far you trust this source, from your first impression and what he has got right">
+      <span class="trust-bar" aria-hidden="true"><i style="width:${t}%"></i></span>${t}% trusted</span>`;
+  }
+
+  function intelHtml(m) {
+    if (!m.intel.length) return "";
+    const cost = CONTENT.balance.information.verify_cost;
+    const items = m.intel.map((item, i) => {
+      const reports = item.reports.map((r) => {
+        const known = game.state.knowledge.sources[r.source_id];
+        return `<li class="slip"><div class="slip-head"><span class="src">${esc(known.name)}</span>${trustChip(r.source_id)}</div>
+          <div class="says">${esc(r.says ? item.claim : item.denial)}</div></li>`;
+      }).join("");
+      const split = item.reports.length > 1 && new Set(item.reports.map((r) => r.says)).size > 1;
+      const can = E.canVerify(game.state, m, i, CONTENT);
+      const why = game.state.standing.influence < cost ? `You need ${cost} Influence.` : "Nobody else would know.";
+      return `<div class="intel-item">
+        <ul class="slips">${reports || `<li class="slip quiet">Nobody has said anything yet.</li>`}</ul>
+        <div class="intel-foot">
+          ${split ? `<span class="split">Your sources disagree.</span>` : `<span></span>`}
+          <button class="verify" data-matter="${esc(m.id)}" data-intel="${i}" ${can ? "" : `disabled title="${esc(why)}"`}>Ask another source · ${cost} Influence</button>
+        </div></div>`;
+    }).join("");
+    return `<div class="intel"><div class="intel-head">What you've heard</div>${items}</div>`;
   }
 
   function newsCard(n) {
@@ -147,7 +179,8 @@
       return `<div class="decision">
         <div class="decision-head"><h4>${esc(d.title)}</h4><span class="tone ${d.tone}">${TONE_LABEL[d.tone]}</span></div>
         <div class="what">${advice} ${did}${trust}</div>
-        <p>${esc(d.text)}</p></div>`;
+        <p>${esc(d.text)}</p>
+        ${(d.revealed || []).map((line) => `<div class="revealed">${esc(line)}</div>`).join("")}</div>`;
     }).join("")}</div>`;
   }
 
@@ -192,6 +225,7 @@
         <p class="stamp">${esc(E.monthLabel(st.month))}</p>
         <p>You are ${esc(E.player(st).name)}, consigliere to ${esc(don.name)}. He keeps his own counsel. He keeps you for yours.</p>
         <p>Each month, matters reach your desk. Advise him, tell him to wait, or say nothing. He listens more when he trusts you, and less when his mood is bad. When he follows you and it goes wrong, it is your name on it.</p>
+        <p>Most of what reaches you is secondhand. Each claim comes from a source, and you can spend Influence to ask someone else. Some sources are better than their reputation. Some are worse.</p>
         <p>Four capos bring envelopes to the house. Read the books, and read the men who bring them.</p>
       </article>`;
   }
@@ -246,6 +280,27 @@
         <div class="people">${people}</div>
         ${unattended.length ? `<p class="quiet">Nobody is running: ${unattended.map((r) => esc(r.name)).join(", ")}.</p>` : ""}
       </div>`;
+  }
+
+  // ---- sources ----
+  function renderSources() {
+    const st = game.state;
+    const rows = Object.entries(st.knowledge.sources).map(([id, k]) => {
+      const t = pct(trustOf(id));
+      const record = k.right + k.wrong ? `${k.right} right · ${k.wrong} wrong` : "No record yet";
+      return `<article class="source fresh${k.active ? "" : " gone"}">
+        <div class="role">${esc(titleCase(k.kind))}${k.active ? "" : " · gone quiet"}</div>
+        <h3>${esc(k.name)}</h3>
+        <div class="trust-big"><span class="trust-bar" aria-hidden="true"><i style="width:${t}%"></i></span><b>${t}%</b> trusted</div>
+        <div class="record">${record}</div>
+        <div class="first">First impression: ${pct(k.believed)}%</div>
+      </article>`;
+    }).join("");
+    return `<div class="family">
+      <div class="col-head"><h2>Who tells you things</h2><small>trust moves when the truth comes out</small></div>
+      <p class="quiet lede">Every claim on your desk comes from someone. Some are better than their reputation, some worse, and some are telling you what somebody else wants you to hear. When a matter is settled, the truth sometimes comes out, and you learn who had it right.</p>
+      <div class="people">${rows}</div>
+    </div>`;
   }
 
   // ---- books ----
@@ -329,7 +384,8 @@
   function render() {
     renderMast();
     const view = byId("view");
-    view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks() : renderOffice();
+    view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
+      : tab === "sources" ? renderSources() : renderOffice();
     const on = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
     on("new-game", () => { confirmingNewGame = true; render(); });
     on("cancel-new", () => { confirmingNewGame = false; render(); });
@@ -346,10 +402,16 @@
   }
 
   function onViewClick(event) {
+    const check = event.target.closest(".verify");
     const btn = event.target.closest(".choice");
-    if (!btn) return;
-    const choice = btn.dataset.choice === "" ? null : btn.dataset.choice;
-    E.recommend(game.state, btn.dataset.matter, choice);
+    if (check && !check.disabled) {
+      E.verify(game.state, game.rng, check.dataset.matter, Number(check.dataset.intel), CONTENT);
+    } else if (btn) {
+      const choice = btn.dataset.choice === "" ? null : btn.dataset.choice;
+      E.recommend(game.state, btn.dataset.matter, choice);
+    } else {
+      return;
+    }
     save();
     const scroll = window.scrollY;
     render();
