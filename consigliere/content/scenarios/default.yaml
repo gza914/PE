@@ -1,0 +1,42 @@
+# Starting scenario: one family, January 1958. Fictional names only.
+player_id: you
+families:
+  - id: ferrante
+    name: The Ferrante Family
+    don_id: don_ferrante
+    member_ids: [don_ferrante, underboss_lauro, you]
+    strength: 60
+    wealth: 55
+    cohesion: 65
+    treasury: 40000
+characters:
+  - id: don_ferrante
+    name: Aurelio Ferrante
+    role: don
+    family_id: ferrante
+    traits: [cautious, sentimental, paranoid]
+    stats: {loyalty: 100, fear: 70, respect: 85, competence: 70, greed: 40, discretion: 80}
+    hidden: {health: 80, birth_year: 1896}
+  - id: underboss_lauro
+    name: Sal Lauro
+    role: underboss
+    family_id: ferrante
+    traits: [ambitious, hothead, loyal]
+    stats: {loyalty: 70, fear: 60, respect: 65, competence: 60, greed: 55, discretion: 40}
+    hidden: {health: 95, birth_year: 1917}
+  - id: you
+    name: Thomas Corvo
+    role: consigliere
+    family_id: ferrante
+    traits: [cautious, loyal, vain]
+    stats: {loyalty: 80, fear: 20, respect: 60, competence: 75, greed: 30, discretion: 85}
+    hidden: {health: 100, birth_year: 1912}
+relationships:
+  - {src: don_ferrante, dst: you, trust: 50, affection: 40}
+  - {src: you, dst: don_ferrante, trust: 60, affection: 50, fear: 30}
+  - {src: underboss_lauro, dst: you, trust: 10, affection: -10}
+  - {src: you, dst: underboss_lauro, trust: 20, fear: 20}
+standing:
+  dons_trust: 50
+  influence: 20
+  exposure: 5
