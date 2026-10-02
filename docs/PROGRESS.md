@@ -1,7 +1,62 @@
 # Progress
 
 ## Current milestone
-4. Information (vertical slice): **done**. Next up: Milestone 5 (web UI depth: Matter detail, Dossiers, Ledger) or Milestone 6 (the world: rival families, heat, investigations).
+6 (The world) and 8 (Time and succession): **done**. Left: 5 (deeper web screens), 7 (simulation harness), 9 (content pass), 10 (optional live sit-downs), 11 (polish).
+
+## Milestone 8: time and succession
+- **Aging** (`engine/lifecycle.py`): past 50, health slips with a monthly chance of 1.5% per year over. Dons and rival bosses run ×1.5, and drink adds 5%. A man below 35 health can have a spell. At 0 he dies off the page and a funeral is narrated. The Don usually dies in the mid to late 1960s.
+- **Rival succession:** a dead rival boss is replaced by the next man in his family (Nicky Brancato, Paolo Orsini).
+- **New blood:** "An empty chair" arises when your crew is down to fewer than five, and lets you make a steady soldier or an earner into a capo. Recruits are generated from `content/recruits.yaml` (name lists and temperament profiles). Without this, every long game ran out of men and ended in ruin.
+- **Succession crisis:** when the Don dies, is jailed or flees, "Who will be Don" arrives. It is a matter **you decide** (new `you_decide` events, where silence takes a `default_option` and the Don isn't consulted).
+  - Your sources tell you who has the votes.
+  - The capos choose by respect + loyalty/2, plus 20 + Influence/2 for the man you back.
+  - If you backed the winner, his trust starts at 70. If you stayed out, it starts at 45. If you backed a loser, he keeps you (30% + Influence/200, trust 25) or pushes you out.
+  - There is a two-candidate variant for a depleted family.
+- **Endings** (`content/endings.yaml`, ranked best first), checked at the end of every month:
+  1. retired with the family intact
+  2. the end of an era (December 1972) with the family intact
+  3. retired, from a diminished family
+  4. the end of an era, diminished; or died in his bed (both rank 4)
+  5. pushed out
+  6. gone to ground (Exposure 100)
+  7. prison
+  8. killed
+  9. disposed of (Don's Trust 0)
+  10. the family's ruin
+
+  Retirement is offered as a matter you decide after six years, if the Don trusts you (60+). Once a run ends, the month no longer advances and commands are refused.
+- **Memoir:** months served, Dons served, matters settled, advice given and taken, how things went, the rat, the peak and final treasury, districts held, final trust, and everyone lost along the way and how.
+- **Web:** cards for decisions that are yours alone (no Don's filter, default shown), the memoir screen with "Begin again", and a list of Dons served.
+- **Schema** version 6, with a migration from version 5.
+
+## Milestone 6: the world
+- **The city:** 8 districts across three families. You hold 4. The Brancatos (hothead boss, broke) hold 2 across the river, and the Orsinis (cautious, rich, stronger) hold 2 uptown. Every racket sits in a district. Rival rackets earn without capos, and rivals pay upkeep.
+- **Heat:** each racket gains its heat rate each month and sheds 8%. Family heat follows its rackets' average, and war adds +4 a month to every family.
+- **The law** (`engine/world.py`): a man draws an investigation when his heat is over 45. Heat means his rackets' heat for a capo, family heat for the Don, and Exposure for you.
+  - Investigations climb surveillance → informant recruitment → grand jury → indictment → prison. They advance with heat, faster while a rat talks and slower while he is fed lies. Cold ones close.
+  - A jailed man's rackets go unattended, his family is owed a stipend (missing it costs loyalty), and an indictment is narrated. The Don's jailing starts a succession.
+  - You learn of investigations through an honest police source (better odds) or when a grand jury makes them public. Matters let you take his rackets away, put Mr. Fessler on it, bribe, hire the best lawyer, ship him abroad, or lean on witnesses.
+- **The conflict ladder:** peace → insult → sit-down → retaliation → blood → war.
+  - Tension drifts each month with the rival boss's temperament and the strength gap, then cools 5%.
+  - Events climb the ladder: an insult at a christening; encroachment in a district (with intel on whether they can afford a fight); a burned car; the question of a hit on their boss.
+  - War costs $3,000 a month and 1–3 strength a side. Capos can be killed (news). After 3 months the Commission demands a settlement. The side that breaks first cedes a district.
+- **Scripted sit-downs:** you negotiate directly, without the Don, over a monthly tribute.
+  - They have a hidden red line: higher if they're stronger, lower if they're broke. They open $800–1,400 above it.
+  - Your moves: concede $300 (they drop $200), hold firm (works only on a broke rival), threaten (credible only if you're 10+ stronger, otherwise it costs their patience), or walk.
+  - A deal sets the tribute as a monthly expense and makes peace. A deal near their red line earns Don's Trust +3. No deal escalates the ladder. A sit-down left unfinished at month end breaks up.
+- **Web:** a sit-down panel on the desk, a City tab (districts and heat, the ladder with each rival, the investigations you know of), a Heat meter, and men in prison or killed marked in Family.
+- **Content:** 15 new events in Milestone 6 and 6 in Milestone 8, for 52 in all.
+- **Schema** version 5, with a migration from version 4.
+
+## Balance check (40 seeds, full runs to an ending; rank 1 is best of 11)
+| Strategy | Avg ending rank | Avg length | Endings |
+|---|---|---|---|
+| Knows every secret | 2.1 | 124 months | retired intact 22, retired diminished 14, pushed out 4 |
+| Best option on paper | 2.8 | 126 months | retired intact 18, retired diminished 12, pushed out 6, disposed 3, era intact 1 |
+| Silent | 3.6 | 148 months | era intact 15, pushed out 13, era diminished 12 |
+| Random | 8.7 | 43 months | disposed 38, retired intact 1, pushed out 1 |
+
+No strategy wins more than 70% of the time (the design doc's bar). Random advice gets you disposed of within about four years.
 
 ## Milestone 4
 - **Sources** (`state.sources` hold the truth; `knowledge.sources` hold what you believe). The scenario starts with four:
@@ -114,6 +169,11 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 - Saves go to the browser's localStorage. A New game button asks for confirmation on the page itself.
 - Pyodide (Python in the browser) was ruled out: the hosting page blocks the CDN fetches it needs, and it would be a 13MB download on phones.
 
+## Known issues (Milestones 6 and 8)
+- The Don decides matters for the month in which he dies, before the succession sits.
+- Bots back succession candidates blindly, which is why "pushed out" is common in the table above. A player reading "who has the votes" should do much better.
+- `tools/simulate.py` is still the scratch scripts described here; Milestone 7 makes it a real tool.
+
 ## Known issues (Milestone 4)
 - Exposure rises (subpoenas, bribes) but has no consequence until heat and the law arrive in Milestone 6.
 - Matters don't show what it would cost to learn more beyond the flat Influence price; sources of different kinds all cost the same.
@@ -132,5 +192,5 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 - pytest is not installed in a fresh container: `pip install -e .[dev]`.
 
 ## Next step
-- Play the vertical slice (24 months) in the web version: is reading the slips fun, and does the Rat arc land?
-- Milestone 5 (deepen the web UI: Dossiers, Ledger with skim estimates) or Milestone 6 (rival families, heat, investigations, sit-downs).
+- Play a full run in the web version, to an ending.
+- Milestone 7: turn the balance scripts into `tools/simulate.py` with bot strategies and reports, then tune.

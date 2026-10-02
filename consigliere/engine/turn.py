@@ -15,8 +15,12 @@ def tick(
     systems: Sequence[System] | None = None,
     month_start: Sequence[System] | None = None,
 ) -> None:
+    if state.ending is not None:
+        return  # the story is over
     for system in SYSTEMS if systems is None else systems:
         system(state, rng)
+    if state.ending is not None:
+        return
     state.month += 1
     for system in MONTH_START if month_start is None else month_start:
         system(state, rng)

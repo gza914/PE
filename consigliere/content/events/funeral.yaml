@@ -1,0 +1,12 @@
+id: funeral
+kind: news
+followup_only: true
+even_if_gone: true
+title: "{man}"
+text: |-
+  {man} died this week, in his own bed, with a priest in the room. The funeral was at St. Anselm's. The line of cars went around the block twice.
+
+  Men who had not spoken to each other in years stood together at the grave, and then went back to not speaking.
+carries: [man]
+effects:
+  - memory: {who: crew, about: family, weight: 2}

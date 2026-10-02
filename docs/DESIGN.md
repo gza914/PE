@@ -108,6 +108,8 @@ Families have Strength, Wealth, and Cohesion. Disputes escalate along a ladder: 
 
 Each turn is one month. Characters age, fall ill, and die. The Don's health declines on a hidden curve. When he dies or is jailed, a succession crisis fires: candidates lobby, rivals probe for weakness, and your choice of who to back decides whether you remain consigliere.
 
+As built (Milestone 8): the succession is a matter you decide yourself, since there is no Don to ask. Your sources tell you who has the votes, and your backing (with your Influence behind it) tips the capos. When the crew runs thin, soldiers can be made capos, so the family can last the full run. Runs end in one of ten ranked endings, from retiring with the family intact to the family's ruin, followed by a memoir of your career.
+
 ## Content
 
 Content lives in data files, not code, so it can grow without touching the engine.

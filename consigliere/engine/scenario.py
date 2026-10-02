@@ -25,6 +25,7 @@ def load_scenario(name: str, seed: int) -> WorldState:
         s["id"]: {"name": s["name"], "kind": s["kind"], "believed": s["believed"]} for s in sources
     }
     state = WorldState.model_validate({**data, "seed": seed})
+    state.knowledge.dons = [state.characters[state.player_family.don_id].name]
     initial_impressions(state)
     return state
 

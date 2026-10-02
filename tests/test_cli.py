@@ -96,3 +96,13 @@ def test_intel_and_verify(game):
     assert "What you've heard:" in text and "% trusted)" in text
     assert "You ask around. Influence now 17." in text
     assert "Usage: v <matter number> <intel number>" in text
+
+
+def test_ending_is_shown_instead_of_another_month(game):
+    state, rng = game
+    state.flags["retire"] = 0
+    out = []
+    run(state, rng, scripted(["n", "n", "q"]), out.append)
+    text = "\n".join(out)
+    assert "=== Retired, with the family intact" in text
+    assert "Ranked 1 of the ways this can end." in text

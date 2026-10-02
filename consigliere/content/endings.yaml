@@ -1,0 +1,56 @@
+# How a run can end, best first. {you}, {don}, {family} and {years} are filled in.
+retired_intact:
+  rank: 1
+  title: Retired, with the family intact
+  text: |-
+    {you} left {family} on his own two feet, after {years} years, with the family strong and the books in order. He keeps tomatoes now. On Sundays men still come by to ask what he thinks, and he tells them, and then he sends them home.
+era_intact:
+  rank: 2
+  title: The end of an era
+  text: |-
+    The decade turned, and so did the city. {you} was still at the Don's right hand when it did, and the family was still standing. That is more than most could say.
+retired_diminished:
+  rank: 3
+  title: Retired, from a smaller family
+  text: |-
+    {you} walked away after {years} years. The family he left was poorer and weaker than the one he joined, and everyone knew it, including him.
+era_diminished:
+  rank: 4
+  title: The end of an era, and not a good one
+  text: |-
+    The decade turned. {you} was still there, advising a family that had less every year to be advised about.
+died:
+  rank: 4
+  title: Died in his bed
+  text: |-
+    {you} died in his bed after {years} years as consigliere, which in this business is its own kind of success. Half the city came to the funeral. The other half sent flowers and watched from across the street.
+pushed_out:
+  rank: 5
+  title: Pushed out
+  text: |-
+    {don} thanked {you} for his years of service and told him to enjoy his retirement. He meant somewhere warm, and he meant soon.
+exile:
+  rank: 6
+  title: Gone to ground
+  text: |-
+    {you}'s name was on too many things. He left the city on a night train with one suitcase and did not come back. A postcard arrives at Christmas, unsigned.
+prison:
+  rank: 7
+  title: The federal penitentiary
+  text: |-
+    {you} was convicted on every count. He said nothing at the trial, nothing at sentencing, and nothing since. The family takes care of his wife, for now.
+killed:
+  rank: 8
+  title: A Sunday drive
+  text: |-
+    {you} went for a drive on a Sunday and did not come back. Nobody asks about it. Everybody understands.
+disposed:
+  rank: 9
+  title: Sidelined, then disposed of
+  text: |-
+    The Don stopped asking for {you}'s advice. Then he stopped asking for him at all. One evening two old friends offered him a ride home.
+ruin:
+  rank: 10
+  title: The family's ruin
+  text: |-
+    {family} is finished: its men dead, jailed or gone over to others, its rackets run by other families. {you} was its consigliere to the end, which is not the honor it once sounded like.

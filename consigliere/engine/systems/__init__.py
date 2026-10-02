@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from .. import matters, world
+from .. import lifecycle, matters, world
 from . import characters, economy, observation
 
 if TYPE_CHECKING:
@@ -20,5 +20,7 @@ if TYPE_CHECKING:
 System = Callable[["WorldState", "GameRNG"], None]
 
 # Economy runs before decisions so money a decision moves lands in this month's books.
-SYSTEMS: list[System] = [economy.run, matters.run, world.run, characters.run, observation.run]
+SYSTEMS: list[System] = [
+    economy.run, matters.run, world.run, lifecycle.run, characters.run, observation.run, lifecycle.check_endings,
+]
 MONTH_START: list[System] = [matters.begin_month]

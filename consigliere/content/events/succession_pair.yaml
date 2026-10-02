@@ -1,0 +1,53 @@
+id: succession_pair
+title: Who will be Don
+text: |-
+  The family needs a Don. The capos will meet at the end of the month, and every one of them has asked to see you first.
+
+  The men who could sit in the chair are {candidates}. Whoever you back, he will remember it. So will the others.
+cast:
+  a:
+    role: [capo, underboss]
+  b:
+    role: [capo, underboss]
+lists: {candidates: [a, b]}
+trigger: [[flag.don_gone, "==", 1], [crew_size, "==", 2]]
+weight: 100
+cooldown: 0
+you_decide: true
+default_option: stay_out
+patience: 0
+intel:
+  - about: a
+    claim: "{a} has the votes."
+    denial: "{a} does not have the votes."
+    truth: [[a.respect, ">=", b.respect]]
+    sources: [family, street, lawyer]
+    reveal: 0
+  - about: b
+    claim: "{b} has the votes."
+    denial: "{b} does not have the votes."
+    truth: [[b.respect, ">=", a.respect]]
+    sources: [family, street, lawyer]
+    reveal: 0
+options:
+  - id: back_a
+    label: Back {a}
+    outcomes:
+      - tone: neutral
+        text: "You let it be known that you are for {a}. The capos meet in the back room of the club, and when the door opens, {winner} is the Don."
+        effects:
+          - succession: {candidates: [a, b], backed: a}
+  - id: back_b
+    label: Back {b}
+    outcomes:
+      - tone: neutral
+        text: "You let it be known that you are for {b}. The capos meet in the back room of the club, and when the door opens, {winner} is the Don."
+        effects:
+          - succession: {candidates: [a, b], backed: b}
+  - id: stay_out
+    label: Stay out of it, and serve whoever wins
+    outcomes:
+      - tone: neutral
+        text: You keep your own counsel. The capos meet in the back room of the club, and when the door opens, {winner} is the Don.
+        effects:
+          - succession: {candidates: [a, b]}

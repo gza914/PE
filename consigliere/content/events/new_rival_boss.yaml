@@ -1,0 +1,11 @@
+id: new_rival_boss
+kind: news
+followup_only: true
+title: "{boss} takes over {rival}"
+text: |-
+  {rival} has a new boss. {boss} was seen kissing hands at a wedding in his late predecessor's chair.
+
+  Nobody yet knows what kind of man he will be at the top. Neither, perhaps, does he.
+carries: [rival, boss]
+effects:
+  - rivalry: {who: rival, tension: 5}

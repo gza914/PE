@@ -142,6 +142,43 @@ class SitDownBalance(Model):
     good_deal_margin: int
 
 
+class LifeBalance(Model):
+    age_threshold: int
+    age_rate: float  # monthly chance of a decline, per year of age over the threshold
+    don_factor: float
+    vice_rate: dict[str, float] = Field(default_factory=dict)
+    decline_min: int
+    decline_max: int
+    spell_below: int
+    spell_chance: Unit
+    spell_min: int
+    spell_max: int
+
+
+class SuccessionBalance(Model):
+    backing_bonus: float
+    influence_weight: float
+    keep_base: Unit
+    keep_influence: float
+    trust_backed_winner: int
+    trust_neutral: int
+    trust_backed_loser: int
+
+
+class EndingsBalance(Model):
+    last_month: int
+    ruin_strength: int
+    ruin_treasury: int
+    exile_exposure: int
+    intact_strength: int
+
+
+class EndingSpec(Model):
+    rank: int
+    title: str
+    text: str
+
+
 class Balance(Model):
     economy: EconomyBalance
     loyalty: LoyaltyBalance
@@ -155,6 +192,9 @@ class Balance(Model):
     law: LawBalance
     rivals: RivalsBalance
     sitdown: SitDownBalance
+    life: LifeBalance
+    succession: SuccessionBalance
+    endings: EndingsBalance
 
 
 class LoyaltyBand(Model):
@@ -198,6 +238,10 @@ def check_event_references(events: dict[str, EventDef]) -> None:
                 if ref is not None and ref not in names:
                     raise ContentError(f"{event.id}: cast slot {name} refers to unknown slot {ref}")
         names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
+        all_effects = [e for o in event.options for out in o.outcomes for e in out.effects]
+        if any(e.kind == "succession" for e in all_effects):
+            names.add("winner")
+        names |= {e.recruit.bind for e in all_effects if e.kind == "recruit"}
         for intel in event.intel:
             if intel.about is not None and intel.about not in names:
                 raise ContentError(f"{event.id}: intel about unknown {intel.about}")
@@ -216,6 +260,10 @@ def check_event_references(events: dict[str, EventDef]) -> None:
             who = getattr(value, "who", None)
             if who is not None and who not in names | {"crew", "don", "you", "family"}:
                 raise ContentError(f"{event.id}: effect on unknown {who}")
+            if effect.kind == "succession":
+                names.add("winner")
+            if effect.kind == "recruit":
+                names.add(value.bind)
             if effect.kind == "assign_roles":
                 names |= set(value.roles)
                 if not set(value.pool) <= names:
@@ -248,3 +296,25 @@ def events() -> dict[str, EventDef]:
 def sitdown_lines() -> dict[str, str]:
     """What gets said across the table, keyed by what just happened."""
     return load_yaml("sitdown.yaml")
+
+
+@lru_cache
+def endings() -> dict[str, EndingSpec]:
+    return {k: EndingSpec.model_validate(v) for k, v in load_yaml("endings.yaml").items()}
+
+
+class RecruitProfile(Model):
+    traits: list[Trait]
+    extra_traits: list[Trait]
+    stats: dict[str, tuple[int, int]]
+
+
+class Recruits(Model):
+    first_names: list[str] = Field(min_length=1)
+    last_names: list[str] = Field(min_length=1)
+    profiles: dict[str, RecruitProfile]
+
+
+@lru_cache
+def recruits() -> Recruits:
+    return Recruits.model_validate(load_yaml("recruits.yaml"))

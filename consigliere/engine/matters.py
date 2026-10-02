@@ -29,6 +29,7 @@ from .models import (
 )
 from .rng import GameRNG
 from .state import WorldState
+from .lifecycle import crew_size, install_successor, recruit
 from .world import (
     WAR,
     book,
@@ -86,6 +87,7 @@ def lookup(state: WorldState, bindings: dict[str, str], path: Any, self_id: str 
             "don_mood": state.don_mood,
             "strength": family.strength,
             "heat": family.heat,
+            "crew_size": crew_size(state),
         }
         if head in simple:
             return simple[head]
@@ -345,6 +347,11 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
         target = resolve_id(state, bindings, value)
         state.investigations.pop(target, None)
         state.knowledge.investigations.pop(target, None)
+    elif kind == "succession":
+        backed = bindings[value.backed] if value.backed else None
+        bindings["winner"] = install_successor(state, rng, [bindings[c] for c in value.candidates], backed)
+    elif kind == "recruit":
+        bindings[value.bind] = recruit(state, rng, value.profile)
     elif kind == "unassign":
         target = resolve_id(state, bindings, value)
         for racket in state.rackets.values():
@@ -572,13 +579,17 @@ def resolve(state: WorldState, matter: Matter, rng: GameRNG, bal: Balance, evs: 
     rec = matter.recommendation
     if rec == WAIT and not (matter.can_wait and matter.waited < event.patience):
         rec = None
-    own = don_preference(event, don, rng, bal)
-    if rec is None:
-        choice, followed = own, None
-    elif rng.chance(follow_chance(state, don, bal)):
-        choice, followed = rec, True
+    if event.you_decide:
+        rec = rec if rec != WAIT else None
+        choice, followed = (rec if rec is not None else event.default_option), None
+    elif rec is None:
+        choice, followed = don_preference(event, don, rng, bal), None
     else:
-        choice, followed = own, own == rec
+        own = don_preference(event, don, rng, bal)
+        if rng.chance(follow_chance(state, don, bal)):
+            choice, followed = rec, True
+        else:
+            choice, followed = own, own == rec
 
     if choice == WAIT:
         matter.waited += 1
@@ -598,10 +609,11 @@ def resolve(state: WorldState, matter: Matter, rng: GameRNG, bal: Balance, evs: 
     if followed and option.advised_exposure:
         state.standing.exposure = int(clamp(state.standing.exposure + option.advised_exposure))
     trust = 0
-    if rec is not None:
+    if rec is not None and not event.you_decide:
         trust = getattr(bal.advice.trust, f"{'followed' if followed else 'ignored'}_{outcome.tone}")
         state.standing.dons_trust = int(clamp(state.standing.dons_trust + trust))
-    state.don_mood = int(clamp(state.don_mood + getattr(bal.mood, outcome.tone)))
+    if not event.you_decide:
+        state.don_mood = int(clamp(state.don_mood + getattr(bal.mood, outcome.tone)))
     state.knowledge.decisions.append(Decision(
         month=state.month, matter_id=matter.id, title=matter.title, recommended=label_of(matter, rec),
         chosen=label_of(matter, choice), followed=followed, tone=outcome.tone,

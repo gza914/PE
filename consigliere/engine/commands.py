@@ -47,6 +47,8 @@ class CommandError(ValueError):
 
 
 def apply(state: WorldState, rng: GameRNG, command: Command) -> None:
+    if state.ending is not None:
+        raise CommandError("The story is over.")
     if isinstance(command, EndMonth):
         tick(state, rng)
     elif isinstance(command, Recommend):

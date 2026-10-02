@@ -1,0 +1,24 @@
+# New men for the family. Names are fictional; profiles set temperament and ability.
+first_names: [Carlo, Dominic, Enzo, Gino, Joey, Lou, Mario, Nunzio, Pat, Ralph, Rocco, Sonny, Tony, Vinnie, Bennie, Mike, Sal, Charlie]
+last_names: [Bellini, Cassaro, DeLuca, Ferraro, Galante, Lombardi, Mancuso, Navarra, Pagano, Rinaldi, Scalise, Tavella, Valenti, Zappa, Corso, Vitale]
+profiles:
+  steady:
+    traits: [loyal, cautious]
+    extra_traits: [pious, sentimental, paranoid]
+    stats:
+      loyalty: [68, 85]
+      fear: [30, 50]
+      respect: [40, 55]
+      competence: [45, 60]
+      greed: [20, 40]
+      discretion: [60, 80]
+  earner:
+    traits: [ambitious, greedy]
+    extra_traits: [vain, hothead, cautious]
+    stats:
+      loyalty: [45, 60]
+      fear: [40, 60]
+      respect: [45, 60]
+      competence: [65, 85]
+      greed: [60, 80]
+      discretion: [35, 55]

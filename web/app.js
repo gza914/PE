@@ -4,7 +4,7 @@
   const E = window.ConsigliereEngine;
   const CONTENT = window.CONSIGLIERE_CONTENT;
   const SAVE_KEY = "consigliere.save";
-  const SAVE_VERSION = 4;
+  const SAVE_VERSION = 5;
   const BAND_RANK = { estranged: 1, restless: 2, cooling: 3, steady: 4, devoted: 5 };
   const TONE_LABEL = { good: "Went well", bad: "Went badly", neutral: "No harm done", waiting: "Put off" };
 
@@ -83,13 +83,14 @@
       const shown = m.value !== undefined ? m.value : m.text || m.word;
       const bar = m.value !== undefined ? `<div class="bar"><i style="width:${m.value}%"></i></div>` : `<div class="bar" style="visibility:hidden"></div>`;
       const aria = m.value !== undefined ? ` role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${m.value}" aria-label="${m.label}"` : "";
-      return `<div class="${cls}"${aria}><span class="label">${m.label}</span><b>${esc(String(shown))}${m.warn ? " (!)" : ""}</b>${bar}</div>`;
+      return `<div class="${cls}"${aria}><span class="label">${m.label}${m.warn ? " !" : ""}</span><b>${esc(String(shown))}</b>${bar}</div>`;
     }).join("");
     const pending = st.matters.length;
     const advised = st.matters.filter((m) => m.recommendation !== null).length;
-    byId("end-month-sub").textContent = pending
-      ? `${pending} matter${pending === 1 ? "" : "s"} · ${advised} advised`
+    byId("end-month-sub").textContent = st.ending ? "the story is over"
+      : pending ? `${pending} matter${pending === 1 ? "" : "s"} · ${advised} advised`
       : `close ${E.monthLabel(st.month).split(" ")[0]}`;
+    byId("end-month").disabled = Boolean(st.ending);
     for (const btn of document.querySelectorAll(".tabs button")) {
       btn.setAttribute("aria-selected", String(btn.dataset.tab === tab));
       if (btn.dataset.tab === "office") btn.innerHTML = `Office${pending ? `<span class="count">${pending}</span>` : ""}`;
@@ -97,7 +98,26 @@
   }
 
   // ---- office: the desk ----
+  const eventDef = (id) => CONTENT.events.find((e) => e.id === id);
+
+  function decisionCard(m, def) {
+    const chosen = m.recommendation ?? def.default_option;
+    const buttons = m.options.map((o) => `<button class="choice" aria-pressed="${chosen === o.id}" data-matter="${esc(m.id)}" data-choice="${esc(o.id)}">
+      <span class="box" aria-hidden="true"></span><span>${esc(o.label)}</span></button>`).join("");
+    return `
+      <article class="matter yours fresh">
+        <div class="kicker">Yours to decide</div>
+        <h3>${esc(m.title)}</h3>
+        <div class="body">${paras(m.text)}</div>
+        ${intelHtml(m)}
+        <div class="choices" role="group" aria-label="Your decision on ${esc(m.title)}">${buttons}</div>
+        <div class="advice-status"><b>${esc(m.options.find((o) => o.id === chosen).label)}.</b> Nobody else is asked. It happens when you end the month.</div>
+      </article>`;
+  }
+
   function matterCard(m) {
+    const def = eventDef(m.event_id);
+    if (def.you_decide) return decisionCard(m, def);
     const choice = (id, label, aside) => {
       const pressed = m.recommendation === id;
       return `<button class="choice${aside ? " aside" : ""}" aria-pressed="${pressed}" data-matter="${esc(m.id)}" data-choice="${id === null ? "" : esc(id)}">
@@ -309,9 +329,10 @@
     return `
       <div class="family">
         <div class="don-card">
-          <div><div class="role">The Don</div><h2>${esc(don.name)}</h2></div>
+          <div><div class="role">The Don${don.alive ? "" : " · gone"}</div><h2>${esc(don.name)}</h2></div>
           <div class="reading">Mood: ${esc(moodWord(st.don_mood).toLowerCase())}</div>
         </div>
+        ${st.knowledge.dons.length > 1 ? `<p class="quiet">Dons you have served: ${st.knowledge.dons.map(esc).join(", ")}.</p>` : ""}
         <div class="col-head"><h2>His people</h2><small>your read on each man, as of today</small></div>
         <div class="people">${people}</div>
         ${unattended.length ? `<p class="quiet">Nobody is running: ${unattended.map((r) => esc(r.name)).join(", ")}.</p>` : ""}
@@ -478,9 +499,55 @@
   }
 
   // ---- wiring ----
+  function renderEnding() {
+    const e = game.state.ending;
+    const m = e.memoir;
+    const years = Math.floor(m.months / 12), months = m.months % 12;
+    const span = `${years} year${years === 1 ? "" : "s"}${months ? ` and ${months} month${months === 1 ? "" : "s"}` : ""}`;
+    const row = (label, value) => `<div class="row"><span>${esc(label)}</span><span class="num">${esc(value)}</span></div>`;
+    return `
+      <article class="memoir fresh">
+        <div class="kicker">${esc(E.monthLabel(e.month))} · the end</div>
+        <h2>${esc(e.title)}</h2>
+        <div class="rank">Ending ${e.rank} of ${Object.keys(CONTENT.endings).length}, best first</div>
+        <div class="memoir-text">${paras(e.text)}</div>
+        <div class="memoir-grid">
+          <div>
+            <div class="section-head">The record</div>
+            <div class="rows">
+              ${row("Years as consigliere", span)}
+              ${row("Dons served", m.dons.join(", "))}
+              ${row("Matters settled", String(m.matters))}
+              ${row("You gave advice", String(m.advised))}
+              ${row("He took it", String(m.taken))}
+              ${row("Went well / went badly", `${m.went_well} / ${m.went_badly}`)}
+              ${row("The rat", m.rat_found ? "Found" : "Never found")}
+            </div>
+          </div>
+          <div>
+            <div class="section-head">The family</div>
+            <div class="rows">
+              ${row("Treasury at its peak", money(m.peak_treasury))}
+              ${row("Treasury at the end", money(m.final_treasury))}
+              ${row("Districts held", String(m.districts))}
+              ${row("Don's trust at the end", String(m.final_trust))}
+            </div>
+            <div class="section-head">Lost along the way</div>
+            ${m.lost.length ? `<ul class="notes">${m.lost.map((l) => `<li class="note">${esc(l)}</li>`).join("")}</ul>` : `<p class="quiet">Nobody. That almost never happens.</p>`}
+          </div>
+        </div>
+        <div class="game-meta"><span>Game seed ${game.state.seed}</span><button class="btn-quiet" id="confirm-new">Begin again, January 1958</button></div>
+      </article>`;
+  }
+
   function render() {
     renderMast();
     const view = byId("view");
+    if (game.state.ending && tab === "office") {
+      view.innerHTML = renderEnding();
+      byId("confirm-new").addEventListener("click", () => { startNewGame(); save(); render(); });
+      return;
+    }
     view.innerHTML = tab === "family" ? renderFamily() : tab === "books" ? renderBooks()
       : tab === "sources" ? renderSources() : tab === "city" ? renderCity() : renderOffice();
     const on = (id, fn) => { const el = byId(id); if (el) el.addEventListener("click", fn); };
@@ -490,6 +557,7 @@
   }
 
   function endMonth() {
+    if (game.state.ending) return;
     E.tick(game.state, game.rng, CONTENT);
     tab = "office";
     confirmingNewGame = false;

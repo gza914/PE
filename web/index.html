@@ -45,11 +45,11 @@ button:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
 @media (max-width: 900px) { .mast-grid { grid-template-columns: minmax(0, 1fr) auto; } .meters { grid-column: 1 / -1; order: 3; } }
 .brand { font: 700 0.78rem/1 var(--display); letter-spacing: 0.32em; text-transform: uppercase; color: var(--muted); }
 .month { font: 700 clamp(1.8rem, 3.4vw, 2.5rem)/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; margin: 6px 0 0; white-space: nowrap; }
-.meters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+.meters { display: grid; grid-template-columns: minmax(0, 1.35fr) repeat(5, minmax(0, 1fr)); gap: 12px; min-width: 0; }
 @media (max-width: 640px) { .meters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; } }
 .meter { min-width: 0; display: grid; gap: 3px; align-content: end; }
 .meter .label { font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meter b { font: 700 1rem/1.1 var(--typed); white-space: nowrap; }
+.meter b { font: 700 1rem/1.1 var(--typed); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meter.word b { font: 600 0.95rem/1.1 var(--body); }
 .bar { height: 5px; background: var(--rule); }
 .bar i { display: block; height: 100%; background: var(--ink); }
@@ -160,6 +160,18 @@ main { padding-block: 26px 64px; }
 .law small { font: 0.75rem var(--typed); color: var(--muted); }
 .law-flag { font: 700 0.72rem var(--body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); }
 .person.gone { opacity: 0.55; }
+
+/* Your own decisions, and the end */
+.matter.yours { border: 1.5px solid var(--brass); }
+.matter .kicker, .memoir .kicker { font: 700 0.72rem var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); }
+.end-month:disabled { filter: grayscale(1); opacity: 0.6; cursor: default; }
+.memoir { background: var(--sheet); border: 1px solid var(--rule); border-left: 4px double var(--brass); padding: 28px 32px; display: grid; gap: 14px; max-width: 60rem; }
+.memoir h2 { font: 700 clamp(2rem, 4vw, 3rem)/1.05 var(--display); text-transform: uppercase; letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.memoir .rank { font: 0.85rem var(--typed); color: var(--muted); }
+.memoir-text { font-size: 1.1rem; max-width: 62ch; }
+.memoir-text p { margin: 0 0 10px; }
+.memoir-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+@media (max-width: 760px) { .memoir-grid { grid-template-columns: minmax(0, 1fr); } .memoir { padding: 20px; } }
 
 /* Sources */
 .lede { max-width: 70ch; }

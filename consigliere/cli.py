@@ -144,6 +144,22 @@ def check_intel(state: WorldState, rng: GameRNG, arg: str) -> str:
     return f"You ask around. Influence now {state.standing.influence}."
 
 
+def ending_view(state: WorldState) -> list[str]:
+    e = state.ending
+    m = e.memoir
+    return [
+        f"=== {e.title} ".ljust(WIDTH, "="),
+        e.text,
+        f"  {m.months} months as consigliere, under {len(m.dons)} Don{'s' if len(m.dons) != 1 else ''}: {', '.join(m.dons)}",
+        f"  {m.matters} matters settled; you advised on {m.advised}, he took your advice {m.taken} times",
+        f"  {m.went_well} went well, {m.went_badly} went badly",
+        f"  Treasury at its peak {money(m.peak_treasury)}, at the end {money(m.final_treasury)}",
+        f"  The rat was {'found' if m.rat_found else 'never found'}",
+        f"  Lost along the way: {', '.join(m.lost) if m.lost else 'nobody'}",
+        f"  Ranked {e.rank} of the ways this can end.",
+    ]
+
+
 def status_line(state: WorldState) -> str:
     s = state.standing
     family = state.player_family
@@ -172,6 +188,10 @@ def run(
         verb, _, arg = line.partition(" ")
         verb = verb.lower()
         path = Path(arg.strip()) if arg.strip() else DEFAULT_SAVE
+        if state.ending is not None and verb in ("n", "next", "", "a", "advise", "v", "verify"):
+            for out in ending_view(state):
+                write(out)
+            continue
         if verb in ("n", "next", ""):
             apply(state, rng, EndMonth())
             for out in monthly_report(state, state.month - 1) + desk_view(state):

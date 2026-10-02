@@ -311,7 +311,7 @@
         treasury: family.treasury, cohesion: family.cohesion, month: state.month, year: yearOf(state.month),
         dons_trust: state.standing.dons_trust, influence: state.standing.influence,
         exposure: state.standing.exposure, don_mood: state.don_mood,
-        strength: family.strength, heat: family.heat,
+        strength: family.strength, heat: family.heat, crew_size: crewSize(state),
       };
       return head in simple ? simple[head] : path;
     }
@@ -554,6 +554,12 @@
         delete state.knowledge.investigations[target];
         break;
       }
+      case "succession": {
+        const backed = v.backed ? bindings[v.backed] : null;
+        bindings.winner = installSuccessor(state, rng, v.candidates.map((c) => bindings[c]), backed, CURRENT);
+        break;
+      }
+      case "recruit": bindings[v.bind] = recruit(state, rng, v.profile, CURRENT); break;
       case "unassign": {
         const target = resolveId(state, bindings, v);
         for (const r of Object.values(state.rackets)) if (r.capo_id === target) r.capo_id = null;
@@ -748,11 +754,19 @@
     const don = state.characters[playerFamily(state).don_id];
     let rec = matter.recommendation;
     if (rec === WAIT && !(matter.can_wait && matter.waited < event.patience)) rec = null;
-    const own = donPreference(event, don, rng, bal);
     let choice, followed;
-    if (rec === null) { choice = own; followed = null; }
-    else if (rng.chance(followChance(state, don, bal))) { choice = rec; followed = true; }
-    else { choice = own; followed = own === rec; }
+    if (event.you_decide) {
+      if (rec === WAIT) rec = null;
+      choice = rec !== null ? rec : event.default_option;
+      followed = null;
+    } else if (rec === null) {
+      choice = donPreference(event, don, rng, bal);
+      followed = null;
+    } else {
+      const own = donPreference(event, don, rng, bal);
+      if (rng.chance(followChance(state, don, bal))) { choice = rec; followed = true; }
+      else { choice = own; followed = own === rec; }
+    }
 
     if (choice === WAIT) {
       matter.waited += 1;
@@ -773,11 +787,11 @@
       state.standing.exposure = Math.trunc(clamp(state.standing.exposure + option.advised_exposure));
     }
     let trust = 0;
-    if (rec !== null) {
+    if (rec !== null && !event.you_decide) {
       trust = bal.advice.trust[`${followed ? "followed" : "ignored"}_${outcome.tone}`];
       state.standing.dons_trust = Math.trunc(clamp(state.standing.dons_trust + trust));
     }
-    state.don_mood = Math.trunc(clamp(state.don_mood + bal.mood[outcome.tone]));
+    if (!event.you_decide) state.don_mood = Math.trunc(clamp(state.don_mood + bal.mood[outcome.tone]));
     state.knowledge.decisions.push({
       month: state.month, matter_id: matter.id, title: matter.title, recommended: labelOf(matter, rec),
       chosen: labelOf(matter, choice), followed, tone: outcome.tone,
@@ -1099,14 +1113,161 @@
     runRivals(state, rng, bal);
   }
 
+  // ---- time (engine/lifecycle.py) ----
+  function runAging(state, rng, bal) {
+    const lb = bal.life;
+    for (const man of Object.values(state.characters)) {
+      if (!man.alive) continue;
+      const age = yearOf(state.month) - man.hidden.birth_year;
+      let chance = Math.max(0, age - lb.age_threshold) * lb.age_rate;
+      if (man.role === "don" || man.role === "rival_boss") chance *= lb.don_factor;
+      chance += sum(man.hidden.vices.map((v) => lb.vice_rate[v] ?? 0.0));
+      if (chance > 0 && rng.chance(chance)) {
+        man.hidden.health = Math.trunc(clamp(man.hidden.health - rng.randint(lb.decline_min, lb.decline_max)));
+      }
+      if (man.hidden.health < lb.spell_below && rng.chance(lb.spell_chance)) {
+        man.hidden.health = Math.trunc(clamp(man.hidden.health - rng.randint(lb.spell_min, lb.spell_max)));
+      }
+      if (man.hidden.health <= 0) {
+        removeFromPlay(state, man, "died");
+        if (man.id !== state.player_id) scheduleNews(state, "funeral", { man: man.id });
+      }
+    }
+  }
+
+  function runRivalHeirs(state) {
+    const ours = playerFamily(state).id;
+    for (const family of Object.values(state.families)) {
+      if (family.id === ours || state.characters[family.don_id].alive) continue;
+      const heirId = family.member_ids.find((m) => state.characters[m].alive);
+      if (heirId !== undefined) {
+        state.characters[heirId].role = "rival_boss";
+        family.don_id = heirId;
+        scheduleNews(state, "new_rival_boss", { rival: family.id, boss: heirId });
+      }
+    }
+  }
+
+  function recruit(state, rng, profileId, content) {
+    const r = content.recruits;
+    const profile = r.profiles[profileId];
+    const family = playerFamily(state);
+    const taken = new Set(Object.values(state.characters).map((c) => c.name));
+    let name, found = false;
+    for (let i = 0; i < 20; i++) {
+      name = `${rng.choice(r.first_names)} ${rng.choice(r.last_names)}`;
+      if (!taken.has(name)) { found = true; break; }
+    }
+    if (!found) name += " Jr.";
+    const stats = {};
+    for (const stat of STATS) stats[stat] = rng.randint(profile.stats[stat][0], profile.stats[stat][1]);
+    const traits = profile.traits.concat([rng.choice(profile.extra_traits)]);
+    const born = Math.floor(state.month / 12) + 1958 - rng.randint(28, 42);
+    const health = rng.randint(85, 100);
+    const manId = `capo_${state.month}_${family.member_ids.length}`;
+    state.characters[manId] = {
+      id: manId, name, role: "capo", family_id: family.id, traits, stats,
+      hidden: { allegiance: "family", allegiance_to: null, debts: 0, vices: [], health, birth_year: born, stash: 0 },
+      memory: [], alive: true, fate: null,
+    };
+    family.member_ids.push(manId);
+    state.knowledge.impressions[manId] = bandFor(content.observations, stats.loyalty).id;
+    return manId;
+  }
+
+  function crewSize(state) {
+    const family = playerFamily(state);
+    return members(state, family.id).filter((m) => m.alive && m.id !== family.don_id && m.id !== state.player_id).length;
+  }
+
+  function installSuccessor(state, rng, candidates, backed, content) {
+    const sb = content.balance.succession;
+    const family = playerFamily(state);
+    const weights = candidates.map((cid) => {
+      const man = state.characters[cid];
+      let weight = man.stats.respect + man.stats.loyalty / 2;
+      if (cid === backed) weight += sb.backing_bonus + state.standing.influence * sb.influence_weight;
+      return weight;
+    });
+    const winner = state.characters[candidates[rng.weightedIndex(weights)]];
+    for (const r of Object.values(state.rackets)) if (r.capo_id === winner.id) r.capo_id = null;
+    winner.role = "don";
+    family.don_id = winner.id;
+    delete state.flags.don_gone;
+    state.flags.new_don = state.month;
+    state.don_mood = 50;
+    state.knowledge.dons.push(winner.name);
+    if (backed === winner.id) state.standing.dons_trust = sb.trust_backed_winner;
+    else if (backed === null) state.standing.dons_trust = sb.trust_neutral;
+    else if (rng.chance(sb.keep_base + state.standing.influence * sb.keep_influence)) state.standing.dons_trust = sb.trust_backed_loser;
+    else state.flags.pushed_out = state.month;
+    return winner.id;
+  }
+
+  function memoir(state) {
+    const knowledge = state.knowledge;
+    const family = playerFamily(state);
+    const settled = knowledge.decisions.filter((d) => d.tone !== "waiting");
+    const lost = members(state, family.id).filter((m) => !m.alive && m.id !== state.player_id).map((m) => `${m.name} (${m.fate})`);
+    const treasuries = knowledge.ledger.map((e) => e.treasury_end);
+    return {
+      months: state.month + 1,
+      dons: knowledge.dons.slice(),
+      matters: settled.length,
+      advised: settled.filter((d) => d.recommended !== null).length,
+      taken: settled.filter((d) => d.followed === true).length,
+      went_well: settled.filter((d) => d.tone === "good").length,
+      went_badly: settled.filter((d) => d.tone === "bad").length,
+      peak_treasury: Math.max(...(treasuries.length ? treasuries : [family.treasury])),
+      final_treasury: family.treasury,
+      districts: Object.values(state.districts).filter((d) => d.family_id === family.id).length,
+      rat_found: "rat_known" in state.flags,
+      lost,
+      final_trust: state.standing.dons_trust,
+    };
+  }
+
+  function whichEnding(state, bal) {
+    const eb = bal.endings;
+    const family = playerFamily(state);
+    const you = player(state);
+    const intact = family.strength >= eb.intact_strength && family.treasury >= 0;
+    if ("you_jailed" in state.flags) return "prison";
+    if (!you.alive) return you.fate === "died" ? "died" : "killed";
+    if ("pushed_out" in state.flags) return "pushed_out";
+    if (state.standing.dons_trust <= 0) return "disposed";
+    if (state.standing.exposure >= eb.exile_exposure) return "exile";
+    if (family.strength <= eb.ruin_strength || family.treasury <= eb.ruin_treasury) return "ruin";
+    if ("don_gone" in state.flags && crewSize(state) === 0) return "ruin";
+    if ("retire" in state.flags) return intact ? "retired_intact" : "retired_diminished";
+    if (state.month >= eb.last_month) return intact ? "era_intact" : "era_diminished";
+    return null;
+  }
+
+  function checkEndings(state, content) {
+    if (state.ending) return;
+    const endingId = whichEnding(state, content.balance);
+    if (endingId === null) return;
+    const spec = content.endings[endingId];
+    const years = Math.floor((state.month + 1) / 12);
+    let text = spec.text.split("{you}").join(player(state).name).split("{family}").join(playerFamily(state).name);
+    text = text.split("{years}").join(String(years)).split("{don}").join(state.characters[playerFamily(state).don_id].name);
+    state.ending = { id: endingId, month: state.month, rank: spec.rank, title: spec.title, text, memoir: memoir(state) };
+  }
+
   // ---- turn (engine/turn.py) ----
   function tick(state, rng, content) {
     CURRENT = content;
+    if (state.ending) return;
     economy(state, rng, content.balance);
     decide(state, rng, content);
     world(state, rng, content);
+    runAging(state, rng, content.balance);
+    runRivalHeirs(state);
     characters(state, rng, content.balance);
     observation(state, rng, content.balance, content.observations);
+    checkEndings(state, content);
+    if (state.ending) return;
     state.month += 1;
     beginMonth(state, rng, content);
   }

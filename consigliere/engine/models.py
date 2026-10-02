@@ -337,3 +337,30 @@ class Standing(Model):
     dons_trust: Score = 50
     influence: Score = 20
     exposure: Score = 0
+
+
+class Memoir(Model):
+    """The end-of-run summary of your career, from what you knew."""
+
+    months: int
+    dons: list[str] = Field(default_factory=list)
+    matters: int
+    advised: int
+    taken: int
+    went_well: int
+    went_badly: int
+    peak_treasury: int
+    final_treasury: int
+    districts: int
+    rat_found: bool
+    lost: list[str] = Field(default_factory=list)
+    final_trust: int
+
+
+class Ending(Model):
+    id: str
+    month: int
+    rank: int  # 1 is the best way this can end
+    title: str
+    text: str
+    memoir: Memoir

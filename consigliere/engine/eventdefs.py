@@ -202,6 +202,20 @@ class InvestigationEffect(Model):
     progress: int
 
 
+class SuccessionEffect(Model):
+    """The capos choose a new Don among the candidates; binds "winner"."""
+
+    candidates: list[str]
+    backed: str | None = None
+
+
+class RecruitEffect(Model):
+    """A soldier is made a capo: a new man from content/recruits.yaml, bound to `bind`."""
+
+    profile: str
+    bind: str
+
+
 class Effect(Model):
     """Exactly one field is set."""
 
@@ -236,6 +250,8 @@ class Effect(Model):
     drop_investigation: str | None = None
     unassign: str | None = None  # take every racket away from him; they run unattended
     kill: str | None = None  # off the page, always
+    succession: SuccessionEffect | None = None
+    recruit: RecruitEffect | None = None
 
     @model_validator(mode="after")
     def exactly_one(self) -> Effect:
@@ -310,6 +326,8 @@ class EventDef(Model):
     lists: dict[str, list[str]] = Field(default_factory=dict)
     carries: list[str] = Field(default_factory=list)  # binding names a follow-up inherits from earlier events
     even_if_gone: bool = False  # news that still runs when the people it names are out of play
+    you_decide: bool = False  # no Don to ask: your choice is the decision
+    default_option: str | None = None  # what happens if you say nothing, when you decide
 
     _check = field_validator("trigger")(check_conditions)
 
@@ -322,6 +340,8 @@ class EventDef(Model):
         ids = [o.id for o in self.options]
         if len(ids) != len(set(ids)):
             raise ValueError("option ids must be unique")
+        if self.you_decide and (self.default_option not in ids or self.patience != 0):
+            raise ValueError("an event you decide needs a default_option among its options and patience 0")
         return self
 
     def option(self, option_id: str) -> OptionDef:

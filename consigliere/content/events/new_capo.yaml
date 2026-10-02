@@ -1,0 +1,33 @@
+id: new_capo
+title: An empty chair
+text: |-
+  There are empty chairs at the table on Sundays now. The soldiers notice, and so do the men across the river.
+
+  Two of the soldiers have earned a look: one who has never given anyone a moment's worry, and one who brings in more than men twice his age.
+trigger: [[crew_size, "<", 5], [flag.don_gone, "==", 0]]
+weight: 3
+cooldown: 3
+options:
+  - id: steady
+    label: Make the steady one a capo
+    don: {base: 0.5, cautious: 1, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: "{recruit} kisses the Don's hand at Sunday dinner and takes the empty chair. Nobody objects, which is the point of him."
+        effects:
+          - recruit: {profile: steady, bind: recruit}
+          - cohesion: 2
+  - id: earner
+    label: Make the earner a capo
+    don: {base: 0, paranoid: -0.5, vain: 0.5}
+    outcomes:
+      - tone: good
+        text: "{recruit} takes the empty chair, and by the end of the dinner he has an opinion about everyone else's rackets."
+        effects:
+          - recruit: {profile: earner, bind: recruit}
+  - id: leave_empty
+    label: Leave the chair empty for now
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The chair stays empty. The soldiers who were hoping for it go on hoping, a little less each Sunday.

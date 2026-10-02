@@ -13,6 +13,7 @@ from .models import (
     Character,
     Decision,
     District,
+    Ending,
     Family,
     Investigation,
     KnownInvestigation,
@@ -35,7 +36,7 @@ from .models import (
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -87,8 +88,21 @@ def _v4_to_v5(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v5_to_v6(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 8: endings and the record of Dons served."""
+    data.setdefault("ending", None)
+    knowledge = data.setdefault("knowledge", {})
+    if "dons" not in knowledge:
+        families = data.get("families", {})
+        player = data.get("characters", {}).get(data.get("player_id"), {})
+        don_id = families.get(player.get("family_id"), {}).get("don_id")
+        don = data.get("characters", {}).get(don_id, {})
+        knowledge["dons"] = [don["name"]] if don else []
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5}
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5, 5: _v5_to_v6}
 
 
 class PlayerKnowledge(Model):
@@ -103,6 +117,7 @@ class PlayerKnowledge(Model):
     sources: dict[str, KnownSource] = Field(default_factory=dict)
     investigations: dict[str, KnownInvestigation] = Field(default_factory=dict)  # by target id
     sitdown: SitDownView | None = None
+    dons: list[str] = Field(default_factory=list)  # every Don you have served, in order
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]
@@ -125,6 +140,7 @@ class WorldState(Model):
     districts: dict[str, District] = Field(default_factory=dict)
     rivalries: dict[str, Rivalry] = Field(default_factory=dict)  # by rival family id
     sitdown: SitDown | None = None
+    ending: Ending | None = None  # set once the story is over
     sources: dict[str, Source] = Field(default_factory=dict)
     standing: Standing = Field(default_factory=Standing)
     don_mood: Score = 50

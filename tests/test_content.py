@@ -42,6 +42,10 @@ def test_event_placeholders_all_resolve():
     for event in events().values():
         names = set(event.cast) | set(event.carries) | set(event.lists) | {"don", "you", "family"}
         names |= {r for e in event.arise_effects if e.kind == "assign_roles" for r in e.assign_roles.roles}
+        all_effects = [e for o in event.options for out in o.outcomes for e in out.effects]
+        if any(e.kind == "succession" for e in all_effects):
+            names.add("winner")
+        names |= {e.recruit.bind for e in all_effects if e.kind == "recruit"}
         texts = [event.title, event.text] + [o.label for o in event.options]
         texts += [out.text for o in event.options for out in o.outcomes]
         texts += [t for i in event.intel for t in (i.claim, i.denial)]

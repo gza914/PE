@@ -21,7 +21,7 @@ families:
   - id: brancato
     name: The Brancato Family
     don_id: don_brancato
-    member_ids: [don_brancato]
+    member_ids: [don_brancato, nicky_brancato]
     strength: 55
     wealth: 40
     cohesion: 60
@@ -34,7 +34,7 @@ families:
   - id: orsini
     name: The Orsini Family
     don_id: don_orsini
-    member_ids: [don_orsini]
+    member_ids: [don_orsini, paolo_orsini]
     strength: 65
     wealth: 70
     cohesion: 70
@@ -59,6 +59,23 @@ characters:
     traits: [cautious, vain, pious]
     stats: {loyalty: 100, fear: 60, respect: 85, competence: 75, greed: 45, discretion: 85}
     hidden: {health: 70, birth_year: 1891}
+
+  # Next in line across the river and uptown.
+  - id: nicky_brancato
+    name: Nicky Brancato
+    role: associate
+    family_id: brancato
+    traits: [hothead, vain, ambitious]
+    stats: {loyalty: 90, fear: 50, respect: 40, competence: 45, greed: 60, discretion: 20}
+    hidden: {health: 95, birth_year: 1932}
+
+  - id: paolo_orsini
+    name: Paolo Orsini
+    role: associate
+    family_id: orsini
+    traits: [cautious, greedy, sentimental]
+    stats: {loyalty: 95, fear: 40, respect: 60, competence: 70, greed: 65, discretion: 80}
+    hidden: {health: 90, birth_year: 1920}
 
   - id: don_ferrante
     name: Aurelio Ferrante

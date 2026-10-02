@@ -121,3 +121,31 @@ sitdown:
   opening_margin_max: 1400
   patience: 3
   good_deal_margin: 400       # a deal within this of their red line pleases the Don
+
+life:
+  age_threshold: 50           # past this age, health starts to slip...
+  age_rate: 0.015             # ...a monthly chance of 1.5% per year over it
+  don_factor: 1.5             # Dons carry more on their hearts
+  vice_rate: {drink: 0.05}
+  decline_min: 1
+  decline_max: 3
+  spell_below: 35             # a man this frail can have a spell...
+  spell_chance: 0.08
+  spell_min: 5
+  spell_max: 15
+
+succession:
+  backing_bonus: 20           # your backing adds this to a candidate's weight...
+  influence_weight: 0.5       # ...plus half your Influence
+  keep_base: 0.3              # a new Don you opposed keeps you with this chance...
+  keep_influence: 0.005       # ...plus this per point of Influence
+  trust_backed_winner: 70
+  trust_neutral: 45
+  trust_backed_loser: 25
+
+endings:
+  last_month: 179             # December 1972
+  ruin_strength: 5
+  ruin_treasury: -25000
+  exile_exposure: 100
+  intact_strength: 40         # "the family intact": at least this strong, and solvent
