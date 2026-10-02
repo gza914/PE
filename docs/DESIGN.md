@@ -216,6 +216,8 @@ Each milestone ends with something playable. Do not start the next until the cur
 10. **Optional: live sit-downs.** Claude API negotiation with validated JSON output and scripted fallback.
 11. **Polish.** Papers screen, typewriter effects, settings, tutorial month, difficulty levels.
 
+As built (Milestones 9 and 11): 151 events, with arcs for the rat, narcotics, the Don's son, a Senate committee, a capo's ambition, a union election, a kidnapping, succession and war. Retirement is a request the Don can refuse, or resent. "Intact" means strength 45 and $100,000 put away. The web page has the Evening Herald (Papers), settings (theme, typewriter, tips), a tutorial month with tips from an old hand, and three difficulty levels chosen at New game.
+
 ## Working with Claude Code
 
 Save this document as `docs/DESIGN.md` in the repo and keep a short `CLAUDE.md` at the root, which Claude Code reads at the start of each session.

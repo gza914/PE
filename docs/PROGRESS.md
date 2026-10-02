@@ -1,7 +1,33 @@
 # Progress
 
 ## Current milestone
-5 (web screens) and 7 (simulation harness): **done**. Left: 9 (content pass to 150+ events), 10 (optional live sit-downs), 11 (polish).
+9 (content pass) and 11 (polish): **done**. Left: 10 (optional live sit-downs).
+
+## Milestone 9: content pass
+- **151 events** (from 56), in four batches, with the balance check rerun after each.
+  - Arcs (8+): the rat; narcotics (an offer, a sideline, quiet money, heat, an overdose, a bust); the Don's son Vincent (home from the Army, first job, made, restless, a lawyer, a rival); a Senate committee (rumor, subpoena, televised hearings, a witness, the aftermath); a capo's ambition; a union election and strike; a kidnapping; succession; war and the Commission.
+  - Trait events: 25 matters that turn on one man's temperament (a vain capo's gold Cadillac, a pious one's confession, a drinker, a loyal man who warns you).
+  - Rackets and the city: fixed fights, a racetrack tip, garbage and vending contracts, airport cargo, parking lots, an IRS audit, a club fire, a newspaper strike, a teen gang.
+  - Your own life: your health, your wife's questions, her brother's debts, an FBI agent at the barber's, a photograph in the Herald.
+  - Money drains: a councilman's nephew, a judge's campaign, a hospital wing, the Policemen's Ball, the Waterfront Commission, a nightclub that loses money beautifully.
+- **New effects:** `add_racket`, `remove_racket`, `promote`, `defect`, and a `headline` on events and outcomes that prints in the Herald.
+- **Event machinery:** `urgent` events (succession) always arise when eligible; cast slots must refer to earlier slots (checked at load); fills skip names that no longer exist, and effects on a racket that has since closed do nothing.
+- **Tone edit:** every new event follows the guide. Real street names are replaced with fictional ones. Places outside the city (Montreal, Miami, the track at Belmont) stay real; no real people.
+- **Balance changes:**
+  - Retirement is offered from 9 years (Don's Trust 70). It is a request the Don can grant, put off ("one more year", likelier the more he relies on you) or resent (Don's Trust -25, likelier with Exposure 30+ or a new Don).
+  - "Intact" needs $100,000 in the treasury (was $25,000).
+  - Event incomes trimmed; new monthly obligations make a careful family pay for its caution.
+- **Latest result** (`docs/BALANCE.md`): RESULTS
+
+## Milestone 11: polish
+- **Difficulty** (`content/difficulty.yaml`): Easy, Normal, Hard. They adjust the starting treasury, Don's Trust and Influence, how readily the Don follows advice, and how fast investigations move. Chosen at New game; saved in `WorldState.difficulty`.
+- **Tutorial month:** an optional gentle first matter (the baker who was robbed), and tips from "an old hand" through the first months: the desk, sources, ending the month, the report, the Family and Books tabs, the Papers. Each can be dismissed, or all turned off.
+- **The Papers** (Evening Herald tab): every month's headlines, newest first. Stories about the family are red and tagged; the rest is the city. Filter by family or city, with a clippings column. A filler story never repeats within a year.
+- **Typewriter:** the month's news, the latest line at the sit-down table and the ending type themselves in. Click or any key skips. Off in settings, and off under reduced motion. The unrevealed text keeps its space, so nothing jumps.
+- **Settings tab:** theme (match system, light, dark), typewriter and tips. Kept in the browser.
+- **New game** opens a setup sheet (difficulty, tutorial). It is the first screen of a fresh browser.
+- **Fix:** typing N in a dossier note no longer ends the month.
+- **Saves:** schema version 8; web save version 7.
 
 ## Milestone 7: simulation harness
 - `python tools/simulate.py --runs 1000` plays full games with six bot strategies (`tools/bots.py`) on four cores. 1,000 runs per strategy take about 4 minutes. Flags: `--strategies`, `--months`, `--seed`, `--jobs`, `--json`, `--report`, and `--strict`, which exits 1 on a balance bug.
@@ -227,5 +253,5 @@ Matters arrive about once a month on average after the opening months (2–3 in 
 - pytest is not installed in a fresh container: `pip install -e .[dev]`.
 
 ## Next step
-- Play a full run in the web version, to an ending.
-- Milestone 9: grow the content toward 150+ events and 8+ arcs, rerunning `python tools/simulate.py --runs 1000 --strict` after each batch.
+- Play full runs on each difficulty, to an ending, and tune by feel.
+- Milestone 10 (optional): live sit-downs over the Claude API, with the scripted sit-down as fallback.
