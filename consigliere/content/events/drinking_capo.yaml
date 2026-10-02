@@ -1,0 +1,37 @@
+id: drinking_capo
+title: "{capo} and the bottle"
+text: |-
+  {capo} is drinking at lunch now, and at breakfast. His collections are late. Last week he forgot which bar he had left his car outside.
+
+  His men are covering for him. They will not cover forever.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, drink]]
+cooldown: 18
+options:
+  - id: dry_out
+    label: Send him somewhere quiet to dry out
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: "{capo} spends two months at a farm upstate that specializes in men like him. He comes back thinner and steadier."
+        effects:
+          - treasury: -2500
+          - stat: {who: capo, stat: competence, delta: 8}
+      - weight: 1
+        tone: neutral
+        text: "{capo} comes back from the farm and is sober for almost a month."
+        effects:
+          - treasury: -2500
+  - id: cover
+    label: Let his men keep covering for him
+    don: {base: 0}
+    outcomes:
+      - tone: bad
+        text: "{capo} says something he shouldn't in a bar the Bureau has wired."
+        effects:
+          - standing: {exposure: 3}
+          - heat: {who: family, delta: 4}
+          - stat: {who: capo, stat: competence, delta: -5}

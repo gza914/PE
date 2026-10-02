@@ -1,0 +1,30 @@
+id: dying_mother
+title: "{capo}'s mother"
+text: |-
+  {capo}'s mother is dying in a hospital in Linden Park. He wants three months away from his rackets to sit with her, and he wants the best doctors in the city to see her.
+
+  He has not asked for anything in twenty years.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, sentimental]]
+cooldown: 48
+options:
+  - id: grant
+    label: Grant it, and send the best doctors
+    don: {base: 0.5, sentimental: 2}
+    outcomes:
+      - tone: good
+        text: "{capo}'s mother dies in the spring, in a private room with flowers from the Don. {capo} comes back older and more loyal than he left."
+        effects:
+          - treasury: -3000
+          - stat: {who: capo, stat: loyalty, delta: 12}
+          - memory: {who: capo, about: don, weight: 12, decay: 0.005}
+  - id: time_only
+    label: Give him the time, and let him find his own doctors
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} sits with his mother until the end. His rackets run themselves, a little worse."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 4}

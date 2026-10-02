@@ -1,0 +1,36 @@
+id: gold_cadillac
+title: A gold Cadillac
+text: |-
+  {capo} has bought a gold Cadillac, paid for in cash, and parked it in front of his mother's house in the Eastside, where nobody else on the street owns a car.
+
+  The Internal Revenue Service has also noticed the car.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, vain]]
+cooldown: 24
+options:
+  - id: sell
+    label: Make him sell it, quietly
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The car goes to a dealer in another state. {capo} drives a Buick now, badly.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: paper
+    label: Have Mr. Fessler paper over where the money came from
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Mr. Fessler produces a will, an inheritance and a dead uncle in Providence. The tax man goes away.
+        effects:
+          - treasury: -2000
+      - weight: 1
+        tone: bad
+        text: The dead uncle in Providence turns out to be alive, and confused. The tax man is not confused at all.
+        effects:
+          - treasury: -2000
+          - standing: {exposure: 4}
+          - heat: {who: family, delta: 4}

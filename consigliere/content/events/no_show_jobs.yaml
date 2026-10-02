@@ -1,0 +1,38 @@
+id: no_show_jobs
+title: Ghosts on the payroll
+text: |-
+  The construction company the family works with has forty men on its payroll who have never seen a construction site. {capo} put most of them there. Some are his cousins.
+
+  An auditor from the city has started asking which ones are real.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, greedy]]
+cooldown: 24
+options:
+  - id: trim
+    label: Trim the ghosts before the auditor counts them
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: Thirty ghosts vanish from the payroll overnight. The auditor counts the rest and finds everything in order.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: auditor
+    label: Find out what the auditor needs
+    don: {base: 0, paranoid: 0.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The auditor needs a new roof. He gets one, and the ghosts keep drawing their wages.
+        effects:
+          - treasury: -2000
+          - treasury: 4000
+      - weight: 1
+        tone: bad
+        text: The auditor needs nothing, and says so to the district attorney.
+        headline: "City Auditor Finds No-Show Jobs at Contractor"
+        effects:
+          - heat: {who: family, delta: 8}
+          - standing: {exposure: 3}

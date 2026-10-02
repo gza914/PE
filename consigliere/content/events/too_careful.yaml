@@ -1,0 +1,38 @@
+id: too_careful
+title: "{capo} won't do it"
+text: |-
+  {capo} has turned down a job the Don asked for personally: collecting from a contractor who owes the family eight thousand dollars. The contractor's brother is a state senator, and {capo} says the risk is not worth it.
+
+  He may be right. He also said no to the Don.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, cautious]]
+cooldown: 24
+options:
+  - id: respect
+    label: Tell the Don {capo} is right to be careful
+    don: {base: 0, cautious: 1.5}
+    outcomes:
+      - tone: good
+        text: The Don lets the debt go. The senator's brother hears about it, and pays half of his own accord.
+        effects:
+          - treasury: 4000
+          - stat: {who: capo, stat: loyalty, delta: 4}
+  - id: someone_else
+    label: Give the job to someone less careful
+    don: {base: 0.5, paranoid: 0.5, vain: 0.5}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The debt is collected, all of it, and the senator says nothing, because what could he say?
+        effects:
+          - treasury: 8000
+          - stat: {who: capo, stat: respect, delta: -5}
+      - weight: 1
+        tone: bad
+        text: The debt is collected. The senator makes a speech about organized crime in the construction industry the following week.
+        headline: "State Senator Decries Mob Grip on Construction"
+        effects:
+          - treasury: 8000
+          - heat: {who: family, delta: 8}

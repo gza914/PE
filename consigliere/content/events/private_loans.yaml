@@ -1,0 +1,33 @@
+id: private_loans
+title: "{capo}'s private bank"
+text: |-
+  {capo} has been lending money privately, at six points a week, to men who work for {rival}. The money is his own. The risk, if anything goes wrong, is the family's.
+
+  Something has gone wrong: one of the borrowers can't pay, and {capo} has threatened his wife.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, greedy]]
+  rival:
+    rival: true
+    where: [[self.stage, "<", 5]]
+cooldown: 24
+options:
+  - id: forgive
+    label: Make {capo} forgive the debt
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: The debt is forgiven. {rival} appreciates it, in the way rivals appreciate things.
+        effects:
+          - rivalry: {who: rival, tension: -5}
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: collect
+    label: Let {capo} collect, his way
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: bad
+        text: "{capo} collects. The borrower's wife goes to {rival}, and {rival} goes to the table."
+        effects:
+          - rivalry: {who: rival, stage: 1, tension: 12}
+          - stat: {who: capo, stat: greed, delta: 5}

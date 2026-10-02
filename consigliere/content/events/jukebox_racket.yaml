@@ -1,0 +1,42 @@
+id: jukebox_racket
+title: "{capo}'s jukeboxes"
+text: |-
+  {capo} has a plan: jukeboxes and cigarette machines in every bar and diner in {district}, owned by the family, serviced by the family, and the bars not given much choice.
+
+  It would take ten thousand to start. He says it would pay that back in a year.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, ambitious]]
+  district:
+    district_of: family
+trigger: [[treasury, ">", 15000]]
+once: true
+options:
+  - id: back
+    label: Back the plan
+    don: {base: 0, vain: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Within six months every bar in {district} has a family jukebox. Some of them even like the music.
+        effects:
+          - treasury: -10000
+          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 4500, heat_per_month: 2, bind: machines}
+          - stat: {who: capo, stat: loyalty, delta: 6}
+      - weight: 1
+        tone: bad
+        text: The machines go in, and three bar owners go to the newspapers about how they got there.
+        headline: "Bar Owners Say They Were Forced to Take Jukeboxes"
+        effects:
+          - treasury: -10000
+          - add_racket: {id: jukeboxes, name: "Jukeboxes in {district}", kind: protection, district: district, capo: capo, income: 3000, heat_per_month: 4, bind: machines}
+          - heat: {who: family, delta: 5}
+  - id: decline_it
+    label: Tell him the family has enough to run
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: "{capo} is disappointed. Another family puts jukeboxes in {district} a year later."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -5}

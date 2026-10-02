@@ -433,7 +433,8 @@
   }
 
   function bindingsAlive(state, bindings) {
-    return castItems(bindings).every(([, ref]) => !(ref in state.characters) || state.characters[ref].alive);
+    return castItems(bindings).every(([, ref]) => ref in state.characters ? state.characters[ref].alive
+      : (ref in state.rackets || ref in state.families || ref in state.districts));
   }
 
   function targets(state, bindings, who) {
@@ -472,10 +473,12 @@
       case "treasury": book(state, label, v); break;
       case "don_mood": state.don_mood = Math.trunc(clamp(state.don_mood + v)); break;
       case "cohesion": family.cohesion = Math.trunc(clamp(family.cohesion + v)); break;
-      case "assign_racket": state.rackets[bindings[v.racket]].capo_id = v.to ? bindings[v.to] : null; break;
+      case "assign_racket":
+        if (bindings[v.racket] in state.rackets) state.rackets[bindings[v.racket]].capo_id = v.to ? bindings[v.to] : null;
+        break;
       case "racket_income": {
         const racket = state.rackets[bindings[v.racket]];
-        racket.income = Math.max(0, pyRound(racket.income * (100 + v.pct) / 100));
+        if (racket) racket.income = Math.max(0, pyRound(racket.income * (100 + v.pct) / 100));
         break;
       }
       case "flag": state.flags[v] = state.month; break;
@@ -500,8 +503,9 @@
       case "add_source":
         if (!(v.id in state.sources)) {
           const character = v.character ? bindings[v.character] : null;
-          state.sources[v.id] = { id: v.id, name: v.name, kind: v.kind, reliability: v.reliability, character_id: character, compromised: false, active: true };
-          state.knowledge.sources[v.id] = { name: v.name, kind: v.kind, believed: v.believed, right: 0, wrong: 0, active: true };
+          const name = fill(v.name, state, bindings);
+          state.sources[v.id] = { id: v.id, name, kind: v.kind, reliability: v.reliability, character_id: character, compromised: false, active: true };
+          state.knowledge.sources[v.id] = { name, kind: v.kind, believed: v.believed, right: 0, wrong: 0, active: true };
         }
         break;
       case "compromise_source": if (v in state.sources) state.sources[v].compromised = true; break;
@@ -745,7 +749,9 @@
     runScheduled(state, rng, evs);
     const m = content.balance.matters;
     const count = rng.randint(m.per_month_min, m.per_month_max);
-    const pool = eligible(state, rng, evs);
+    let pool = eligible(state, rng, evs);
+    for (const [event, bindings] of pool.filter(([e]) => e.urgent)) state.matters.push(makeMatter(event, bindings, state, rng));
+    pool = pool.filter(([e]) => !e.urgent);
     const n = Math.min(count, pool.length);
     for (let i = 0; i < n; i++) {
       const [[event, bindings]] = pool.splice(rng.weightedIndex(pool.map(([e]) => e.weight)), 1);

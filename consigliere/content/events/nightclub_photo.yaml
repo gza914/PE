@@ -1,0 +1,31 @@
+id: nightclub_photo
+title: "{capo} in the Herald"
+text: |-
+  The Sunday Herald ran a photograph of {capo} at the Copa Room with a singer on each arm and a bottle of champagne in front of him. The caption calls him "a waterfront businessman."
+
+  {capo} has bought twenty copies.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, vain]]
+cooldown: 18
+options:
+  - id: word
+    label: Have the Don tell {capo} to stay out of photographs
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: "{capo} stops going to the Copa Room. He sulks about it in places without photographers."
+        effects:
+          - stat: {who: capo, stat: discretion, delta: 8}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: let_be
+    label: Let him enjoy it
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: bad
+        text: "{capo} goes back to the Copa Room every Saturday. So does a man from the Bureau, with a camera of his own."
+        headline: "Waterfront Figure Toasts Singers at Copa Room"
+        effects:
+          - heat: {who: family, delta: 5}
+          - standing: {exposure: 2}

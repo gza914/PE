@@ -244,7 +244,8 @@ def fill(text: str, state: WorldState, bindings: dict[str, str], lists: dict[str
 
 
 def bindings_alive(state: WorldState, bindings: dict[str, str]) -> bool:
-    return all(ref not in state.characters or state.characters[ref].alive for _, ref in cast_items(bindings))
+    return all(state.characters[ref].alive if ref in state.characters else exists(state, ref)
+               for _, ref in cast_items(bindings))
 
 
 # ---- effects ----
@@ -278,10 +279,12 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
     elif kind == "cohesion":
         family.cohesion = int(clamp(family.cohesion + value))
     elif kind == "assign_racket":
-        state.rackets[bindings[value.racket]].capo_id = bindings[value.to] if value.to else None
+        if bindings[value.racket] in state.rackets:
+            state.rackets[bindings[value.racket]].capo_id = bindings[value.to] if value.to else None
     elif kind == "racket_income":
-        racket = state.rackets[bindings[value.racket]]
-        racket.income = max(0, round(racket.income * (100 + value.pct) / 100))
+        racket = state.rackets.get(bindings[value.racket])
+        if racket is not None:
+            racket.income = max(0, round(racket.income * (100 + value.pct) / 100))
     elif kind == "flag":
         state.flags[value] = state.month
     elif kind == "clear_flag":
@@ -305,9 +308,10 @@ def apply_effect(state: WorldState, effect: Effect, bindings: dict[str, str], rn
     elif kind == "add_source":
         if value.id not in state.sources:
             character = bindings[value.character] if value.character else None
-            state.sources[value.id] = Source(id=value.id, name=value.name, kind=value.kind,
+            name = fill(value.name, state, bindings)
+            state.sources[value.id] = Source(id=value.id, name=name, kind=value.kind,
                                              reliability=value.reliability, character_id=character)
-            state.knowledge.sources[value.id] = KnownSource(name=value.name, kind=value.kind, believed=value.believed)
+            state.knowledge.sources[value.id] = KnownSource(name=name, kind=value.kind, believed=value.believed)
     elif kind == "compromise_source":
         if value in state.sources:
             state.sources[value].compromised = True
@@ -571,6 +575,9 @@ def begin_month(state: WorldState, rng: GameRNG, bal: Balance | None = None, evs
     run_scheduled(state, rng, evs)
     count = rng.randint(bal.matters.per_month_min, bal.matters.per_month_max)
     pool = eligible(state, rng, evs)
+    for event, bindings in [p for p in pool if p[0].urgent]:
+        state.matters.append(make_matter(event, bindings, state, rng))
+    pool = [p for p in pool if not p[0].urgent]
     for _ in range(min(count, len(pool))):
         event, bindings = pool.pop(rng.weighted_index([e.weight for e, _ in pool]))
         if event.kind == "news":

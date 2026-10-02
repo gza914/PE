@@ -1,0 +1,36 @@
+id: writer_interview
+title: "{capo} and the writer"
+text: |-
+  A writer from a magazine in New York has been buying {capo} lunch. {capo} enjoys being listened to. He has been listened to for three lunches now.
+
+  The writer is said to be working on a book.
+cast:
+  capo:
+    role: [capo, underboss]
+    where: [[self, has, vain]]
+cooldown: 36
+options:
+  - id: stop
+    label: End the lunches
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: good
+        text: "{capo} stops having lunch with the writer. The book, when it comes out, is about another city."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: feed
+    label: Let {capo} feed him what the family wants written
+    don: {base: 0, vain: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The book describes the family as old-fashioned businessmen with traditional values. The Don reads it twice.
+        effects:
+          - don_mood: 5
+      - weight: 1
+        tone: bad
+        text: The book has a chapter about the back room of the social club. It is called "The Advisor."
+        headline: "New Book Names Local 'Crime Family'"
+        effects:
+          - standing: {exposure: 5}
+          - heat: {who: family, delta: 4}

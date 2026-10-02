@@ -1,0 +1,37 @@
+id: old_friend_cop
+title: "{capo}'s friend from the old block"
+text: |-
+  {capo} grew up on the same block as a cop named Eddie Moran. Eddie is in trouble: a gambling debt, an internal affairs inquiry, and three children.
+
+  {capo} wants the family to help Eddie. Eddie, in return, would owe the family for the rest of his life.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, sentimental]]
+cooldown: 36
+options:
+  - id: help
+    label: Help Eddie, and let him owe us
+    don: {base: 0.5, sentimental: 1, paranoid: -0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: Eddie's debt disappears and the inquiry finds nothing. Eddie becomes a very useful friend, and a grateful one.
+        effects:
+          - treasury: -4000
+          - add_source: {id: eddie_moran, name: Patrolman Eddie Moran, kind: police, reliability: 0.75, believed: 0.55}
+          - stat: {who: capo, stat: loyalty, delta: 6}
+      - weight: 1
+        tone: bad
+        text: Eddie takes the help, and then, cornered by internal affairs, trades the story of who helped him.
+        effects:
+          - treasury: -4000
+          - standing: {exposure: 5}
+  - id: refuse
+    label: Tell {capo} a cop is a cop
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: Eddie Moran loses his badge. {capo} goes to see him once a month, with groceries, and does not mention the family.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -5}

@@ -1,0 +1,35 @@
+id: insult_at_wedding
+title: "{capo} says something at a wedding"
+text: |-
+  At a wedding where three families were guests, {capo} had four drinks and told {boss}, loudly, what he thought of {rival}'s manners and mothers.
+
+  Several hundred people heard it. {boss} smiled the whole time.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, hothead]]
+  rival:
+    rival: true
+    where: [[self.stage, "<", 4]]
+  boss:
+    boss_of: rival
+cooldown: 18
+options:
+  - id: apologize
+    label: Send an apology with the Don's name on it
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The apology is accepted with a gracious note. {capo} is not invited to the next wedding.
+        effects:
+          - rivalry: {who: rival, tension: -5}
+          - stat: {who: capo, stat: loyalty, delta: -3}
+  - id: stand_by
+    label: Stand by every word
+    don: {base: 0, vain: 1}
+    outcomes:
+      - tone: bad
+        text: The family stands by it. {rival} takes note, and adds it to a list.
+        effects:
+          - rivalry: {who: rival, stage: 1, tension: 12}
+          - stat: {who: capo, stat: loyalty, delta: 5}

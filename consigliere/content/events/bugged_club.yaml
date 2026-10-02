@@ -1,0 +1,42 @@
+id: bugged_club
+title: "{capo} tears out the walls"
+text: |-
+  {capo} is convinced his club is bugged. He has torn out two walls, the ceiling and the jukebox looking for microphones, and found a mouse.
+
+  His men are nervous. So are the men who drink there.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, paranoid]]
+cooldown: 24
+intel:
+  - about: capo
+    claim: The government really is listening at {capo}'s club.
+    denial: "{capo} is seeing shadows."
+    truth: [[capo.investigation, ">=", 1]]
+    sources: [police, lawyer]
+options:
+  - id: sweep
+    label: Bring in a man who knows how to look properly
+    don: {base: 0.5, paranoid: 1.5}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[capo.investigation, "==", 0]]
+            mult: 0.5
+        text: The man finds a microphone inside the cigarette machine, where nobody thought to look. {capo} feels vindicated for a month.
+        effects:
+          - treasury: -1500
+          - investigation: {who: capo, progress: -20}
+      - tone: neutral
+        text: The man finds nothing, because there is nothing. {capo} pays him to look again.
+        effects:
+          - treasury: -1500
+  - id: calm
+    label: Tell him to calm down and fix his walls
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} fixes the walls. He holds his meetings in the park now, in all weather."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -2}

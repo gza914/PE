@@ -1,0 +1,36 @@
+id: judges_clerk
+title: The judge's clerk
+text: |-
+  {capo} dragged a man out of his car at a red light and gave him a lesson in driving. The man turned out to be the clerk of Judge Halloran of the county court.
+
+  The clerk has a broken nose and a long memory. Judge Halloran has both, and a docket.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, hothead]]
+cooldown: 24
+options:
+  - id: make_right
+    label: Make it right with the clerk, generously
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The clerk's nose is set by the best man in the city, at no cost, and his son finds a job at the port authority.
+        effects:
+          - treasury: -2500
+      - weight: 1
+        tone: bad
+        text: The clerk takes the money and tells the judge anyway.
+        effects:
+          - treasury: -2500
+          - heat: {who: family, delta: 6}
+  - id: ignore
+    label: It was a red light; let it go
+    don: {base: 0}
+    outcomes:
+      - tone: bad
+        text: Judge Halloran begins to take a very close interest in cases involving men who know {capo}.
+        effects:
+          - heat: {who: family, delta: 8}
+          - standing: {influence: -3}

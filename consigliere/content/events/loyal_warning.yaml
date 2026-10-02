@@ -1,0 +1,39 @@
+id: loyal_warning
+title: "{capo} brings you something"
+text: |-
+  {capo} came to see you, not the Don, which is unusual. A man from {rival} approached him last week with an offer, and {capo} turned it down.
+
+  He thought you should know that {rival} is making offers. He wonders who else they have made them to.
+cast:
+  capo:
+    role: [capo, underboss]
+    where: [[self, has, loyal], [self.loyalty, ">=", 65]]
+  rival:
+    rival: true
+cooldown: 24
+options:
+  - id: reward
+    label: Make sure the Don knows what {capo} did
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: The Don embraces {capo} at Sunday dinner, in front of everyone. Nobody else at the table mentions any offers.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 6}
+          - stat: {who: capo, stat: respect, delta: 5}
+          - rivalry: {who: rival, tension: 5}
+  - id: use
+    label: Have {capo} keep talking to them, and report back
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: "{capo} becomes the family's ear inside {rival}'s offers. What he hears is useful."
+        effects:
+          - standing: {influence: 5}
+          - add_source: {id: inside_rival, name: "{capo}, listening", kind: family, reliability: 0.8, believed: 0.6, character: capo}
+      - weight: 1
+        tone: bad
+        text: "{rival} realizes {capo} is playing them. Their answer is a broken window at {capo}'s house."
+        effects:
+          - rivalry: {who: rival, tension: 12}

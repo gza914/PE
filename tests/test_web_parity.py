@@ -147,9 +147,9 @@ def test_same_seed_same_fifteen_years_with_a_faithful_advisor(seed, content):
 
 
 def test_a_trusted_advisor_retires(content):
-    state = starting_state(5)
+    state = starting_state(6)
     state["standing"]["dons_trust"] = 95
-    js, py = run_js(state, 5, 180, content, "faithful"), run_py(state, 5, 180, "faithful")
+    js, py = run_js(state, 6, 180, content, "faithful"), run_py(state, 6, 180, "faithful")
     assert py["state"]["ending"]["id"].startswith("retired")
     assert js == py
 

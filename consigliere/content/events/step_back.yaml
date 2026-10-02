@@ -1,0 +1,35 @@
+id: step_back
+title: "{capo} wants to step back"
+text: |-
+  {capo} wants to step back from his rackets and spend more time with his grandchildren. He would keep his share of what he built and give up the running of it.
+
+  He is good at the running of it.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, cautious], [self.age, ">=", 50], [self.rackets, ">=", 1]]
+  racket:
+    racket_of: capo
+  heir:
+    role: [capo, underboss]
+cooldown: 48
+options:
+  - id: let_him
+    label: Let him step back, and give {racket} to {heir}
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: "{capo} hands {racket} to {heir} over a long lunch and takes his grandchildren to the shore. He is the happiest man in the family."
+        effects:
+          - assign_racket: {racket: racket, to: heir}
+          - add_expense: {id: step_back_pension, label: A capo's share in retirement, amount: 600}
+          - memory: {who: capo, about: don, weight: 8, decay: 0.01}
+  - id: one_more
+    label: Ask him for one more year
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} gives the family one more year. He gives it a little less of himself than before."
+        effects:
+          - stat: {who: capo, stat: competence, delta: -5}
+          - stat: {who: capo, stat: loyalty, delta: -3}

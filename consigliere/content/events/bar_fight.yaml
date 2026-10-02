@@ -1,0 +1,40 @@
+id: bar_fight
+title: "{capo} and the bartender's brother"
+text: |-
+  {capo} put a man through the front window of a bar on Union Avenue on Saturday night. The man is the brother of a precinct sergeant.
+
+  {capo} says the man had it coming. The sergeant has a different view.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, hothead]]
+cooldown: 12
+options:
+  - id: pay
+    label: Pay for the window, the hospital, and the sergeant's good will
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: good
+        text: The window is replaced, the hospital is paid, and the sergeant decides his brother fell.
+        effects:
+          - treasury: -3000
+  - id: back
+    label: Back {capo}; the man insulted him
+    don: {base: 0, vain: 1, paranoid: 0.5}
+    outcomes:
+      - tone: bad
+        text: The family backs {capo}. The sergeant writes it all down, and the precinct remembers how this felt.
+        headline: "Bar Brawl on Union Avenue Leaves Man Hurt"
+        effects:
+          - heat: {who: family, delta: 6}
+          - stat: {who: capo, stat: loyalty, delta: 4}
+  - id: rebuke
+    label: Have the Don tell {capo} that a capo does not fight in bars
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don says it in four words. {capo} hears them for a week.
+        effects:
+          - treasury: -1500
+          - stat: {who: capo, stat: discretion, delta: 6}
+          - stat: {who: capo, stat: loyalty, delta: -3}

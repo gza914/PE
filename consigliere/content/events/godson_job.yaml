@@ -1,0 +1,34 @@
+id: godson_job
+title: "{capo}'s godson"
+text: |-
+  {capo} has a godson who has just finished school. The boy is bright, and {capo} wants him given a place in the family's accounts, where bright boys are useful and rare.
+
+  The boy has no idea what the family does. {capo} would like to keep it that way for a while.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, sentimental]]
+cooldown: 36
+options:
+  - id: hire
+    label: Give the boy a place in the accounts
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The boy is good with numbers and better with silence. Within a year he has found three places where money was leaking.
+        effects:
+          - treasury: 4000
+          - stat: {who: capo, stat: loyalty, delta: 5}
+      - weight: 1
+        tone: bad
+        text: The boy is bright enough to understand what the accounts are. He quits, and tells his mother, who tells her sister.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -2}
+          - standing: {exposure: 2}
+  - id: decline_it
+    label: Keep the boy out of it entirely
+    don: {base: 0, cautious: 1, pious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The boy goes to work for an insurance company. {capo} is disappointed and, in a way he will never say, relieved.

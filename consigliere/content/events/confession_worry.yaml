@@ -1,0 +1,44 @@
+id: confession_worry
+title: What {capo} tells his priest
+text: |-
+  {capo} goes to confession every Saturday at St. Anselm's. Lately he stays a long time.
+
+  Some of the men have started to wonder what he is confessing, and to whom the priest might talk.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, pious]]
+cooldown: 36
+intel:
+  - about: capo
+    claim: "{capo} has told his priest about family business."
+    denial: "{capo} confesses his own sins, and nobody else's."
+    truth: [[capo.discretion, "<", 50]]
+    sources: [street, family]
+options:
+  - id: talk
+    label: Have someone remind {capo} what a confessional is for
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: "{capo} is reminded. He is offended, and a little frightened, and his confessions get shorter."
+        effects:
+          - stat: {who: capo, stat: discretion, delta: 8}
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: leave
+    label: A man's confession is his own business
+    don: {base: 0, pious: 1.5, sentimental: 0.5}
+    outcomes:
+      - tone: neutral
+        weight_if:
+          - when: [[capo.discretion, "<", 50]]
+            mult: 0
+        text: Nothing comes of it, as nothing ever was going to.
+      - tone: bad
+        weight_if:
+          - when: [[capo.discretion, ">=", 50]]
+            mult: 0
+        text: The priest is a good man. His housekeeper is not, and she has a nephew in the district attorney's office.
+        effects:
+          - standing: {exposure: 3}
+          - heat: {who: family, delta: 4}

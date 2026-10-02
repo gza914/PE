@@ -1,0 +1,43 @@
+id: dons_driver
+title: The Don's driver
+text: |-
+  The Don has decided that his driver, Benny, who has driven him for nine years, is talking to someone. He has no evidence. He has a feeling, which in the Don is worse.
+
+  He wants your opinion before he does anything about Benny.
+trigger: [[don_mood, "<", 55]]
+cooldown: 36
+secrets: {benny_talks: 0.2}
+intel:
+  - claim: Benny has been talking to someone he shouldn't.
+    denial: Benny talks to his wife, his parish priest, and his pigeons.
+    truth: [[secret.benny_talks, "==", 1]]
+    sources: [street, police, family]
+options:
+  - id: reassure
+    label: Tell the Don that Benny is loyal
+    don: {base: 0, sentimental: 1}
+    outcomes:
+      - tone: good
+        weight_if:
+          - when: [[secret.benny_talks, "==", 1]]
+            mult: 0
+        text: The Don lets it go. Benny drives him to Mass on Sunday, as always, and never knows how close it came.
+        effects:
+          - don_mood: 3
+      - tone: bad
+        weight_if:
+          - when: [[secret.benny_talks, "==", 0]]
+            mult: 0
+        text: The Don lets it go. A month later, a federal agent quotes back something the Don said in the back of his own car.
+        effects:
+          - standing: {exposure: 5}
+          - heat: {who: family, delta: 5}
+  - id: replace
+    label: Give Benny a pension and a new driver for the Don
+    don: {base: 0.5, paranoid: 1, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Benny retires to Florida with a gold watch. The new driver is young and drives too fast. The Don is calmer.
+        effects:
+          - treasury: -2000
+          - don_mood: 4

@@ -1,0 +1,48 @@
+id: stolen_furs
+title: "{capo}'s furs"
+text: |-
+  {capo} has been selling stolen furs through a fence in the River Wards. The fence works for {rival}. The furs came out of a warehouse the family protects.
+
+  {capo} says business is business. The warehouse owner says something else, and pays the family every month.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, greedy]]
+  rival:
+    rival: true
+cooldown: 18
+intel:
+  - about: capo
+    claim: "{capo} planned the warehouse job himself."
+    denial: "{capo} only bought the furs after someone else stole them."
+    truth: [[capo.greed, ">=", 70]]
+    sources: [street, family]
+options:
+  - id: repay
+    label: Make {capo} pay the warehouse back
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: good
+        text: "{capo} pays back every coat. The warehouse owner is grateful, and stays a customer."
+        effects:
+          - stat: {who: capo, stat: greed, delta: -8}
+          - stat: {who: capo, stat: loyalty, delta: -4}
+  - id: cut
+    label: Take the family's cut and forget it
+    don: {base: 0}
+    outcomes:
+      - tone: bad
+        text: The family takes its cut. The warehouse owner stops paying, and tells other owners why.
+        effects:
+          - treasury: 3000
+          - stat: {who: capo, stat: greed, delta: 5}
+          - standing: {influence: -3}
+  - id: rival_fence
+    label: Close the fence, so it never happens again
+    don: {base: 0, paranoid: 1}
+    outcomes:
+      - tone: neutral
+        text: The fence in the River Wards closes for good, abruptly. {rival} understands the message and does not like it.
+        effects:
+          - rivalry: {who: rival, tension: 10}
+          - stat: {who: capo, stat: fear, delta: 5}

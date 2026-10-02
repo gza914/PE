@@ -1,0 +1,29 @@
+id: good_friday
+title: Not on Good Friday
+text: |-
+  A shipment comes into Pier 9 on Good Friday, and {capo} has refused to work it. He will not do the family's business on the day Christ died, and he said so in front of his men.
+
+  The shipment will not wait.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, pious]]
+cooldown: 36
+options:
+  - id: respect
+    label: Respect it, and send someone else
+    don: {base: 0.5, pious: 1.5, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: Someone else works the shipment. {capo} goes to three Masses and lights a candle for the family.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: 6}
+  - id: order
+    label: Order him to do it
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - tone: bad
+        text: "{capo} does it, and confesses it, and does not forgive the man who made him."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -8}
+          - memory: {who: capo, about: don, weight: -8, decay: 0.02}

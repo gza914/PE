@@ -1,0 +1,42 @@
+id: take_the_fall
+title: "{capo} offers to take the fall"
+text: |-
+  The district attorney has a case against the family's card games: a ledger, a witness, and a judge who wants to be mayor. Somebody is going to be charged.
+
+  {capo} has offered to be that somebody. Two years, maybe three. He asks only that his family be looked after.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, loyal]]
+trigger: [[heat, ">=", 30]]
+cooldown: 48
+options:
+  - id: accept
+    label: Accept, and look after his family like our own
+    don: {base: 0.5, sentimental: 1, cautious: 0.5}
+    outcomes:
+      - tone: good
+        text: "{capo} pleads guilty and goes upstate without a word. The district attorney is satisfied. The family's men see how the family treats a man who does this."
+        headline: "Gambling Figure Pleads Guilty, Draws Three Years"
+        effects:
+          - retire: capo
+          - add_expense: {id: fall_family, label: The family of a man who went away for us, amount: 600, stipend: true}
+          - heat: {who: family, delta: -15}
+          - stat: {who: crew, stat: loyalty, delta: 4}
+  - id: lawyers
+    label: Fight it in court instead
+    don: {base: 0, vain: 1}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: The witness forgets things on the stand. The case collapses, expensively.
+        effects:
+          - treasury: -10000
+      - weight: 1
+        tone: bad
+        text: The case goes to trial and the family loses it, along with a great deal of money and two men.
+        headline: "Jury Convicts Two in Gambling Case"
+        effects:
+          - treasury: -10000
+          - heat: {who: family, delta: 6}
+          - strength: {who: family, delta: -4}
