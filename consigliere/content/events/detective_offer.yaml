@@ -1,0 +1,33 @@
+id: detective_offer
+title: A detective with a mortgage
+text: |-
+  Detective Sergeant Ray Dolan of the Ninth Precinct has a sick wife and a mortgage. He has let it be known, through a cousin, that he is open to an arrangement.
+
+  For six hundred dollars a month, the family would hear whenever the precinct takes an interest in anyone.
+once: true
+options:
+  - id: hire
+    label: Put him on the payroll
+    don: {base: 0, paranoid: 1.5}
+    advised_exposure: 2
+    outcomes:
+      - weight: 3
+        tone: good
+        text: Dolan's first tip arrives within the month. A raid on one of the card games finds a room full of men playing gin for matchsticks.
+        effects:
+          - add_expense: {id: sgt_dolan, label: Sgt. Dolan, amount: 600}
+          - standing: {influence: 5}
+          - flag: dolan_on_payroll
+      - weight: 1
+        tone: bad
+        text: Dolan takes the first envelope to his lieutenant. The lieutenant tells him to keep taking them, and to keep notes.
+        effects:
+          - add_expense: {id: sgt_dolan, label: Sgt. Dolan, amount: 600}
+          - standing: {exposure: 5}
+          - flag: dolan_double
+  - id: decline
+    label: A cop who sells once sells twice
+    don: {base: 0.3, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The cousin is told there is no arrangement. Dolan's mortgage becomes somebody else's opportunity.

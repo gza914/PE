@@ -1,0 +1,45 @@
+id: card_debt
+title: "{capo}'s marker"
+text: |-
+  {capo} lost eight thousand dollars at a card game run by people outside the family. They are being polite about it, for now, because of who he is.
+
+  That politeness is the family's credit, and he is spending it.
+cast:
+  capo:
+    role: [capo, underboss]
+    where: [[self, has, cards]]
+cooldown: 12
+options:
+  - id: pay
+    label: The family pays his marker
+    don: {base: 0, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: The marker is paid and torn up in front of him. {capo} says he will never forget it. He might even mean it.
+        effects:
+          - treasury: -8000
+          - stat: {who: capo, stat: loyalty, delta: 8}
+          - memory: {who: capo, about: family, weight: 10, decay: 0.01}
+  - id: half
+    label: Pay half, and he finds the rest
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The family pays four thousand. {capo} finds the rest. Nobody asks where.
+        effects:
+          - treasury: -4000
+          - stat: {who: capo, stat: greed, delta: 3}
+  - id: his_problem
+    label: It's his debt, not the family's
+    don: {base: 0, paranoid: 0.5}
+    outcomes:
+      - weight: 1
+        tone: neutral
+        text: "{capo} says he will handle it. He handles it."
+        effects:
+          - stat: {who: capo, stat: greed, delta: 5}
+      - weight: 1
+        tone: bad
+        text: "{capo} says he will handle it."
+        effects:
+          - followup: {event: card_debt_trouble, after: [1, 2]}

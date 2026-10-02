@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from consigliere.engine.commands import Recommend, apply
 from consigliere.engine.rng import GameRNG
-from consigliere.engine.scenario import load_scenario
+from consigliere.engine.scenario import load_scenario, new_game
 from consigliere.engine.state import WorldState
 from consigliere.engine.turn import tick
 from tools.build_web import content_bundle
@@ -20,15 +21,28 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="node is not installed")
 RUNNER = """
 const E = require(process.argv[1]);
 const input = JSON.parse(require("fs").readFileSync(0, "utf8"));
-const rng = new E.GameRNG(input.seed);
-const state = input.state;
-for (let i = 0; i < input.months; i++) E.tick(state, rng, input.content);
+let state, rng;
+if (input.fresh) ({ state, rng } = E.newGame(input.content, input.seed));
+else { state = input.state; rng = new E.GameRNG(input.seed); }
+for (let i = 0; i < input.months; i++) {
+  state.matters.forEach((m, j) => {
+    const choices = m.options.map((o) => o.id).concat(m.can_wait ? ["wait"] : [], [null]);
+    E.recommend(state, m.id, choices[(state.month * 7 + j * 3) % choices.length]);
+  });
+  E.tick(state, rng, input.content);
+}
 process.stdout.write(JSON.stringify({ state, probe: rng.random() }));
 """
 
 
-def run_js(state: dict, seed: int, months: int, content: dict) -> dict:
-    payload = json.dumps({"state": state, "seed": seed, "months": months, "content": content})
+def bot_choice(state: WorldState, matter, index: int):
+    """The same deterministic advisor as the JS runner: cycles through every kind of advice."""
+    choices = [o.id for o in matter.options] + (["wait"] if matter.can_wait else []) + [None]
+    return choices[(state.month * 7 + index * 3) % len(choices)]
+
+
+def run_js(state: dict | None, seed: int, months: int, content: dict) -> dict:
+    payload = json.dumps({"state": state, "fresh": state is None, "seed": seed, "months": months, "content": content})
     out = subprocess.run(
         [NODE, "-e", RUNNER, str(ROOT / "web" / "engine.js")],
         input=payload, capture_output=True, text=True, check=True,
@@ -36,9 +50,14 @@ def run_js(state: dict, seed: int, months: int, content: dict) -> dict:
     return json.loads(out.stdout)
 
 
-def run_py(state: dict, seed: int, months: int) -> dict:
-    world, rng = WorldState.model_validate(state), GameRNG(seed)
+def run_py(state: dict | None, seed: int, months: int) -> dict:
+    if state is None:
+        world, rng = new_game(seed)
+    else:
+        world, rng = WorldState.model_validate(state), GameRNG(seed)
     for _ in range(months):
+        for i, matter in enumerate(world.matters):
+            apply(world, rng, Recommend(matter_id=matter.id, choice=bot_choice(world, matter, i)))
         tick(world, rng)
     return {"state": world.model_dump(mode="json"), "probe": rng.random()}
 
@@ -52,10 +71,11 @@ def content():
     return content_bundle()
 
 
-@pytest.mark.parametrize("seed", [0, 1234, 2**32 - 1])
+@pytest.mark.parametrize("seed", [0, 1234, 2**32 - 1, 77, 31337])
 def test_same_seed_same_decade(seed, content):
-    state = starting_state(seed)
-    assert run_js(state, seed, 120, content) == run_py(state, seed, 120)
+    js, py = run_js(None, seed, 120, content), run_py(None, seed, 120)
+    assert py["state"]["knowledge"]["decisions"], "the bot should have settled some matters"
+    assert js == py
 
 
 def test_broke_family_matches(content):
@@ -71,3 +91,14 @@ def test_broke_family_matches(content):
 
 def test_bundle_scenario_matches_engine(content):
     assert content["scenarios"]["default"] == starting_state(0)
+
+
+def test_every_event_and_effect_kind_is_exercised_somewhere(content):
+    """Parity only proves what the bots reach. Make sure they reach most of the content."""
+    seen = set()
+    for seed in range(40):
+        state = run_py(None, seed, 60)["state"]
+        seen.update(d["matter_id"].rsplit("-", 1)[0] for d in state["knowledge"]["decisions"])
+        seen.update(state["event_log"])
+    matters = {e["id"] for e in content["events"] if e["kind"] == "matter" and not e.get("followup_only")}
+    assert matters <= seen

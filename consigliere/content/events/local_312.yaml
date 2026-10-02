@@ -1,0 +1,50 @@
+id: local_312
+title: A man from Local 312
+text: |-
+  The business agent of Local 312 has a problem: a contractor who won't hire union men. He also has a solution.
+
+  For ten thousand dollars, {racket} gets that contractor's jobs, and every job like them for the next few years.
+cast:
+  racket:
+    racket: true
+    where: [[self.kind, "==", construction]]
+trigger: [[treasury, ">", 20000]]
+cooldown: 12
+options:
+  - id: invest
+    label: Pay the ten thousand
+    don: {base: 0, cautious: -1}
+    advised_exposure: 1
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The contractor discovers a sudden respect for organized labor. {racket} has more work than it can staff.
+        effects:
+          - treasury: -10000
+          - racket_income: {racket: racket, pct: 30}
+      - weight: 1
+        tone: bad
+        text: The contractor goes to the district attorney instead. The business agent is suddenly hard to find, and so is the ten thousand.
+        effects:
+          - treasury: -10000
+          - standing: {exposure: 4}
+          - don_mood: -4
+  - id: counter
+    label: Offer five, and see
+    don: {base: 0.3}
+    outcomes:
+      - weight: 1
+        tone: good
+        text: He takes the five. Business agents always do, in the end.
+        effects:
+          - treasury: -5000
+          - racket_income: {racket: racket, pct: 15}
+      - weight: 1
+        tone: neutral
+        text: He thanks the Don for his time and takes his proposal somewhere else.
+  - id: decline
+    label: Stay out of union business
+    don: {base: 0.3, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: The Don stays out of it. Somebody else's construction company gets the work.

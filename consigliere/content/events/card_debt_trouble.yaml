@@ -1,0 +1,16 @@
+id: card_debt_trouble
+kind: news
+followup_only: true
+title: "{capo} in the hospital"
+text: |-
+  {capo} was found in his car outside the card club with his jaw wired shut, metaphorically and then literally.
+
+  The men who run that game are no longer being polite. Everyone in the city knows whose capo it was.
+cast:
+  capo:
+    role: [capo, underboss]
+effects:
+  - stat: {who: capo, stat: respect, delta: -10}
+  - cohesion: -3
+  - don_mood: -6
+  - standing: {exposure: 2}

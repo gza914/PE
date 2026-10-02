@@ -1,0 +1,44 @@
+id: stipend_grumbles
+title: Grumbling in the crews
+text: |-
+  Prices are up, and the stipends for the men are where they were three years ago. Nobody has said anything to the Don.
+
+  They have said it to {capo}, who has said it to you.
+cast:
+  capo:
+    role: [capo]
+trigger: [[month, ">=", 4]]
+cooldown: 12
+options:
+  - id: raise
+    label: Raise the stipends for good
+    don: {base: 0, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: The stipends go up a thousand a month. The men stop grumbling, and start telling each other that the old man takes care of his own.
+        effects:
+          - change_expense: {id: stipends, delta: 1000}
+          - stat: {who: crew, stat: loyalty, delta: 3}
+          - memory: {who: crew, about: family, weight: 6, decay: 0.02}
+  - id: bonus
+    label: A bonus this once
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: A bonus goes around. It is spent by the weekend and remembered for about as long.
+        effects:
+          - treasury: -4000
+          - stat: {who: crew, stat: loyalty, delta: 1}
+  - id: refuse
+    label: The men are paid fine
+    don: {base: 0, paranoid: 0.5, cautious: 0.5}
+    outcomes:
+      - weight: 1
+        tone: bad
+        text: The grumbling goes quiet, which is not the same as stopping.
+        effects:
+          - stat: {who: crew, stat: loyalty, delta: -2}
+          - memory: {who: crew, about: family, weight: -5, decay: 0.03}
+      - weight: 1
+        tone: neutral
+        text: The grumbling stops. For now.

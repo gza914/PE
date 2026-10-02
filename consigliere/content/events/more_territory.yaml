@@ -1,0 +1,59 @@
+id: more_territory
+title: "{capo} asks for {racket}"
+text: |-
+  {capo} came to the house with a box of pastries and a proposal. {rival} is stretched thin, he says, and {racket} deserves more attention. He would take it off {rival}'s hands, as a favor.
+
+  He has not mentioned this to {rival}.
+cast:
+  capo:
+    role: [capo]
+    where: [[self, has, ambitious]]
+  rival:
+    role: [capo]
+    where: [[self.competence, "<", capo.competence], [self.rackets, ">=", 2]]
+  racket:
+    racket_of: rival
+weight: 2
+cooldown: 12
+options:
+  - id: give
+    label: Give {racket} to {capo}
+    don: {base: 0, cautious: -0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: "{racket} goes to {capo}, and the envelopes get heavier. {rival} kisses the Don's hand and goes home early."
+        effects:
+          - assign_racket: {racket: racket, to: capo}
+          - stat: {who: capo, stat: loyalty, delta: 6}
+          - stat: {who: rival, stat: loyalty, delta: -12}
+          - memory: {who: rival, about: family, weight: -12, decay: 0.01}
+      - weight: 1
+        tone: bad
+        text: "{racket} goes to {capo}. Within a week {rival}'s men and {capo}'s men have a disagreement in a parking lot. Two of them need stitches."
+        effects:
+          - assign_racket: {racket: racket, to: capo}
+          - stat: {who: rival, stat: loyalty, delta: -15}
+          - memory: {who: rival, about: family, weight: -15, decay: 0.01}
+          - cohesion: -5
+          - standing: {exposure: 2}
+  - id: refuse
+    label: Tell him to be grateful for what he has
+    don: {base: 0.5, cautious: 1}
+    outcomes:
+      - tone: neutral
+        text: "{capo} takes it well. Perhaps too well."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -5}
+          - memory: {who: capo, about: don, weight: -6, decay: 0.02}
+          - followup: {event: territory_sulk, after: [2, 4], when: [[capo.loyalty, "<", 50]]}
+  - id: promise
+    label: Promise him the next opening
+    don: {base: 0, paranoid: -0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don tells {capo} that patience is rewarded in this family. {capo} says he understands. He will be counting the months.
+        effects:
+          - flag: promised_territory
+          - memory: {who: capo, about: don, weight: 4}
+          - followup: {event: promise_comes_due, after: [5, 8]}

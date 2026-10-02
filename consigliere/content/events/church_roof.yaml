@@ -1,0 +1,37 @@
+id: church_roof
+title: The roof at St. Anselm's
+text: |-
+  Father Cerrone came to the house himself. The roof over the parish school leaks onto the children's desks, and the diocese has other priorities.
+
+  Three thousand dollars would fix it. He did not say the Don's name would go on a plaque. He did not have to.
+weight: 1
+cooldown: 12
+options:
+  - id: give
+    label: Pay for the whole roof
+    don: {base: 0.5, sentimental: 1}
+    outcomes:
+      - tone: good
+        text: The Don's name goes on a small brass plaque by the school door. He pretends not to care, and goes to look at it twice.
+        effects:
+          - treasury: -3000
+          - don_mood: 6
+          - cohesion: 2
+          - standing: {influence: 2}
+  - id: half
+    label: Pay half, and let the parish raise the rest
+    don: {base: 0.3, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: Father Cerrone accepts the fifteen hundred with real gratitude, and a bake sale makes up the rest.
+        effects:
+          - treasury: -1500
+          - don_mood: 1
+  - id: decline
+    label: Not this year
+    don: {base: -0.5}
+    outcomes:
+      - tone: bad
+        text: Father Cerrone thanks the Don all the same. On Sunday he gives a sermon about the rich man and the eye of the needle, and looks at nobody in particular.
+        effects:
+          - don_mood: -4

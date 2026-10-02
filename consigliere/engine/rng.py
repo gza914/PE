@@ -40,6 +40,15 @@ class GameRNG:
     def weighted_choice(self, items: Sequence[T], weights: Sequence[float]) -> T:
         return self._random.choices(items, weights=weights, k=1)[0]
 
+    def weighted_index(self, weights: Sequence[float]) -> int:
+        """Index picked with probability proportional to its weight. Mirrored in web/engine.js."""
+        r = self._random.random() * sum(weights)
+        for i, weight in enumerate(weights):
+            r -= weight
+            if r < 0:
+                return i
+        return len(weights) - 1
+
     def round_stochastic(self, value: float) -> int:
         """Round so that small deltas still add up: 0.3 becomes 1 thirty percent of the time."""
         whole = int(value // 1)

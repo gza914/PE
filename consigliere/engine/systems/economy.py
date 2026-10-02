@@ -46,6 +46,10 @@ def miss_stipend(state: WorldState, family: Family, bal: Balance) -> None:
 
 def run_family(state: WorldState, family: Family, rng: GameRNG, bal: Balance) -> LedgerEntry:
     entry = LedgerEntry(month=state.month, treasury_start=family.treasury, treasury_end=family.treasury)
+    if family.id == state.player.family_id and state.unbooked:
+        entry.other = state.unbooked
+        entry.treasury_start -= sum(line.amount for line in state.unbooked)
+        state.unbooked = []
     for racket in state.rackets.values():
         if racket.family_id != family.id:
             continue

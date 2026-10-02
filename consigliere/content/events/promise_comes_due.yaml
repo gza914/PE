@@ -1,0 +1,39 @@
+id: promise_comes_due
+title: "{capo} remembers a promise"
+text: |-
+  Some months ago the Don told {capo} that patience is rewarded in this family. {capo} has been patient.
+
+  He would like to talk about {racket}. {rival} would not.
+followup_only: true
+cast:
+  capo:
+    role: [capo]
+  rival:
+    role: [capo]
+  racket:
+    racket_of: rival
+trigger: [[flag.promised_territory, "==", 1]]
+patience: 0
+options:
+  - id: keep
+    label: Keep the promise and give him {racket}
+    don: {base: 0.5, sentimental: 0.5}
+    outcomes:
+      - tone: good
+        text: The Don keeps his word. {capo} takes {racket}. {rival} learns that the Don's word can cost him, too.
+        effects:
+          - assign_racket: {racket: racket, to: capo}
+          - stat: {who: capo, stat: loyalty, delta: 8}
+          - stat: {who: rival, stat: loyalty, delta: -10}
+          - memory: {who: rival, about: don, weight: -10, decay: 0.01}
+          - clear_flag: promised_territory
+  - id: delay
+    label: Ask him to wait a little longer
+    don: {base: 0, cautious: 1}
+    outcomes:
+      - tone: bad
+        text: "{capo} says of course, of course. He says it twice."
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -8}
+          - memory: {who: capo, about: don, weight: -10, decay: 0.01}
+          - clear_flag: promised_territory

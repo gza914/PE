@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .content import load_yaml
+from .matters import begin_month
 from .rng import GameRNG
 from .state import WorldState
 from .systems.observation import initial_impressions
@@ -19,4 +20,7 @@ def load_scenario(name: str, seed: int) -> WorldState:
 
 
 def new_game(seed: int, scenario: str = "default") -> tuple[WorldState, GameRNG]:
-    return load_scenario(scenario, seed), GameRNG(seed)
+    """The starting state is the same for every seed; the first month's matters are not."""
+    state, rng = load_scenario(scenario, seed), GameRNG(seed)
+    begin_month(state, rng)
+    return state, rng

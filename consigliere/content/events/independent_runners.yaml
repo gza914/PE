@@ -1,0 +1,54 @@
+id: independent_runners
+title: Strangers taking numbers
+text: |-
+  Two brothers from out of town have started taking numbers bets in the territory of {racket}, and paying out a little better.
+
+  {capo}'s collectors say the take is down. {capo} wants to know what the Don would like done.
+cast:
+  racket:
+    racket: true
+    where: [[self.kind, "==", numbers]]
+  capo:
+    role: [capo, underboss]
+    runs: racket
+cooldown: 12
+options:
+  - id: absorb
+    label: Bring the brothers in under {capo}
+    don: {base: 0, cautious: 0.5}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The brothers are happy to be inside rather than outside. {racket} grows by two corners.
+        effects:
+          - racket_income: {racket: racket, pct: 15}
+      - weight: 1
+        tone: bad
+        text: The brothers come in, and keep a book of their own on the side. {capo} finds out about it last.
+        effects:
+          - racket_income: {racket: racket, pct: -5}
+          - stat: {who: capo, stat: respect, delta: -5}
+  - id: run_out
+    label: Run them out of the neighborhood
+    don: {base: 0.5, paranoid: 1}
+    outcomes:
+      - weight: 2
+        tone: good
+        text: The brothers leave town on a Tuesday. Their customers come back on Wednesday.
+        effects:
+          - racket_income: {racket: racket, pct: 5}
+          - stat: {who: capo, stat: fear, delta: 5}
+      - weight: 1
+        tone: bad
+        text: One brother leaves town. The other ends up in the hospital, and then at the precinct, telling a long story.
+        effects:
+          - standing: {exposure: 3}
+          - don_mood: -3
+  - id: leave
+    label: Let {capo} handle it his own way
+    don: {base: 0}
+    outcomes:
+      - tone: neutral
+        text: "{capo} handles it slowly. The take stays down."
+        effects:
+          - racket_income: {racket: racket, pct: -10}

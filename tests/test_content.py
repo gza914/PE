@@ -31,3 +31,23 @@ def test_default_scenario_has_milestone_two_cast(game):
         assert state.characters[racket.capo_id].role is Role.CAPO
         assert racket.capo_id in family.member_ids
     assert any(e.stipend for e in family.expenses)
+
+
+def test_event_placeholders_all_resolve():
+    import re
+
+    from consigliere.engine.content import events
+
+    for event in events().values():
+        names = set(event.cast) | {"don", "you", "family"}
+        texts = [event.title, event.text] + [o.label for o in event.options]
+        texts += [out.text for o in event.options for out in o.outcomes]
+        for text in texts:
+            for found in re.findall(r"\{(\w+)\}", text):
+                assert found in names, f"{event.id}: {{{found}}} is not in its cast"
+
+
+def test_milestone_three_has_fifteen_events():
+    from consigliere.engine.content import events
+
+    assert len(events()) >= 15

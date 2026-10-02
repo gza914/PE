@@ -11,18 +11,24 @@ from pydantic import Field
 
 from .models import (
     Character,
+    Decision,
     Family,
     Investigation,
     LedgerEntry,
+    LedgerLine,
+    Matter,
     Model,
+    NewsItem,
     Racket,
     Relationship,
     Report,
+    Scheduled,
+    Score,
     Standing,
 )
 from .rng import GameRNG, RNGState
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 Migration = Callable[[dict[str, Any]], dict[str, Any]]
 
@@ -38,8 +44,24 @@ def _v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v2_to_v3(data: dict[str, Any]) -> dict[str, Any]:
+    """Milestone 3: matters, decisions, news, flags, the Don's mood."""
+    data.setdefault("matters", [])
+    data.setdefault("scheduled", [])
+    data.setdefault("flags", {})
+    data.setdefault("event_log", {})
+    data.setdefault("unbooked", [])
+    data.setdefault("don_mood", 50)
+    knowledge = data.setdefault("knowledge", {})
+    knowledge.setdefault("decisions", [])
+    knowledge.setdefault("news", [])
+    for entry in knowledge.get("ledger", []):
+        entry.setdefault("other", [])
+    return data
+
+
 # MIGRATIONS[n] upgrades a save from version n to n + 1.
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2}
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3}
 
 
 class PlayerKnowledge(Model):
@@ -49,6 +71,8 @@ class PlayerKnowledge(Model):
     ledger: list[LedgerEntry] = Field(default_factory=list)
     # character id -> loyalty band id the player currently believes
     impressions: dict[str, str] = Field(default_factory=dict)
+    decisions: list[Decision] = Field(default_factory=list)
+    news: list[NewsItem] = Field(default_factory=list)
 
     def reports_for(self, month: int) -> list[Report]:
         return [r for r in self.reports if r.month == month]
@@ -69,6 +93,12 @@ class WorldState(Model):
     rackets: dict[str, Racket] = Field(default_factory=dict)
     investigations: dict[str, Investigation] = Field(default_factory=dict)
     standing: Standing = Field(default_factory=Standing)
+    don_mood: Score = 50
+    matters: list[Matter] = Field(default_factory=list)
+    scheduled: list[Scheduled] = Field(default_factory=list)
+    flags: dict[str, int] = Field(default_factory=dict)  # flag -> month set
+    unbooked: list[LedgerLine] = Field(default_factory=list)  # money moved before this month's books open
+    event_log: dict[str, int] = Field(default_factory=dict)  # event id -> month it last arose
     knowledge: PlayerKnowledge = Field(default_factory=PlayerKnowledge)
 
     @property
@@ -81,6 +111,12 @@ class WorldState(Model):
 
     def members(self, family_id: str) -> list[Character]:
         return [self.characters[i] for i in self.families[family_id].member_ids]
+
+    def matter(self, matter_id: str) -> Matter:
+        for matter in self.matters:
+            if matter.id == matter_id:
+                return matter
+        raise KeyError(matter_id)
 
 
 class SaveError(Exception):

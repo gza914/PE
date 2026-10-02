@@ -1,0 +1,39 @@
+id: wedding_gift
+title: A wedding in {capo}'s family
+text: |-
+  {capo}'s daughter is marrying a dentist's son from Linden Park. There will be four hundred guests, and every one of them will notice what the Don sends.
+cast:
+  capo:
+    role: [capo, underboss]
+cooldown: 12
+options:
+  - id: lavish
+    label: Something people will talk about
+    don: {base: 0, sentimental: 1, vain: 1}
+    outcomes:
+      - tone: good
+        text: The Don's envelope is the talk of the reception. {capo} dances with his daughter and cries, and then dances with his wife and cries again.
+        effects:
+          - treasury: -5000
+          - stat: {who: capo, stat: loyalty, delta: 8}
+          - memory: {who: capo, about: don, weight: 8, decay: 0.02}
+          - cohesion: 1
+  - id: proper
+    label: What's proper, and no more
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don's envelope is exactly what it should be. Nobody remarks on it, which is what proper means.
+        effects:
+          - treasury: -1500
+          - stat: {who: capo, stat: loyalty, delta: 2}
+  - id: small
+    label: Times are tight
+    don: {base: -0.5}
+    outcomes:
+      - tone: bad
+        text: Envelopes are counted at weddings. Everyone knows the count by midnight.
+        effects:
+          - treasury: -500
+          - stat: {who: capo, stat: loyalty, delta: -6}
+          - memory: {who: capo, about: don, weight: -6}

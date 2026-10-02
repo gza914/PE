@@ -1,4 +1,4 @@
-"""Plain-text loop for Milestone 1. Replaced by the Textual UI in Milestone 5."""
+"""Plain-text loop. The main interface is the web page (web/); this stays for quick headless play."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .engine.calendar import month_label
-from .engine.commands import EndMonth, apply
+from .engine.commands import CommandError, EndMonth, Recommend, apply
 from .engine.content import observations
 from .engine.models import Role
 from .engine.rng import GameRNG, fresh_seed
@@ -15,7 +15,7 @@ from .engine.scenario import new_game
 from .engine.state import SaveError, WorldState, load_game, save_game
 
 DEFAULT_SAVE = Path("saves/save.json")
-HELP = "[n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
+HELP = "[d]esk  [a]dvise N choice  [n]ext month  [r]eport  [f]amily  [s]ave [path]  [l]oad [path]  [h]elp  [q]uit"
 WIDTH = 60
 
 
@@ -43,8 +43,18 @@ def monthly_report(state: WorldState, month: int) -> list[str]:
         amount = "UNPAID" if line.note == "unpaid" else money(line.amount)
         lines.append(ledger_row(line.label, amount))
     lines.append(ledger_row("Total out", money(entry.total_out)))
+    if entry.other:
+        lines.append("Other")
+        lines.extend(ledger_row(line.label, f"{line.amount:+,}") for line in entry.other)
     change = entry.treasury_end - entry.treasury_start
     lines.append(f"Treasury {money(entry.treasury_start)} -> {money(entry.treasury_end)} ({change:+,})")
+    decided = [d for d in knowledge.decisions if d.month == month]
+    if decided:
+        lines.append("The Don's decisions")
+        for d in decided:
+            advice = f"you advised: {d.recommended}" if d.recommended else "you kept quiet"
+            lines.append(f"  {d.title}: {d.chosen} ({advice}; trust {d.trust_delta:+d})")
+            lines.append(f"    {d.text}")
     noticed = knowledge.reports_for(month)
     if noticed:
         lines.append("Around the family")
@@ -68,12 +78,54 @@ def family_view(state: WorldState) -> list[str]:
     return lines
 
 
+def desk_view(state: WorldState) -> list[str]:
+    """News that arrived this month and the matters waiting for your advice."""
+    lines = []
+    for item in (n for n in state.knowledge.news if n.month == state.month):
+        lines.append(f"NEWS: {item.title}")
+        lines.append(f"  {item.text}")
+    if not state.matters:
+        lines.append("Nothing on your desk this month.")
+    for i, matter in enumerate(state.matters, 1):
+        lines.append(f"[{i}] {matter.title}")
+        lines.extend(f"    {para}" for para in matter.text.split("\n") if para)
+        for j, option in enumerate(matter.options, 1):
+            mark = "*" if matter.recommendation == option.id else " "
+            lines.append(f"   {mark}{j}. {option.label}")
+        if matter.can_wait:
+            lines.append(f"   {'*' if matter.recommendation == 'wait' else ' '}w. Let it wait")
+        lines.append(f"   {'*' if matter.recommendation is None else ' '}s. Say nothing")
+    return lines
+
+
+def advise(state: WorldState, rng: GameRNG, arg: str) -> str:
+    """Parse "N choice": choice is an option number, w (wait) or s (say nothing)."""
+    parts = arg.split()
+    if len(parts) != 2 or not parts[0].isdigit() or not 1 <= int(parts[0]) <= len(state.matters):
+        return "Usage: a <matter number> <option number | w | s>"
+    matter = state.matters[int(parts[0]) - 1]
+    pick = parts[1].lower()
+    if pick == "s":
+        choice = None
+    elif pick == "w":
+        choice = "wait"
+    elif pick.isdigit() and 1 <= int(pick) <= len(matter.options):
+        choice = matter.options[int(pick) - 1].id
+    else:
+        return "Usage: a <matter number> <option number | w | s>"
+    try:
+        apply(state, rng, Recommend(matter_id=matter.id, choice=choice))
+    except CommandError as exc:
+        return str(exc)
+    return f"Noted for {matter.title}."
+
+
 def status_line(state: WorldState) -> str:
     s = state.standing
     family = state.player_family
     return (
         f"{month_label(state.month)} | {family.name} | Treasury ${family.treasury:,} | "
-        f"Don's Trust {s.dons_trust}  Influence {s.influence}  Exposure {s.exposure}"
+        f"Don's Trust {s.dons_trust}  Influence {s.influence}  Exposure {s.exposure}  Desk {len(state.matters)}"
     )
 
 
@@ -98,8 +150,13 @@ def run(
         path = Path(arg.strip()) if arg.strip() else DEFAULT_SAVE
         if verb in ("n", "next", ""):
             apply(state, rng, EndMonth())
-            for out in monthly_report(state, state.month - 1):
+            for out in monthly_report(state, state.month - 1) + desk_view(state):
                 write(out)
+        elif verb in ("d", "desk"):
+            for out in desk_view(state):
+                write(out)
+        elif verb in ("a", "advise"):
+            write(advise(state, rng, arg))
         elif verb in ("r", "report"):
             for out in monthly_report(state, state.month - 1):
                 write(out)

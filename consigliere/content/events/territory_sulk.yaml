@@ -1,0 +1,14 @@
+id: territory_sulk
+kind: news
+followup_only: true
+title: "{capo} keeps his own company"
+text: |-
+  {capo} has missed two Sunday dinners. His envelopes arrive on time and exact to the dollar.
+
+  He has been seen at a restaurant across the river, where our people do not usually eat.
+cast:
+  capo:
+    role: [capo]
+effects:
+  - stat: {who: capo, stat: loyalty, delta: -5}
+  - cohesion: -2

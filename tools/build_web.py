@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from consigliere.engine.content import CONTENT_DIR, balance, observations  # noqa: E402
+from consigliere.engine.content import CONTENT_DIR, balance, events, observations  # noqa: E402
 from consigliere.engine.scenario import load_scenario  # noqa: E402
 
 WEB = ROOT / "web"
@@ -28,6 +28,7 @@ def content_bundle() -> dict:
     return {
         "balance": balance().model_dump(mode="json"),
         "observations": observations().model_dump(mode="json"),
+        "events": [e.model_dump(mode="json", exclude_none=True) for e in events().values()],
         "scenarios": {name: load_scenario(name, seed=0).model_dump(mode="json") for name in scenarios},
     }
 

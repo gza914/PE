@@ -171,6 +171,7 @@ class LedgerEntry(Model):
     month: int
     kickups: list[LedgerLine] = Field(default_factory=list)
     expenses: list[LedgerLine] = Field(default_factory=list)
+    other: list[LedgerLine] = Field(default_factory=list)  # signed; money moved by decisions
     treasury_start: int
     treasury_end: int
 
@@ -194,21 +195,53 @@ class Report(Model):
     confidence: Unit
 
 
-class EventOption(Model):
+class MatterOption(Model):
     id: str
-    text: str
-    effects: list[dict[str, Any]] = Field(default_factory=list)
+    label: str
 
 
-class EventDef(Model):
-    """Shape of a content/events YAML file. Not used until Milestone 3."""
+class Matter(Model):
+    """A decision on the consigliere's desk this month. Text is resolved when it arises."""
 
     id: str
-    trigger: dict[str, Any] = Field(default_factory=dict)
-    weight: float = 1.0
-    cooldown: int = 0
+    event_id: str
+    month: int
+    title: str
     text: str
-    options: list[EventOption] = Field(min_length=2, max_length=4)
+    options: list[MatterOption]
+    bindings: dict[str, str] = Field(default_factory=dict)  # cast name -> character or racket id
+    waited: int = 0
+    can_wait: bool = True
+    recommendation: str | None = None  # option id, "wait", or None for silence
+
+
+class Scheduled(Model):
+    """A follow-up event due in a later month, if its conditions still hold."""
+
+    event_id: str
+    month: int
+    bindings: dict[str, str] = Field(default_factory=dict)
+    when: list[list[Any]] = Field(default_factory=list)
+
+
+class Decision(Model):
+    """How a matter was settled, as the consigliere saw it."""
+
+    month: int
+    matter_id: str
+    title: str
+    recommended: str | None  # label of what you advised; None if you kept quiet
+    chosen: str  # label of what the Don did
+    followed: bool | None  # None when you kept quiet
+    tone: str  # good, bad, neutral, or waiting
+    text: str
+    trust_delta: int = 0
+
+
+class NewsItem(Model):
+    month: int
+    title: str
+    text: str
 
 
 class Standing(Model):

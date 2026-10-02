@@ -1,0 +1,44 @@
+id: old_capo
+title: "{capo}'s heart"
+text: |-
+  {capo} collapsed at a christening on Sunday. The doctor says it is his heart and that he must rest.
+
+  {capo} says the doctor is a child.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.age, ">=", 55], [self.rackets, ">=", 1]]
+  racket:
+    racket_of: capo
+  successor:
+    role: [capo]
+    where: [[self.competence, ">=", 55]]
+once: true
+options:
+  - id: retire
+    label: Retire him with honor and give {racket} to {successor}
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: good
+        text: "{capo} is given a dinner, a watch, and a pension. He cries a little at the dinner. {successor} takes {racket} the next morning."
+        effects:
+          - assign_racket: {racket: racket, to: successor}
+          - add_expense: {id: old_capo_pension, label: A pension for an old capo, amount: 500}
+          - memory: {who: capo, about: don, weight: 10, decay: 0.01}
+          - stat: {who: successor, stat: loyalty, delta: 4}
+  - id: keep
+    label: Let him keep working
+    don: {base: 0, sentimental: 1.5}
+    outcomes:
+      - weight: 2
+        tone: neutral
+        text: "{capo} keeps working. He is slower now, and he knows that everyone can see it."
+        effects:
+          - stat: {who: capo, stat: competence, delta: -10}
+          - memory: {who: capo, about: don, weight: 6}
+      - weight: 1
+        tone: bad
+        text: "{capo} collapses again, at the club this time. He recovers. {racket} spent a month running itself, and it shows."
+        effects:
+          - stat: {who: capo, stat: competence, delta: -15}
+          - racket_income: {racket: racket, pct: -15}

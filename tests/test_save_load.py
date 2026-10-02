@@ -83,6 +83,10 @@ def test_version_1_save_upgrades(game):
     state, rng = game
     data = json.loads(to_json(state, rng))
     data["schema_version"] = 1
+    for key in ("matters", "scheduled", "flags", "event_log", "don_mood", "unbooked"):
+        del data[key]
+    del data["knowledge"]["decisions"]
+    del data["knowledge"]["news"]
     del data["knowledge"]["ledger"]
     del data["knowledge"]["impressions"]
     for racket in data["rackets"].values():
@@ -97,3 +101,15 @@ def test_migrate_does_not_mutate_input():
     data = {"schema_version": 1, "knowledge": {}, "rackets": {}}
     migrate(data)
     assert data == {"schema_version": 1, "knowledge": {}, "rackets": {}}
+
+
+def test_version_2_save_upgrades(game):
+    state, rng = game
+    data = json.loads(to_json(state, rng))
+    data["schema_version"] = 2
+    for key in ("matters", "scheduled", "flags", "event_log", "don_mood", "unbooked"):
+        del data[key]
+    del data["knowledge"]["decisions"]
+    del data["knowledge"]["news"]
+    loaded, _ = from_json(json.dumps(data))
+    assert loaded.matters == [] and loaded.don_mood == 50 and loaded.knowledge.decisions == []

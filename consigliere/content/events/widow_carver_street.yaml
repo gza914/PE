@@ -1,0 +1,41 @@
+id: widow_carver_street
+title: The widow on Carver Street
+text: |-
+  Nicky Bruno did four years upstate and never said a word. He died in there in the spring. His widow, Rose, has three children and has started taking in laundry.
+
+  {capo} brought it up quietly. Nicky was one of his.
+cast:
+  capo:
+    role: [capo]
+weight: 2
+once: true
+options:
+  - id: pension
+    label: A monthly envelope for Rose
+    don: {base: 0.5, sentimental: 1.5}
+    outcomes:
+      - tone: good
+        text: Rose Bruno gets an envelope on the first of every month. The men notice. They always notice.
+        effects:
+          - add_expense: {id: bruno_widow, label: Rose Bruno, amount: 400}
+          - stat: {who: crew, stat: loyalty, delta: 2}
+          - memory: {who: crew, about: family, weight: 5, decay: 0.02}
+  - id: gift
+    label: One gift, and the funeral costs
+    don: {base: 0.5, cautious: 0.5}
+    outcomes:
+      - tone: neutral
+        text: The Don sends two thousand dollars and flowers. Rose writes him a letter in careful handwriting.
+        effects:
+          - treasury: -2000
+          - memory: {who: capo, about: family, weight: 3}
+  - id: nothing
+    label: The family can't carry everyone
+    don: {base: -1}
+    outcomes:
+      - tone: bad
+        text: Nothing goes to Carver Street. {capo} starts sending his own money. He doesn't tell anyone, and everyone knows.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -8}
+          - memory: {who: crew, about: family, weight: -4, decay: 0.03}
+          - cohesion: -3

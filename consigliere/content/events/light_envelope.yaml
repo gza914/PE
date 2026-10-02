@@ -1,0 +1,65 @@
+id: light_envelope
+title: A light envelope from {capo}
+text: |-
+  {capo}'s envelope from {racket} came in short again. He says it was a slow month, that people are holding on to their money.
+
+  The other capos had good months.
+cast:
+  capo:
+    role: [capo]
+    where: [[self.greed, ">=", 50]]
+  racket:
+    racket_of: capo
+  underboss:
+    role: [underboss]
+trigger: [[month, ">=", 2]]
+weight: 3
+cooldown: 6
+options:
+  - id: accept
+    label: Take him at his word
+    don: {base: 0.5, sentimental: 0.5}
+    outcomes:
+      - weight: 2
+        tone: neutral
+        text: The Don lets it go. {capo} thanks him for his patience, and seems to mean it.
+      - weight: 1
+        weight_if:
+          - when: [[capo.stash, ">", 15000]]
+            mult: 3
+        tone: bad
+        text: Word comes back that {capo} bought his wife a fur coat the same week. The Don hears it from someone else, which is worse.
+        effects:
+          - don_mood: -5
+          - stat: {who: capo, stat: greed, delta: 5}
+  - id: audit
+    label: Have {underboss} look at his books
+    don: {base: 0, paranoid: 1.5}
+    outcomes:
+      - weight: 1
+        weight_if:
+          - when: [[capo.stash, ">", 15000]]
+            mult: 4
+        tone: good
+        text: "{underboss} finds that the numbers don't add up. {capo} makes it right with an envelope of his own, and doesn't look at anyone while he hands it over."
+        effects:
+          - treasury: 6000
+          - stat: {who: capo, stat: fear, delta: 10}
+          - stat: {who: capo, stat: greed, delta: -10}
+          - memory: {who: capo, about: family, weight: -4}
+      - weight: 2
+        tone: bad
+        text: The books are clean, or clean enough. {capo} tells anyone who will listen that he was treated like a thief in front of his own crew.
+        effects:
+          - stat: {who: capo, stat: loyalty, delta: -6}
+          - memory: {who: capo, about: family, weight: -8, decay: 0.03}
+  - id: dock
+    label: Take it out of his next envelope
+    don: {base: -0.5, cautious: -0.5}
+    outcomes:
+      - tone: neutral
+        text: "{capo} pays. He says nothing about it, which says something."
+        effects:
+          - treasury: 3000
+          - stat: {who: capo, stat: loyalty, delta: -4}
+          - memory: {who: capo, about: family, weight: -5}

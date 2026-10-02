@@ -1,7 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from consigliere.engine.models import Character, EventDef, Role, Standing, Stats
+from consigliere.engine.eventdefs import EventDef
+from consigliere.engine.models import Character, Role, Standing, Stats
 
 
 def make_character(**overrides):
@@ -51,10 +52,9 @@ def test_unknown_fields_rejected():
 
 
 def test_event_needs_two_to_four_options():
-    base = {"id": "e1", "text": "A man waits in the outer office."}
+    base = {"id": "e1", "title": "A visitor", "text": "A man waits in the outer office."}
+    see = {"id": "a", "label": "See him", "outcomes": [{"tone": "neutral", "text": "He is seen."}]}
+    wait = {"id": "b", "label": "Let him wait", "outcomes": [{"tone": "neutral", "text": "He waits."}]}
     with pytest.raises(ValidationError):
-        EventDef.model_validate({**base, "options": [{"id": "a", "text": "See him"}]})
-    event = EventDef.model_validate(
-        {**base, "options": [{"id": "a", "text": "See him"}, {"id": "b", "text": "Let him wait"}]}
-    )
-    assert len(event.options) == 2
+        EventDef.model_validate({**base, "options": [see]})
+    assert len(EventDef.model_validate({**base, "options": [see, wait]}).options) == 2

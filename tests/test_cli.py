@@ -67,3 +67,16 @@ def test_family_view_shows_readings_not_numbers(game):
     assert "Capo Frank Tessaro (cooling)" in text
     assert "Social club card games" in text
     assert str(state.characters["capo_tessaro"].stats.loyalty) not in text
+
+
+def test_desk_and_advice(game):
+    state, rng = game
+    out = []
+    first = state.matters[0]
+    run(state, rng, scripted(["d", "a 1 1", "a 1 x", "n", "q"]), out.append)
+    text = "\n".join(out)
+    assert f"[1] {first.title}" in text
+    assert f"Noted for {first.title}." in text
+    assert "Usage: a <matter number>" in text
+    assert "The Don's decisions" in text
+    assert f"you advised: {first.options[0].label}" in text

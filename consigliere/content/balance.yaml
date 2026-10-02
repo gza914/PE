@@ -38,3 +38,32 @@ observation:
   base_notice: 0.35           # chance you notice a man's shift in a given month...
   indiscretion_weight: 0.5    # ...plus up to 50% more if he has no discretion at all
   confidence: 0.6
+
+matters:
+  per_month_min: 1            # matters that reach your desk each month
+  per_month_max: 3
+
+advice:
+  follow_base: 0.15           # chance the Don takes your advice...
+  follow_trust_weight: 0.7    # ...plus up to 70% more at Don's Trust 100
+  follow_mood_weight: 0.1     # ...plus or minus up to 10% for his mood
+  follow_traits:
+    paranoid: -0.10
+    vain: -0.05
+    sentimental: 0.05
+  follow_min: 0.05
+  follow_max: 0.95
+  don_noise: 1.0              # how much his own preference wavers
+  trust:                      # Don's Trust change after a matter is settled
+    followed_good: 3
+    followed_bad: -8          # a bad call he follows costs more
+    followed_neutral: 0
+    ignored_good: -2          # he went his own way and it worked: you were wrong
+    ignored_bad: -2           # a good call he ignores still costs you when it goes wrong
+    ignored_neutral: 0
+
+mood:                         # the Don's mood after a matter turns out...
+  good: 3
+  bad: -5
+  neutral: 0
+  drift_rate: 0.1             # ...and how fast it returns to even
